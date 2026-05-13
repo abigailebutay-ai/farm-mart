@@ -36,4 +36,68 @@ class Product extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    /**
+     * Get all ratings for this product.
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get all reviews for this product.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get all wishlist entries for this product.
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Get all images for this product.
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class);
+    }
+
+    /**
+     * Get all inventory alerts for this product.
+     */
+    public function inventoryAlerts(): HasMany
+    {
+        return $this->hasMany(InventoryAlert::class);
+    }
+
+    /**
+     * Get all harvest schedules for this product.
+     */
+    public function harvestSchedules(): HasMany
+    {
+        return $this->hasMany(HarvestSchedule::class);
+    }
+
+    /**
+     * Get all sales analytics for this product.
+     */
+    public function salesAnalytics(): HasMany
+    {
+        return $this->hasMany(SalesAnalytic::class);
+    }
+
+    /**
+     * Get all demand trends for this product.
+     */
+    public function demandTrends(): HasMany
+    {
+        return $this->hasMany(DemandTrend::class);
+    }
 }

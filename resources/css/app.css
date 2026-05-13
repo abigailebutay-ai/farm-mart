@@ -8,4 +8,17 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    
+    /* Agricultural Theme Colors */
+    --color-ag-primary: #22c55e;      /* Agricultural green */
+    --color-ag-primary-light: #dcfce7;
+    --color-ag-primary-dark: #15803d;
+    
+    --color-ag-secondary: #92400e;    /* Earth brown */
+    --color-ag-secondary-light: #fef3c7;
+    --color-ag-secondary-dark: #78350f;
+    
+    --color-ag-accent: #f59e0b;       /* Harvest gold */
+    --color-ag-accent-light: #fef3c7;
+    --color-ag-accent-dark: #d97706;
 }

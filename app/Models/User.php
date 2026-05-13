@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'address', 'profile_picture', 'dark_mode', 'notification_enabled', 'role'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'address', 'profile_picture', 'dark_mode', 'notification_enabled', 'role', 'is_verified', 'verification_status', 'kyc_documents', 'verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,6 +31,9 @@ class User extends Authenticatable
             'password' => 'hashed',
             'dark_mode' => 'boolean',
             'notification_enabled' => 'boolean',
+            'is_verified' => 'boolean',
+            'kyc_documents' => 'array',
+            'verified_at' => 'datetime',
         ];
     }
 
@@ -56,6 +59,54 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get all ratings given by this user.
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    /**
+     * Get all reviews written by this user.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get all wishlist entries for this user.
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
+     * Get all notifications for this user.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    /**
+     * Get all inventory alerts for this user (farmer).
+     */
+    public function inventoryAlerts(): HasMany
+    {
+        return $this->hasMany(InventoryAlert::class);
+    }
+
+    /**
+     * Get all harvest schedules for this user (farmer).
+     */
+    public function harvestSchedules(): HasMany
+    {
+        return $this->hasMany(HarvestSchedule::class);
     }
 
     /**

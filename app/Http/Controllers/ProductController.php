@@ -53,7 +53,7 @@ class ProductController extends Controller
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:1',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:51200',
         ]);
 
         $validated['user_id'] = auth()->id();

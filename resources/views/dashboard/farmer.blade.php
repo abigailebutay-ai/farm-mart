@@ -4,34 +4,63 @@
 
 @section('content')
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <div class="text-4xl mb-2">📦</div>
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Products</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white">{{ $totalProducts }}</p>
+        <!-- Total Products Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Products</h3>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $totalProducts }}</p>
+                </div>
+                <div class="text-5xl opacity-20">📦</div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a href="{{ route('farmer.products.index') }}" class="text-sm text-green-600 dark:text-green-400 hover:text-green-700 font-medium">View Products →</a>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <div class="text-4xl mb-2">💰</div>
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Sales</h3>
-            <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $totalSales }}</p>
+        <!-- Total Sales Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Sales</h3>
+                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{ $totalSales }}</p>
+                </div>
+                <div class="text-5xl opacity-20">💰</div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p class="text-xs text-gray-600 dark:text-gray-400">This month</p>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <div class="text-4xl mb-2">⏳</div>
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Pending Orders</h3>
-            <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ $pendingOrders }}</p>
+        <!-- Pending Orders Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Pending Orders</h3>
+                    <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ $pendingOrders }}</p>
+                </div>
+                <div class="text-5xl opacity-20">⏳</div>
+            </div>
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <a href="{{ route('orders.index') }}" class="text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 font-medium">View Orders →</a>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
-            <div class="text-4xl mb-2">📊</div>
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Statistics</h3>
-            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">View →</p>
+        <!-- Quick Actions Card -->
+        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow hover:shadow-lg transition">
+            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-3">Quick Actions</h3>
+            <a href="{{ route('farmer.products.create') }}" class="block w-full px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition text-center mb-2">
+                ➕ Add Product
+            </a>
+            <a href="{{ route('orders.index') }}" class="block w-full px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 transition text-center">
+                📋 View Orders
+            </a>
         </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Orders</h2>
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-transparent dark:from-gray-700 dark:to-transparent">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">📋 Recent Orders</h2>
         </div>
 
         @if($recentOrders->count() > 0)
@@ -50,8 +79,8 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($recentOrders as $order)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">#{{ $order->id }}</td>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">#{{ $order->id }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->consumer->name }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->items()->where('farmer_id', auth()->id())->count() }}</td>
                                 <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">₱{{ number_format($order->total, 2) }}</td>
@@ -66,7 +95,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $order->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4 text-sm">
-                                    <a href="{{ route('orders.show', $order) }}" class="text-green-600 dark:text-green-400 hover:text-green-700 font-semibold">View</a>
+                                    <a href="{{ route('orders.show', $order) }}" class="text-green-600 dark:text-green-400 hover:text-green-700 font-semibold transition">View</a>
                                 </td>
                             </tr>
                         @endforeach
@@ -75,8 +104,11 @@
             </div>
         @else
             <div class="px-6 py-12 text-center">
+                <p class="text-2xl mb-4">🌾</p>
                 <p class="text-gray-600 dark:text-gray-400">No orders yet. Start selling your products!</p>
+                <a href="{{ route('farmer.products.create') }}" class="mt-4 inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Add Your First Product</a>
             </div>
         @endif
     </div>
 @endsection
+

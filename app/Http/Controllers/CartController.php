@@ -15,10 +15,16 @@ class CartController extends Controller
     public function index()
     {
         $user = auth()->user();
-        $cart = $user->cart ?? Cart::create(['user_id' => $user->id]);
+
+        $cart = $user->cart ?? Cart::create([
+            'user_id' => $user->id
+        ]);
+
         $cart->calculateTotals();
 
-        return view('cart.index', ['cart' => $cart]);
+        return view('cart.index', [
+            'cart' => $cart
+        ]);
     }
 
     /**
@@ -31,14 +37,26 @@ class CartController extends Controller
         ]);
 
         $user = auth()->user();
-        $cart = $user->cart ?? Cart::create(['user_id' => $user->id]);
 
-        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+        $cart = $user->cart ?? Cart::create([
+            'user_id' => $user->id
+        ]);
+
+        $cartItem = $cart->items()
+            ->where('product_id', $product->id)
+            ->first();
 
         if ($cartItem) {
+
             $cartItem->quantity += $validated['quantity'];
-            $cartItem->updateSubtotal();
+
+            $cartItem->subtotal =
+                $cartItem->price * $cartItem->quantity;
+
+            $cartItem->save();
+
         } else {
+
             CartItem::create([
                 'cart_id' => $cart->id,
                 'product_id' => $product->id,
@@ -46,10 +64,13 @@ class CartController extends Controller
                 'price' => $product->price,
                 'subtotal' => $product->price * $validated['quantity'],
             ]);
-            $cart->calculateTotals();
         }
 
-        return redirect()->route('cart.index')->with('success', 'Product added to cart!');
+        $cart->calculateTotals();
+
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Product added to cart!');
     }
 
     /**
@@ -64,9 +85,17 @@ class CartController extends Controller
         $this->authorize('update', $cartItem);
 
         $cartItem->quantity = $validated['quantity'];
-        $cartItem->updateSubtotal();
 
-        return redirect()->route('cart.index')->with('success', 'Cart updated!');
+        $cartItem->subtotal =
+            $cartItem->price * $validated['quantity'];
+
+        $cartItem->save();
+
+        $cartItem->cart->calculateTotals();
+
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Cart updated!');
     }
 
     /**
@@ -77,10 +106,14 @@ class CartController extends Controller
         $this->authorize('delete', $cartItem);
 
         $cart = $cartItem->cart;
+
         $cartItem->delete();
+
         $cart->calculateTotals();
 
-        return redirect()->route('cart.index')->with('success', 'Item removed from cart!');
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Item removed from cart!');
     }
 
     /**
@@ -89,11 +122,16 @@ class CartController extends Controller
     public function clear()
     {
         $cart = auth()->user()->cart;
+
         if ($cart) {
+
             $cart->items()->delete();
+
             $cart->calculateTotals();
         }
 
-        return redirect()->route('cart.index')->with('success', 'Cart cleared!');
+        return redirect()
+            ->route('cart.index')
+            ->with('success', 'Cart cleared!');
     }
 }

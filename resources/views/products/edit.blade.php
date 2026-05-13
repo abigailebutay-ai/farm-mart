@@ -5,110 +5,104 @@
 @section('content')
     <div class="max-w-2xl">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Edit Product</h2>
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-transparent dark:from-gray-700 dark:to-transparent">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">✏️ Edit Product</h2>
             </div>
 
             <form method="POST" action="{{ route('farmer.products.update', $product) }}" enctype="multipart/form-data" class="p-6 space-y-6">
                 @csrf
                 @method('PUT')
 
-                <div>
-                    <label for="name" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Product Name *</label>
-                    <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value="{{ old('name', $product->name) }}"
-                        required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('name') border-red-500 @enderror"
-                    >
-                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+                @include('layouts.form-input', [
+                    'name' => 'name',
+                    'label' => 'Product Name',
+                    'placeholder' => 'e.g., Fresh Organic Tomatoes',
+                    'icon' => '🥕',
+                    'required' => true,
+                    'value' => old('name', $product->name)
+                ])
 
-                <div>
-                    <label for="description" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Description *</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('description') border-red-500 @enderror"
-                    >{{ old('description', $product->description) }}</textarea>
-                    @error('description')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+                @include('layouts.form-textarea', [
+                    'name' => 'description',
+                    'label' => 'Description',
+                    'placeholder' => 'Describe your product, harvesting details, quality, etc.',
+                    'required' => true,
+                    'rows' => 4,
+                    'value' => old('description', $product->description)
+                ])
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="category" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Category *</label>
-                        <input
-                            type="text"
-                            id="category"
-                            name="category"
-                            value="{{ old('category', $product->category) }}"
-                            required
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('category') border-red-500 @enderror"
-                        >
-                        @error('category')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
+                    @include('layouts.form-input', [
+                        'name' => 'category',
+                        'label' => 'Category',
+                        'type' => 'text',
+                        'placeholder' => 'e.g., Vegetables, Fruits',
+                        'icon' => '📁',
+                        'required' => true,
+                        'hint' => 'Help customers find your product',
+                        'value' => old('category', $product->category)
+                    ])
 
-                    <div>
-                        <label for="price" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Price (₱) *</label>
-                        <input
-                            type="number"
-                            id="price"
-                            name="price"
-                            value="{{ old('price', $product->price) }}"
-                            step="0.01"
-                            min="0"
-                            required
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('price') border-red-500 @enderror"
-                        >
-                        @error('price')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                    </div>
+                    @include('layouts.form-input', [
+                        'name' => 'price',
+                        'label' => 'Price (₱)',
+                        'type' => 'number',
+                        'placeholder' => '0.00',
+                        'icon' => '💰',
+                        'required' => true,
+                        'step' => '0.01',
+                        'min' => '0',
+                        'value' => old('price', $product->price)
+                    ])
                 </div>
 
-                <div>
-                    <label for="quantity" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Quantity (pcs/units) *</label>
-                    <input
-                        type="number"
-                        id="quantity"
-                        name="quantity"
-                        value="{{ old('quantity', $product->quantity) }}"
-                        min="0"
-                        required
-                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('quantity') border-red-500 @enderror"
-                    >
-                    @error('quantity')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
+                @include('layouts.form-input', [
+                    'name' => 'quantity',
+                    'label' => 'Available Quantity (units)',
+                    'type' => 'number',
+                    'placeholder' => '0',
+                    'icon' => '📦',
+                    'required' => true,
+                    'hint' => 'Number of units available',
+                    'value' => old('quantity', $product->quantity)
+                ])
 
-                <div>
-                    <label for="image" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Product Image</label>
+                <div class="mb-4">
+                    <label for="image" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Product Image
+                    </label>
                     @if($product->image)
-                        <div class="mb-4">
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-32 rounded-lg">
+                        <div class="mb-4 relative">
+                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-48 rounded-lg shadow">
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Current image. Upload a new one to replace it.</p>
                         </div>
                     @endif
-                    <input
-                        type="file"
-                        id="image"
-                        name="image"
-                        accept="image/*"
-                        class="block w-full text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 dark:file:bg-green-900 dark:file:text-green-200"
-                    >
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG or GIF (max. 2MB)</p>
+                    <div class="relative">
+                        <input
+                            type="file"
+                            id="image"
+                            name="image"
+                            accept="image/*"
+                            class="block w-full text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-600 file:text-white hover:file:bg-green-700 dark:file:bg-green-600 dark:hover:file:bg-green-700 transition cursor-pointer"
+                        />
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">PNG, JPG, or GIF (max. 2MB). Recommended: 500x500px</p>
                 </div>
 
-                <div class="flex gap-4">
-                    <button
-                        type="submit"
-                        class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
-                    >
-                        Update Product
-                    </button>
-                    <a href="{{ route('farmer.products.index') }}" class="bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white px-6 py-2 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition font-semibold">
-                        Cancel
-                    </a>
+                <div class="flex gap-4 pt-4">
+                    @include('layouts.form-button', [
+                        'type' => 'submit',
+                        'variant' => 'primary',
+                        'size' => 'md',
+                        'icon' => '✓',
+                        'slot' => 'Update Product'
+                    ])
+                    @include('layouts.form-button', [
+                        'href' => route('farmer.products.index'),
+                        'variant' => 'secondary',
+                        'size' => 'md',
+                        'slot' => 'Cancel'
+                    ])
                 </div>
             </form>
         </div>
