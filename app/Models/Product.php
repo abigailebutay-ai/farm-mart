@@ -69,8 +69,8 @@ class Product extends Model
             }
         }
 
-        if (preg_match('#products/[^?#]+#', $path, $matches)) {
-            return $matches[0];
+        if (Str::contains($path, 'products/')) {
+            return 'products/' . Str::after($path, 'products/');
         }
 
         return ltrim($path, '/');

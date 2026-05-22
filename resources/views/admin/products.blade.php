@@ -32,7 +32,8 @@
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-3">
                             <x-ui.product-image
-                                :product="$product"
+                                :src="$product->image"
+                                :alt="$product->name"
                                 image-class="h-12 w-12 rounded-xl object-cover"
                                 placeholder-class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800"
                                 icon-class="h-5 w-5"
