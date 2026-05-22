@@ -11,10 +11,21 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_verified')->default(false)->after('role');
-            $table->string('verification_status')->nullable()->after('is_verified');
-            $table->json('kyc_documents')->nullable()->after('verification_status');
-            $table->timestamp('verified_at')->nullable()->after('kyc_documents');
+            if (!Schema::hasColumn('users', 'is_verified')) {
+                $table->boolean('is_verified')->default(false)->after('role');
+            }
+
+            if (!Schema::hasColumn('users', 'verification_status')) {
+                $table->string('verification_status')->nullable()->after('is_verified');
+            }
+
+            if (!Schema::hasColumn('users', 'kyc_documents')) {
+                $table->json('kyc_documents')->nullable()->after('verification_status');
+            }
+
+            if (!Schema::hasColumn('users', 'verified_at')) {
+                $table->timestamp('verified_at')->nullable()->after('kyc_documents');
+            }
         });
     }
 
@@ -23,8 +34,16 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['is_verified', 'verification_status', 'kyc_documents', 'verified_at']);
+        $columns = collect(['is_verified', 'verification_status', 'kyc_documents', 'verified_at'])
+            ->filter(fn (string $column) => Schema::hasColumn('users', $column))
+            ->all();
+
+        if (empty($columns)) {
+            return;
+        }
+
+        Schema::table('users', function (Blueprint $table) use ($columns) {
+            $table->dropColumn($columns);
         });
     }
 };

@@ -40,6 +40,8 @@ class AuthController
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
+            'is_verified' => false,
+            'verification_status' => 'pending',
         ]);
 
         event(new Registered($user));

@@ -12,30 +12,58 @@ class OrderController extends Controller
     /**
      * Show orders for the current user.
      */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $status = $request->query('status', 'all');
+        $allowedStatuses = ['all', 'pending', 'accepted', 'preparing', 'completed', 'cancelled'];
 
-        if ($user->isFarmer()) {
+        if (! in_array($status, $allowedStatuses, true)) {
+            $status = 'all';
+        }
+
+        if ($user->isAdmin()) {
+
+            // Admin sees all marketplace orders for monitoring.
+            $orders = Order::with('consumer')
+                ->withCount('items')
+                ->latest()
+                ->paginate(10);
+
+        } elseif ($user->isFarmer()) {
 
             // Farmer sees orders containing their products
             $orders = Order::whereHas('items', function ($query) use ($user) {
 
                 $query->where('farmer_id', $user->id);
 
-            })->latest()->paginate(10);
+            })->withCount('items')->latest()->paginate(10);
 
         } else {
 
             // Consumer sees their own orders
-            $orders = $user->orders()
-                ->latest()
-                ->paginate(10);
+            $ordersQuery = $user->orders()->withCount('items');
+
+            if ($status !== 'all') {
+                $ordersQuery->where('status', $status);
+            }
+
+            $orders = $ordersQuery->latest()->paginate(10)->withQueryString();
         }
 
         return view('orders.index', [
-            'orders' => $orders
+            'orders' => $orders,
+            'status' => $status,
+            'statusFilters' => $allowedStatuses,
         ]);
+    }
+
+    /**
+     * Show completed purchases for the current consumer.
+     */
+    public function purchaseHistory()
+    {
+        return redirect()->route('orders.index', ['status' => 'completed']);
     }
 
     /**
@@ -47,6 +75,7 @@ class OrderController extends Controller
 
         // Consumer protection
         if (
+            !$user->isAdmin() &&
             $user->isConsumer() &&
             $order->user_id !== $user->id
         ) {
@@ -55,6 +84,7 @@ class OrderController extends Controller
 
         // Farmer protection
         if (
+            !$user->isAdmin() &&
             $user->isFarmer() &&
             !$order->items()
                 ->where('farmer_id', $user->id)
@@ -64,7 +94,27 @@ class OrderController extends Controller
         }
 
         return view('orders.show', [
-            'order' => $order
+            'order' => $order->loadMissing(['consumer', 'items.product', 'items.farmer'])
+        ]);
+    }
+
+    /**
+     * Show a printable receipt for a completed consumer order.
+     */
+    public function receipt(Order $order)
+    {
+        $user = auth()->user();
+
+        if (! $user->isConsumer() || $order->user_id !== $user->id) {
+            abort(403);
+        }
+
+        if ($order->status !== 'completed') {
+            abort(404, 'Receipt is available after order completion.');
+        }
+
+        return view('orders.receipt', [
+            'order' => $order->load(['consumer', 'items.product', 'items.farmer']),
         ]);
     }
 

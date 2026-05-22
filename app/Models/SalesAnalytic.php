@@ -2,17 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['product_id', 'date', 'quantity_sold', 'total_revenue', 'avg_price'])]
 class SalesAnalytic extends Model
 {
     use HasFactory;
 
     protected $table = 'sales_analytics';
+
+    protected $fillable = [
+        'product_id',
+        'date',
+        'quantity_sold',
+        'total_revenue',
+        'avg_price',
+    ];
 
     /**
      * Get the attributes that should be cast.

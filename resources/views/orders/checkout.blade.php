@@ -21,7 +21,7 @@
                                 <div class="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                     <div>
                                         <p class="font-semibold text-gray-900 dark:text-white">{{ $item->product->name }}</p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">Qty: {{ $item->quantity }} x ₱{{ number_format($item->price, 2) }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Qty: {{ $item->quantity }} {{ $item->product->unit ?? 'piece' }} x ₱{{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
                                     </div>
                                     <p class="font-semibold text-gray-900 dark:text-white">₱{{ number_format($item->subtotal, 2) }}</p>
                                 </div>

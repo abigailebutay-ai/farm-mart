@@ -14,13 +14,12 @@
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($cart->items as $item)
                             <div class="p-6 flex gap-6 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                @if($item->product->image)
-                                    <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="w-24 h-24 object-cover rounded-lg">
-                                @else
-                                    <div class="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                        <span class="text-gray-400">No img</span>
-                                    </div>
-                                @endif
+                                <x-ui.product-image
+                                    :product="$item->product"
+                                    image-class="h-24 w-24 rounded-lg object-cover"
+                                    placeholder-class="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-200 text-gray-400 dark:bg-gray-700"
+                                    icon-class="h-8 w-8"
+                                />
 
                                 <div class="flex-1">
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">{{ $item->product->name }}</h3>
@@ -28,7 +27,7 @@
 
                                     <div class="flex justify-between items-end">
                                         <div>
-                                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Price: ₱{{ number_format($item->price, 2) }}</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Price: ₱{{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
                                             <p class="text-lg font-bold text-green-600 dark:text-green-400">Subtotal: ₱{{ number_format($item->subtotal, 2) }}</p>
                                         </div>
 
@@ -36,7 +35,7 @@
                                             @csrf
                                             @method('PUT')
                                             <div>
-                                                <label for="quantity" class="text-xs text-gray-600 dark:text-gray-400">Qty</label>
+                                                <label for="quantity" class="text-xs text-gray-600 dark:text-gray-400">Qty ({{ $item->product->unit ?? 'piece' }})</label>
                                                 <input
                                                     type="number"
                                                     name="quantity"
@@ -72,7 +71,7 @@
             @else
                 <div class="bg-white dark:bg-gray-800 rounded-lg p-12 text-center">
                     <p class="text-gray-600 dark:text-gray-400 text-lg mb-4">Your cart is empty</p>
-                    <a href="{{ route('products.index') }}" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold inline-block">
+                    <a href="{{ route('consumer.marketplace') }}" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold inline-block">
                         Continue Shopping
                     </a>
                 </div>
@@ -105,7 +104,7 @@
                         </a>
                     @endif
 
-                    <a href="{{ route('products.index') }}" class="block w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold text-center">
+                    <a href="{{ route('consumer.marketplace') }}" class="block w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold text-center">
                         Continue Shopping
                     </a>
                 </div>

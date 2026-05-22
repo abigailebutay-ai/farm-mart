@@ -27,6 +27,7 @@ class ProductFactory extends Factory
             'category' => fake()->randomElement($categories),
             'price' => fake()->randomFloat(2, 50, 500),
             'quantity' => fake()->numberBetween(10, 1000),
+            'unit' => fake()->randomElement(Product::UNITS),
             'image' => null,
         ];
     }

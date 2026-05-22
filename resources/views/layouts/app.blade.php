@@ -1,166 +1,328 @@
 <!DOCTYPE html>
-<html lang="en" @if(auth()->user() && auth()->user()->dark_mode) dark @endif>
+<html lang="en" @if(auth()->user() && auth()->user()->dark_mode) class="dark" @endif>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - Farmers Marketplace</title>
+    <title>@yield('title', 'Farm-Mart') - Farm-Mart</title>
+    <script>
+        (() => {
+            try {
+                const savedTheme = localStorage.getItem('farmMartTheme');
+                if (savedTheme === 'dark') document.documentElement.classList.add('dark');
+                if (savedTheme === 'light') document.documentElement.classList.remove('dark');
+                document.documentElement.dataset.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+            } catch (error) {}
+        })();
+
+        window.farmMartThemeShell = function () {
+            return {
+                theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+                setTheme(theme) {
+                    this.theme = theme;
+                    document.documentElement.classList.toggle('dark', theme === 'dark');
+                    document.documentElement.dataset.theme = theme;
+                    try {
+                        localStorage.setItem('farmMartTheme', theme);
+                    } catch (error) {}
+                },
+                toggleTheme() {
+                    this.setTheme(this.theme === 'dark' ? 'light' : 'dark');
+                },
+            };
+        };
+
+        window.farmMartPublicShell = function () {
+            return {
+                ...window.farmMartThemeShell(),
+                publicMenuOpen: false,
+                publicProfileOpen: false,
+            };
+        };
+    </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+    <style>[x-cloak] { display: none !important; }</style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
-    @auth
-        <!-- Toast Container -->
-        @include('layouts.toast')
+<body class="bg-stone-50 text-slate-800 antialiased dark:bg-gray-900">
+@if(auth()->check() && request()->routeIs('dashboard', 'orders.*', 'cart.*', 'profile.*', 'settings.*', 'consumer.*', 'farmer.*', 'admin.*'))
+    @include('layouts.toast')
 
-        <div class="flex h-screen bg-gray-100 dark:bg-gray-800">
-            <!-- Sidebar -->
-            <div class="hidden md:flex md:w-64 md:flex-col">
-                <div class="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center flex-shrink-0 px-4">
-                        <h1 class="text-2xl font-bold text-green-600 dark:text-green-400">🌾 FarmMart</h1>
+    @php
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $navItems = [
+                ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => 'dashboard', 'icon' => 'dashboard'],
+                ['label' => 'User Reports', 'href' => route('admin.user-reports'), 'active' => 'admin.user-reports', 'icon' => 'users'],
+                ['label' => 'Products', 'href' => route('admin.products'), 'active' => 'admin.products', 'icon' => 'products'],
+                ['label' => 'Orders', 'href' => route('orders.index'), 'active' => 'orders.*', 'icon' => 'orders'],
+                ['label' => 'Announcements', 'href' => route('admin.announcements'), 'active' => 'admin.announcements', 'icon' => 'megaphone'],
+                ['label' => 'Activity Logs', 'href' => route('admin.activity-logs'), 'active' => 'admin.activity-logs', 'icon' => 'activity'],
+            ];
+        } elseif ($user->isFarmer()) {
+            $navItems = [
+                ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => 'dashboard', 'icon' => 'dashboard'],
+                ['label' => 'My Products', 'href' => route('farmer.products.index'), 'active' => 'farmer.products.*', 'icon' => 'products'],
+                ['label' => 'Inventory', 'href' => route('farmer.inventory.index'), 'active' => 'farmer.inventory.*', 'icon' => 'inventory'],
+                ['label' => 'Orders', 'href' => route('orders.index'), 'active' => 'orders.*', 'icon' => 'orders'],
+                ['label' => 'Decision Support', 'href' => route('farmer.decision-support'), 'active' => 'farmer.decision-support', 'icon' => 'chart'],
+                ['label' => 'Sales Summary', 'href' => route('farmer.sales-summary'), 'active' => 'farmer.sales-summary', 'icon' => 'report'],
+                ['label' => 'Settings', 'href' => route('settings.index'), 'active' => 'settings.*', 'icon' => 'activity'],
+            ];
+        } else {
+            $navItems = [
+                ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => 'dashboard', 'icon' => 'dashboard'],
+                ['label' => 'Marketplace', 'href' => route('consumer.marketplace'), 'active' => 'consumer.marketplace', 'icon' => 'products'],
+                ['label' => 'Cart', 'href' => route('cart.index'), 'active' => 'cart.*', 'icon' => 'cart'],
+                ['label' => 'My Orders', 'href' => route('orders.index'), 'active' => ['orders.*', 'consumer.orders.*'], 'icon' => 'orders'],
+                ['label' => 'Feedback', 'href' => route('consumer.feedback'), 'active' => 'consumer.feedback', 'icon' => 'star'],
+            ];
+        }
+
+        $notificationItems = [];
+        if ($user->isFarmer()) {
+            $notificationItems = [
+                ['title' => 'Inventory check', 'message' => 'Review low-stock products before accepting new orders.', 'icon' => 'alert'],
+                ['title' => 'Order queue', 'message' => 'Pending buyer orders will appear in your dashboard.', 'icon' => 'orders'],
+            ];
+        } elseif ($user->isConsumer()) {
+            $notificationItems = [
+                ['title' => 'Marketplace updates', 'message' => 'Fresh product recommendations are available.', 'icon' => 'products'],
+                ['title' => 'Order tracking', 'message' => 'Track pending and completed purchases from your dashboard.', 'icon' => 'orders'],
+            ];
+        } else {
+            $notificationItems = [
+                ['title' => 'Verification queue', 'message' => 'Monitor pending farmer and buyer approvals.', 'icon' => 'users'],
+                ['title' => 'Platform activity', 'message' => 'Recent product and order activity is summarized below.', 'icon' => 'activity'],
+            ];
+        }
+    @endphp
+
+    <div x-data="{ ...farmMartThemeShell(), sidebarOpen: false, profileOpen: false, notificationsOpen: false }" class="min-h-screen">
+        <aside class="fixed inset-y-0 left-0 z-40 w-[260px] -translate-x-full border-r border-slate-200 bg-white transition duration-200 md:translate-x-0 dark:border-gray-800 dark:bg-gray-950" :class="{ 'translate-x-0 shadow-2xl': sidebarOpen }">
+            <div class="flex h-full flex-col">
+                <div class="border-b border-slate-100 px-4 py-4 dark:border-gray-800">
+                    <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
+                            <x-ui.icon name="farmer" class="h-5 w-5" />
+                        </span>
+                        <span>
+                            <span class="block text-lg font-black text-emerald-900 dark:text-emerald-400">Farm-Mart</span>
+                            <span class="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Farm-to-Market</span>
+                        </span>
+                    </a>
+                    <button type="button" class="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 md:hidden" @click="sidebarOpen = false">
+                        <x-ui.icon name="x" class="h-4 w-4" />
+                    </button>
+                </div>
+
+                <nav class="flex-1 space-y-1.5 px-3 py-4">
+                    @foreach($navItems as $item)
+                        @php
+                            $isActive = is_array($item['active'])
+                                ? request()->routeIs(...$item['active'])
+                                : request()->routeIs($item['active']);
+                        @endphp
+                            <a href="{{ $item['href'] }}" class="flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900 dark:text-gray-300 dark:hover:bg-gray-900' }}">
+                                <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg {{ $isActive ? 'bg-white/15 text-white' : 'bg-slate-50 text-slate-500' }}">
+                                    <x-ui.icon :name="$item['icon']" class="h-4 w-4" />
+                                </span>
+                                {{ $item['label'] }}
+                            </a>
+                    @endforeach
+                </nav>
+
+                <div class="border-t border-slate-100 p-3 dark:border-gray-800">
+                    <div class="rounded-xl bg-stone-50 p-3 ring-1 ring-slate-100 dark:bg-gray-900">
+                        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $user->name }}</p>
+                        <p class="text-xs font-semibold text-emerald-700">{{ \Illuminate\Support\Str::title($user->role) }}</p>
                     </div>
-                    <nav class="mt-5 flex-1 flex flex-col px-2 space-y-1">
-                        <div class="space-y-1">
-                            <a href="{{ route('dashboard') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('dashboard')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                <span class="text-lg mr-3 w-5">📊</span>
-                                <span>Dashboard</span>
-                            </a>
+                </div>
+            </div>
+        </aside>
 
-                            @if(auth()->user()->isConsumer())
-                                <a href="{{ route('products.index') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('products.index')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                    <span class="text-lg mr-3 w-5">🛒</span>
-                                    <span>Browse</span>
-                                </a>
-                                <a href="{{ route('cart.index') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('cart.index')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                    <span class="text-lg mr-3 w-5">🛒</span>
-                                    <span>My Cart</span>
-                                </a>
-                            @endif
+        <div class="md:pl-[260px]">
+            <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95 md:px-6">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <button type="button" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 md:hidden" @click="sidebarOpen = true">
+                            <x-ui.icon name="menu" class="h-5 w-5" />
+                        </button>
+                        <div class="min-w-0">
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-amber-600">Farm-Mart Workspace</p>
+                            <h1 class="truncate text-lg font-black text-slate-900 dark:text-white md:text-xl">@yield('page-title', 'Dashboard')</h1>
+                        </div>
+                    </div>
 
-                            @if(auth()->user()->isFarmer())
-                                <a href="{{ route('farmer.products.index') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('farmer.products.index')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                    <span class="text-lg mr-3 w-5">📦</span>
-                                    <span>My Products</span>
-                                </a>
-                                <a href="{{ route('farmer.products.create') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                    <span class="text-lg mr-3 w-5">➕</span>
-                                    <span>Add Product</span>
-                                </a>
-                            @endif
-
-                            <a href="{{ route('orders.index') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('orders.index')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                <span class="text-lg mr-3 w-5">📋</span>
-                                <span>Orders</span>
-                            </a>
+                    <div class="flex items-center gap-2">
+                        <div class="relative hidden lg:block">
+                            <x-ui.icon name="products" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input type="search" placeholder="Search workspace" class="w-56 rounded-xl border border-slate-200 bg-stone-50 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100">
                         </div>
 
-                        <hr class="my-3 border-gray-200 dark:border-gray-700">
+                        <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="toggleTheme()" :aria-pressed="theme === 'dark'" aria-label="Toggle light and dark mode">
+                            <x-ui.icon name="sun" class="h-4 w-4 dark:hidden" />
+                            <x-ui.icon name="moon" class="hidden h-4 w-4 dark:block" />
+                            <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Dark' : 'Light'">Light</span>
+                        </button>
 
-                        <div class="space-y-1">
-                            <a href="{{ route('profile.edit') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('profile.edit')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                <span class="text-lg mr-3 w-5">👤</span>
-                                <span>Profile</span>
-                            </a>
-                            <a href="{{ route('settings.index') }}" class="flex items-center w-full px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition @if(request()->routeIs('settings.index')) bg-green-50 dark:bg-green-900 text-green-600 dark:text-green-400 @endif">
-                                <span class="text-lg mr-3 w-5">⚙️</span>
-                                <span>Settings</span>
-                            </a>
-                        </div>
-
-                        <form method="POST" action="{{ route('logout') }}" class="mt-auto">
-                            @csrf
-                            <button type="submit" class="flex items-center w-full text-left px-3 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                                <span class="text-lg mr-3 w-5">🚪</span>
-                                <span>Logout</span>
+                        <div class="relative" @click.outside="notificationsOpen = false">
+                            <button type="button" class="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="notificationsOpen = !notificationsOpen; profileOpen = false">
+                                <x-ui.icon name="bell" class="h-5 w-5" />
+                                <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-500"></span>
                             </button>
-                        </form>
-                    </nav>
-                </div>
-            </div>
+                            <div x-cloak x-show="notificationsOpen" x-transition class="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-100 bg-white p-3 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                                <p class="px-2 pb-2 text-sm font-black text-slate-900 dark:text-white">Notifications</p>
+                                <div class="space-y-2">
+                                    @forelse($notificationItems as $item)
+                                        <div class="flex gap-3 rounded-xl bg-stone-50 p-3 dark:bg-gray-800">
+                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                                <x-ui.icon :name="$item['icon']" class="h-4 w-4" />
+                                            </span>
+                                            <div>
+                                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $item['title'] }}</p>
+                                                <p class="text-xs leading-relaxed text-slate-500 dark:text-gray-400">{{ $item['message'] }}</p>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <p class="rounded-xl bg-stone-50 p-3 text-sm text-slate-500 dark:bg-gray-800 dark:text-gray-400">No new notifications.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
 
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Top Navigation -->
-                <div class="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-700 px-4 py-4 md:px-8 md:py-6">
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">@yield('page-title', 'Dashboard')</h2>
-                        <div class="flex items-center space-x-4">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ auth()->user()->name }}</span>
-                            <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-xs font-semibold">
-                                {{ Str::ucfirst(auth()->user()->role) }}
-                            </span>
+                        <div class="relative" @click.outside="profileOpen = false">
+                            <button type="button" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800" @click="profileOpen = !profileOpen; notificationsOpen = false">
+                                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-xs font-black text-white">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                                <span class="hidden text-left sm:block">
+                                    <span class="block text-xs font-bold text-slate-900 dark:text-white">{{ \Illuminate\Support\Str::limit($user->name, 18) }}</span>
+                                    <span class="block text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">{{ \Illuminate\Support\Str::title($user->role) }}</span>
+                                </span>
+                            </button>
+                            <div x-cloak x-show="profileOpen" x-transition class="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-100 bg-white p-3 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                                <div class="border-b border-slate-100 px-2 pb-3 dark:border-gray-800">
+                                    <p class="font-black text-slate-900 dark:text-white">{{ $user->name }}</p>
+                                    <p class="text-sm text-slate-500 dark:text-gray-400">{{ $user->email }}</p>
+                                    <span class="mt-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">{{ \Illuminate\Support\Str::title($user->role) }}</span>
+                                </div>
+                                <div class="py-2">
+                                    <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
+                                    <a href="{{ route('settings.index') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Settings</a>
+                                </div>
+                                <form method="POST" action="{{ route('logout') }}" class="border-t border-slate-100 pt-2 dark:border-gray-800">
+                                    @csrf
+                                    <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50">Logout</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </header>
 
-                <!-- Content -->
-                <div class="flex-1 overflow-auto relative z-0">
-                    <main class="p-4 md:p-8">
-                        @yield('content')
-                    </main>
-                </div>
+            <main class="px-4 py-5 md:px-6">
+                @yield('content')
+            </main>
+        </div>
+
+        <div x-cloak x-show="sidebarOpen" class="fixed inset-0 z-30 bg-gray-900/30 md:hidden" @click="sidebarOpen = false"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if($message = Session::get('success'))
+                setTimeout(() => window.toast?.success('{{ $message }}'), 100);
+            @endif
+            @if($message = Session::get('error'))
+                setTimeout(() => window.toast?.error('{{ $message }}'), 100);
+            @endif
+            @if($errors->any())
+                setTimeout(() => @json($errors->all()).forEach(error => window.toast?.error(error)), 100);
+            @endif
+        });
+    </script>
+@else
+    @php
+        $publicNavItems = [
+            ['label' => 'Home', 'href' => route('home'), 'active' => ['home'], 'icon' => 'home'],
+            ['label' => 'Marketplace', 'href' => route('marketplace'), 'active' => ['marketplace', 'products.*'], 'icon' => 'products'],
+            ['label' => 'About', 'href' => route('about'), 'active' => ['about'], 'icon' => 'info'],
+        ];
+
+        if (auth()->check()) {
+            $publicNavItems[] = ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => ['dashboard'], 'icon' => 'dashboard'];
+        }
+    @endphp
+
+    <div x-data="farmMartPublicShell()" class="min-h-screen bg-stone-50 text-slate-800 dark:bg-gray-950 dark:text-gray-100">
+        <aside class="fixed inset-y-0 left-0 z-50 w-[240px] -translate-x-full border-r border-slate-200 bg-white transition duration-200 md:translate-x-0 dark:border-gray-800 dark:bg-gray-950" :class="{ 'translate-x-0 shadow-2xl': publicMenuOpen }">
+            <div class="flex h-full flex-col">
+                <a href="{{ route('home') }}" class="flex items-center gap-3">
+                    <span class="ml-4 mt-4 flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
+                        <x-ui.icon name="farmer" class="h-5 w-5" />
+                    </span>
+                    <span class="mt-4">
+                        <span class="block text-xl font-black text-emerald-900 dark:text-emerald-400">Farm-Mart</span>
+                        <span class="hidden text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-gray-500 sm:block">Farm-to-Market Platform</span>
+                    </span>
+                </a>
+
+                <nav class="mt-6 flex-1 space-y-1.5 px-3">
+                    @foreach($publicNavItems as $item)
+                        @php($isActive = request()->routeIs(...$item['active']))
+                        <a href="{{ $item['href'] }}" class="flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition {{ $isActive ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-900 dark:text-gray-300 dark:hover:bg-gray-900' }}" @click="publicMenuOpen = false">
+                            <span class="mr-3 flex h-8 w-8 items-center justify-center rounded-lg {{ $isActive ? 'bg-white/15 text-white' : 'bg-slate-50 text-slate-500 dark:bg-gray-900 dark:text-gray-400' }}">
+                                <x-ui.icon :name="$item['icon']" class="h-4 w-4" />
+                            </span>
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </nav>
             </div>
-        </div>
+        </aside>
 
-        <!-- Flash Messages to Toasts Script -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                @if($message = Session::get('success'))
-                    setTimeout(() => {
-                        if (window.toast) {
-                            window.toast.success('{{ $message }}');
-                        }
-                    }, 100);
-                @endif
+        <div class="md:pl-[240px]">
+            <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
+                <div class="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+                    <div class="flex min-w-0 items-center gap-3">
+                        <button type="button" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 md:hidden" @click="publicMenuOpen = !publicMenuOpen" aria-label="Open navigation menu">
+                            <x-ui.icon name="menu" class="h-5 w-5" />
+                        </button>
+                        <span class="truncate text-sm font-black text-emerald-900 dark:text-emerald-400 md:hidden">Farm-Mart</span>
+                    </div>
 
-                @if($message = Session::get('error'))
-                    setTimeout(() => {
-                        if (window.toast) {
-                            window.toast.error('{{ $message }}');
-                        }
-                    }, 100);
-                @endif
-
-                @if($errors->any())
-                    setTimeout(() => {
-                        if (window.toast) {
-                            const errors = @json($errors->all());
-                            errors.forEach(error => {
-                                window.toast.error(error);
-                            });
-                        }
-                    }, 100);
-                @endif
-            });
-        </script>
-
-        <!-- Mobile Menu Button (for future implementation) -->
-        <div class="md:hidden fixed bottom-4 right-4 z-50">
-            <!-- Mobile menu can be added here -->
-        </div>
-    @else
-        <!-- Guest Layout -->
-        <div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-            <!-- Top Navigation -->
-            <nav class="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-700">
-                <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                    <h1 class="text-2xl font-bold text-green-600 dark:text-green-400">🌾 FarmMart</h1>
-                    <div class="space-x-4">
-                        @if(Route::has('login'))
-                            <a href="{{ route('login') }}" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Login</a>
-                            <a href="{{ route('register') }}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Register</a>
-                        @endif
+                    <div class="flex items-center gap-2 text-sm font-semibold">
+                        <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm transition hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="toggleTheme()" :aria-pressed="theme === 'dark'" aria-label="Toggle light and dark mode">
+                            <x-ui.icon name="sun" class="h-4 w-4 dark:hidden" />
+                            <x-ui.icon name="moon" class="hidden h-4 w-4 dark:block" />
+                            <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Dark' : 'Light'">Light</span>
+                        </button>
+                        @auth
+                            <div class="relative" @click.outside="publicProfileOpen = false">
+                                <button type="button" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm dark:border-gray-800 dark:bg-gray-900" @click="publicProfileOpen = !publicProfileOpen">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-xs font-black text-white">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                                    <span class="hidden font-bold text-slate-700 dark:text-gray-200 sm:inline">{{ \Illuminate\Support\Str::limit(auth()->user()->name, 14) }}</span>
+                                </button>
+                                <div x-cloak x-show="publicProfileOpen" x-transition class="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-3 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                                    <a href="{{ route('dashboard') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Dashboard</a>
+                                    <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
+                                    <form method="POST" action="{{ route('logout') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-gray-800">
+                                        @csrf
+                                        <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50">Logout</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ route('login') }}" class="text-slate-600 hover:text-emerald-800 dark:text-gray-300 dark:hover:text-emerald-300">Login</a>
+                            <a href="{{ route('register') }}" class="rounded-xl bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">Register</a>
+                        @endauth
                     </div>
                 </div>
-            </nav>
+            </header>
 
-            <div class="container mx-auto px-4 py-12">
-                @yield('content')
-            </div>
+            @yield('content')
         </div>
-    @endauth
+
+        <div x-cloak x-show="publicMenuOpen" class="fixed inset-0 z-40 bg-gray-900/30 md:hidden" @click="publicMenuOpen = false"></div>
+    </div>
+@endif
 </body>
 </html>

@@ -3,112 +3,94 @@
 @section('page-title', 'Farmer Dashboard')
 
 @section('content')
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <!-- Total Products Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Products</h3>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $totalProducts }}</p>
-                </div>
-                <div class="text-5xl opacity-20">📦</div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a href="{{ route('farmer.products.index') }}" class="text-sm text-green-600 dark:text-green-400 hover:text-green-700 font-medium">View Products →</a>
-            </div>
-        </div>
+    <x-ui.page-header
+        title="Welcome back, {{ auth()->user()->name }}"
+        subtitle="Quick overview of your products, inventory, orders, and sales. Use Decision Support for deeper analysis and recommendations."
+        action-url="{{ route('farmer.products.create') }}"
+        action-label="Add Product"
+    />
 
-        <!-- Total Sales Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Total Sales</h3>
-                    <p class="text-3xl font-bold text-amber-600 dark:text-amber-400">{{ $totalSales }}</p>
-                </div>
-                <div class="text-5xl opacity-20">💰</div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p class="text-xs text-gray-600 dark:text-gray-400">This month</p>
-            </div>
-        </div>
-
-        <!-- Pending Orders Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Pending Orders</h3>
-                    <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ $pendingOrders }}</p>
-                </div>
-                <div class="text-5xl opacity-20">⏳</div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a href="{{ route('orders.index') }}" class="text-sm text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 font-medium">View Orders →</a>
-            </div>
-        </div>
-
-        <!-- Quick Actions Card -->
-        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow hover:shadow-lg transition">
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-3">Quick Actions</h3>
-            <a href="{{ route('farmer.products.create') }}" class="block w-full px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition text-center mb-2">
-                ➕ Add Product
-            </a>
-            <a href="{{ route('orders.index') }}" class="block w-full px-3 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 transition text-center">
-                📋 View Orders
-            </a>
-        </div>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <x-ui.stat-card label="Total Products" :value="$totalProducts ?? 0" icon="products" trend="All marketplace listings under your account." />
+        <x-ui.stat-card label="Total Inventory" :value="$totalInventoryQuantity ?? 0" icon="inventory" tone="blue" trend="Combined available quantity across listings." />
+        <x-ui.stat-card label="Low-Stock Products" :value="$lowStockProductsCount ?? 0" icon="alert" tone="amber" trend="Products with 1 to 10 units remaining." />
+        <x-ui.stat-card label="Pending Orders" :value="$pendingOrders ?? 0" icon="clock" tone="amber" trend="Buyer orders waiting for action." />
+        <x-ui.stat-card label="Completed Orders" :value="$completedOrders ?? 0" icon="orders" tone="green" trend="Fulfilled farmer-to-buyer transactions." />
+        <x-ui.stat-card label="Total Sales" value="PHP {{ number_format($totalSales ?? 0, 2) }}" icon="money" tone="green" trend="Revenue from completed orders." />
+        <x-ui.stat-card label="Monthly Sales" value="PHP {{ number_format($monthlySales ?? 0, 2) }}" icon="chart" tone="blue" trend="Income summary for {{ now()->format('F Y') }}." />
+        <x-ui.stat-card label="Recent Products" :value="($recentProducts ?? collect())->count()" icon="check" trend="Latest listings or product updates." />
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-transparent dark:from-gray-700 dark:to-transparent">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">📋 Recent Orders</h2>
-        </div>
+    <div class="mt-5 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+        <x-ui.table-card title="Recent Orders" subtitle="Latest order fulfillment activity from buyers.">
+            <thead class="bg-slate-50">
+                <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <th class="px-5 py-3">Order</th>
+                    <th class="px-5 py-3">Buyer</th>
+                    <th class="px-5 py-3">Items</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">Amount</th>
+                    <th class="px-5 py-3">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($recentOrders ?? [] as $order)
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-5 py-4 text-sm font-bold text-slate-900">#{{ $order->id }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-600">{{ $order->consumer->name ?? 'Buyer' }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-600">{{ $order->items->where('farmer_id', auth()->id())->count() }}</td>
+                        <td class="px-5 py-4"><x-ui.status-badge :status="$order->status" /></td>
+                        <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($order->total, 2) }}</td>
+                        <td class="px-5 py-4"><a href="{{ route('orders.show', $order) }}" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">View</a></td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="px-5 py-5"><x-ui.empty-state title="No orders yet" message="New buyer orders will appear here." icon="orders" /></td></tr>
+                @endforelse
+            </tbody>
+        </x-ui.table-card>
 
-        @if($recentOrders->count() > 0)
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Order ID</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Customer</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Items</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Total</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($recentOrders as $order)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">#{{ $order->id }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->consumer->name }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->items()->where('farmer_id', auth()->id())->count() }}</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">₱{{ number_format($order->total, 2) }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                        @if($order->status === 'pending') bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
-                                        @elseif($order->status === 'accepted') bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200
-                                        @elseif($order->status === 'completed') bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
-                                        @else bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 @endif">
-                                        {{ Str::ucfirst($order->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $order->created_at->format('M d, Y') }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <a href="{{ route('orders.show', $order) }}" class="text-green-600 dark:text-green-400 hover:text-green-700 font-semibold transition">View</a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        <x-ui.dashboard-card title="Quick Actions" subtitle="Common farmer workflows.">
+            <div class="grid gap-3">
+                <x-ui.quick-action-card href="{{ route('farmer.products.create') }}" title="Add Product" description="Create a new marketplace listing." icon="products" />
+                <x-ui.quick-action-card href="{{ route('orders.index') }}" title="View Orders" description="Review buyer orders and fulfillment status." icon="orders" />
+                <x-ui.quick-action-card href="{{ route('farmer.inventory.index') }}" title="Manage Inventory" description="Update stock quantities and availability." icon="inventory" />
+                <x-ui.quick-action-card href="{{ route('farmer.decision-support') }}" title="Decision Support" description="Open insights and restock recommendations." icon="chart" />
             </div>
-        @else
-            <div class="px-6 py-12 text-center">
-                <p class="text-2xl mb-4">🌾</p>
-                <p class="text-gray-600 dark:text-gray-400">No orders yet. Start selling your products!</p>
-                <a href="{{ route('farmer.products.create') }}" class="mt-4 inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Add Your First Product</a>
+        </x-ui.dashboard-card>
+    </div>
+
+    <div class="mt-5 grid gap-4 xl:grid-cols-2">
+        <x-ui.table-card title="Recent Product Activity" subtitle="Latest product listings and product record updates.">
+            <thead class="bg-slate-50">
+                <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <th class="px-5 py-3">Product</th>
+                    <th class="px-5 py-3">Category</th>
+                    <th class="px-5 py-3">Price</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">Updated</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($recentProducts ?? [] as $product)
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-5 py-4 font-bold text-slate-900">{{ $product->name }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-600">{{ $product->category }}</td>
+                        <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
+                        <td class="px-5 py-4"><x-ui.status-badge :status="$product->quantity > 0 ? 'Active' : 'Out of Stock'" /></td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->format('M d, Y') }}</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="px-5 py-5"><x-ui.empty-state title="No products yet" message="Add your first product to see activity here." icon="products" /></td></tr>
+                @endforelse
+            </tbody>
+        </x-ui.table-card>
+
+        <x-ui.dashboard-card title="Overview Notes" subtitle="Snapshot reminders for day-to-day operations.">
+            <div class="space-y-3">
+                <x-ui.alert-card title="Dashboard is for quick review" message="Use this page to check totals, recent orders, product activity, and common actions." tone="green" />
+                <x-ui.alert-card title="Use Decision Support for analysis" message="Restock advice, product performance, and slow-moving product signals are now separated into Decision Support." tone="gray" />
+                <x-ui.alert-card title="Use Inventory for stock changes" message="Quantity updates and stock status management are handled in the Inventory page." tone="amber" />
             </div>
-        @endif
+        </x-ui.dashboard-card>
     </div>
 @endsection
-

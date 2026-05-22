@@ -4,20 +4,38 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'address', 'profile_picture', 'dark_mode', 'notification_enabled', 'role', 'is_verified', 'verification_status', 'kyc_documents', 'verified_at'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected $fillable = [
+        'name',
+        'email',
+        'email_verified_at',
+        'password',
+        'phone',
+        'address',
+        'profile_picture',
+        'dark_mode',
+        'notification_enabled',
+        'role',
+        'is_verified',
+        'verification_status',
+        'kyc_documents',
+        'verified_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -77,6 +95,11 @@ class User extends Authenticatable
         return $this->hasMany(Review::class);
     }
 
+    public function feedback(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
+    }
+
     /**
      * Get all wishlist entries for this user.
      */
@@ -123,5 +146,13 @@ class User extends Authenticatable
     public function isConsumer(): bool
     {
         return $this->role === 'consumer';
+    }
+
+    /**
+     * Check if user is an admin.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

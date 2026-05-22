@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
@@ -21,4 +23,519 @@
     --color-ag-accent: #f59e0b;       /* Harvest gold */
     --color-ag-accent-light: #fef3c7;
     --color-ag-accent-dark: #d97706;
+
+    --color-primary: #166534;
+    --color-secondary: #22c55e;
+    --color-harvest: #f59e0b;
+    --color-cream: #fefce8;
+    --color-danger: #dc2626;
+    --color-muted: #6b7280;
+}
+
+:root {
+    color-scheme: light;
+    --fm-bg: #fafaf9;
+    --fm-surface: #ffffff;
+    --fm-surface-muted: #f8fafc;
+    --fm-surface-soft: #f0fdf4;
+    --fm-border: #e2e8f0;
+    --fm-border-soft: #f1f5f9;
+    --fm-text: #1e293b;
+    --fm-text-strong: #0f172a;
+    --fm-text-muted: #64748b;
+    --fm-text-faint: #94a3b8;
+    --fm-accent: #047857;
+    --fm-accent-strong: #065f46;
+    --fm-accent-soft: #ecfdf5;
+    --fm-ring: #d1fae5;
+    --fm-warning-soft: #fef3c7;
+    --fm-warning-text: #92400e;
+    --fm-danger-soft: #fef2f2;
+    --fm-danger-text: #dc2626;
+    --table-header-bg: #f8fafc;
+    --table-row-bg: #ffffff;
+    --table-row-hover-bg: #f1f5f9;
+    --table-border-color: #e2e8f0;
+    --table-text-primary: #0f172a;
+    --table-text-muted: #64748b;
+    --table-row-hover: var(--table-row-hover-bg);
+    --text-primary: var(--table-text-primary);
+    --text-muted: var(--table-text-muted);
+    --buyer-card-bg: #ffffff;
+    --buyer-card-hover-bg: #f8fafc;
+    --buyer-table-header-bg: #f1f5f9;
+    --buyer-table-row-bg: #ffffff;
+    --buyer-table-row-hover-bg: #f8fafc;
+    --buyer-border-color: #e2e8f0;
+    --buyer-text-primary: #0f172a;
+    --buyer-text-muted: #64748b;
+}
+
+.dark,
+[data-theme='dark'] {
+    color-scheme: dark;
+    --fm-bg: #111827;
+    --fm-surface: #182230;
+    --fm-surface-muted: #1f2937;
+    --fm-surface-soft: #10251f;
+    --fm-border: #334155;
+    --fm-border-soft: #243244;
+    --fm-text: #d1d5db;
+    --fm-text-strong: #f8fafc;
+    --fm-text-muted: #9ca3af;
+    --fm-text-faint: #6b7280;
+    --fm-accent: #34d399;
+    --fm-accent-strong: #6ee7b7;
+    --fm-accent-soft: #064e3b;
+    --fm-ring: rgba(52, 211, 153, 0.22);
+    --fm-warning-soft: rgba(120, 53, 15, 0.35);
+    --fm-warning-text: #fcd34d;
+    --fm-danger-soft: rgba(127, 29, 29, 0.35);
+    --fm-danger-text: #fca5a5;
+    --table-header-bg: #1e293b;
+    --table-row-bg: #162231;
+    --table-row-hover-bg: #1f2937;
+    --table-border-color: #334155;
+    --table-text-primary: #f8fafc;
+    --table-text-muted: #cbd5e1;
+    --table-row-hover: var(--table-row-hover-bg);
+    --text-primary: var(--table-text-primary);
+    --text-muted: var(--table-text-muted);
+    --buyer-card-bg: #162231;
+    --buyer-card-hover-bg: #1f2937;
+    --buyer-table-header-bg: #1e293b;
+    --buyer-table-row-bg: #162231;
+    --buyer-table-row-hover-bg: #1f2937;
+    --buyer-border-color: #334155;
+    --buyer-text-primary: #f8fafc;
+    --buyer-text-muted: #cbd5e1;
+}
+
+html,
+body {
+    background-color: var(--fm-bg);
+    color: var(--fm-text);
+}
+
+body,
+.theme-surface {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+input,
+select,
+textarea {
+    background-color: var(--fm-surface);
+    border-color: var(--fm-border);
+    color: var(--fm-text-strong);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--fm-text-faint);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--fm-accent);
+    box-shadow: 0 0 0 4px var(--fm-ring);
+}
+
+table {
+    border-color: var(--table-border-color);
+    color: var(--table-text-primary);
+}
+
+table thead,
+table thead tr,
+.table-header {
+    background-color: var(--table-header-bg) !important;
+    color: var(--table-text-muted);
+}
+
+table tbody tr,
+.table-row,
+.product-row,
+.inventory-row,
+.decision-row,
+.order-row,
+.sales-row {
+    background-color: var(--table-row-bg) !important;
+    border-color: var(--table-border-color) !important;
+    color: var(--table-text-primary);
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+
+table tbody tr:hover,
+.table-row:hover,
+.product-row:hover,
+.inventory-row:hover,
+.decision-row:hover,
+.order-row:hover,
+.sales-row:hover {
+    background-color: var(--table-row-hover-bg) !important;
+}
+
+table td,
+table th {
+    border-color: var(--table-border-color) !important;
+}
+
+table tbody td {
+    color: var(--table-text-primary);
+}
+
+table tbody td .muted,
+table tbody td small,
+.table-muted,
+.product-description,
+.inventory-description,
+.stock-text,
+.date-text,
+.product-category,
+.product-stock,
+.product-date {
+    color: var(--table-text-muted);
+}
+
+.product-name {
+    color: var(--table-text-primary);
+}
+
+a {
+    transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.dark .bg-white,
+.dark .bg-stone-50,
+.dark .bg-gray-50 {
+    background-color: var(--fm-surface) !important;
+}
+
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
+    background-color: color-mix(in srgb, var(--fm-surface) 92%, transparent) !important;
+}
+
+.dark .bg-white\/70,
+.dark .bg-stone-50\/80,
+.dark .bg-slate-50\/70 {
+    background-color: color-mix(in srgb, var(--fm-surface-muted) 82%, transparent) !important;
+}
+
+.dark .bg-stone-100,
+.dark .bg-gray-100,
+.dark .bg-slate-50 {
+    background-color: var(--fm-surface-muted) !important;
+}
+
+.dark .bg-emerald-50,
+.dark .bg-green-50 {
+    background-color: var(--fm-accent-soft) !important;
+}
+
+.dark .bg-amber-50,
+.dark .bg-amber-100,
+.dark .bg-yellow-50 {
+    background-color: var(--fm-warning-soft) !important;
+}
+
+.dark .bg-red-50,
+.dark .bg-red-100 {
+    background-color: var(--fm-danger-soft) !important;
+}
+
+.dark .from-white,
+.dark .from-stone-50,
+.dark .from-emerald-50,
+.dark .from-green-50 {
+    --tw-gradient-from: var(--fm-surface) var(--tw-gradient-from-position) !important;
+    --tw-gradient-to: rgb(24 34 48 / 0) var(--tw-gradient-to-position) !important;
+}
+
+.dark .via-white,
+.dark .via-emerald-50,
+.dark .via-green-50 {
+    --tw-gradient-via: var(--fm-surface-muted) var(--tw-gradient-via-position) !important;
+}
+
+.dark .to-lime-50,
+.dark .to-emerald-50,
+.dark .to-green-50 {
+    --tw-gradient-to: var(--fm-surface-soft) var(--tw-gradient-to-position) !important;
+}
+
+.dark .border-white,
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-emerald-100,
+.dark .ring-slate-100,
+.dark .ring-gray-100,
+.dark .ring-emerald-100 {
+    border-color: var(--fm-border) !important;
+    --tw-ring-color: var(--fm-border) !important;
+}
+
+.dark .text-slate-900,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-slate-800,
+.dark .text-emerald-900 {
+    color: var(--fm-text-strong) !important;
+}
+
+.dark .text-slate-700,
+.dark .text-gray-700,
+.dark .text-slate-600,
+.dark .text-gray-600 {
+    color: var(--fm-text) !important;
+}
+
+.dark .text-slate-500,
+.dark .text-gray-500,
+.dark .text-slate-400,
+.dark .text-gray-400 {
+    color: var(--fm-text-muted) !important;
+}
+
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-green-800,
+.dark .text-green-700,
+.dark .hover\:text-emerald-800:hover,
+.dark .hover\:text-green-800:hover {
+    color: var(--fm-accent-strong) !important;
+}
+
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600 {
+    color: var(--fm-warning-text) !important;
+}
+
+.dark .text-red-800,
+.dark .text-red-700,
+.dark .text-red-600 {
+    color: var(--fm-danger-text) !important;
+}
+
+.dark .shadow,
+.dark .shadow-sm,
+.dark .shadow-lg,
+.dark .shadow-xl,
+.dark .shadow-2xl {
+    --tw-shadow-color: rgba(0, 0, 0, 0.32);
+}
+
+.dark input,
+.dark select,
+.dark textarea,
+.dark .bg-white input,
+.dark .bg-white select,
+.dark .bg-white textarea {
+    background-color: var(--fm-surface-muted) !important;
+    border-color: var(--fm-border) !important;
+    color: var(--fm-text-strong) !important;
+}
+
+.dark input[type='file'] {
+    color: var(--fm-text-muted) !important;
+}
+
+.dark option {
+    background-color: var(--fm-surface);
+    color: var(--fm-text-strong);
+}
+
+.dark table,
+.dark thead,
+.dark tbody,
+.dark tr,
+.dark th,
+.dark td {
+    border-color: var(--table-border-color) !important;
+}
+
+.dark table thead,
+.dark table thead tr,
+.dark table .table-header,
+.dark table thead.bg-slate-50,
+.dark table thead.bg-gray-50,
+.dark table thead.bg-white,
+.dark table thead tr.bg-slate-50,
+.dark table thead tr.bg-gray-50,
+.dark table thead tr.bg-white {
+    background-color: var(--table-header-bg) !important;
+    color: var(--table-text-muted) !important;
+}
+
+.dark table tbody tr,
+.dark table tbody tr.bg-white,
+.dark table tbody tr.bg-slate-50,
+.dark table tbody tr.bg-gray-50,
+.dark table tbody tr.bg-stone-50 {
+    background-color: var(--table-row-bg) !important;
+    color: var(--table-text-primary) !important;
+}
+
+.dark table tbody tr:hover,
+.dark table tbody tr.hover\:bg-white:hover,
+.dark table tbody tr.hover\:bg-slate-50:hover,
+.dark table tbody tr.hover\:bg-gray-50:hover,
+.dark table tbody tr.hover\:bg-stone-50:hover {
+    background-color: var(--table-row-hover-bg) !important;
+}
+
+.dark table tbody td {
+    color: var(--table-text-primary);
+}
+
+.dark table tbody td .muted,
+.dark table tbody td small,
+.dark table .table-muted,
+.dark table .product-description,
+.dark table .inventory-description,
+.dark table .stock-text,
+.dark table .date-text,
+.dark table .product-category,
+.dark table .product-stock,
+.dark table .product-date {
+    color: var(--table-text-muted) !important;
+}
+
+.dark thead,
+.dark .divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--table-border-color) !important;
+}
+
+.dark nav,
+.dark aside,
+.dark header,
+.dark section,
+.dark article,
+.dark .modal,
+.dark [role='dialog'] {
+    border-color: var(--fm-border);
+}
+
+.dark [aria-current='page'],
+.dark .pagination .active,
+.dark .active {
+    border-color: var(--fm-accent);
+}
+
+.buyer-card,
+.order-card,
+.purchase-card,
+.receipt-card {
+    background-color: var(--buyer-card-bg) !important;
+    color: var(--buyer-text-primary) !important;
+    border-color: var(--buyer-border-color) !important;
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.buyer-card:hover,
+.order-card:hover,
+.purchase-card:hover {
+    background-color: var(--buyer-card-hover-bg) !important;
+}
+
+.buyer-table,
+.receipt-card table {
+    color: var(--buyer-text-primary);
+}
+
+.buyer-table thead,
+.buyer-table thead tr,
+.receipt-card table thead,
+.receipt-card table thead tr {
+    background-color: var(--buyer-table-header-bg) !important;
+    color: var(--buyer-text-muted) !important;
+}
+
+.buyer-table tbody tr,
+.receipt-card table tbody tr {
+    background-color: var(--buyer-table-row-bg) !important;
+    color: var(--buyer-text-primary) !important;
+    border-color: var(--buyer-border-color) !important;
+}
+
+.buyer-table tbody tr:hover,
+.receipt-card table tbody tr:hover {
+    background-color: var(--buyer-table-row-hover-bg) !important;
+}
+
+.buyer-table td,
+.buyer-table th,
+.receipt-card table td,
+.receipt-card table th,
+.buyer-divider {
+    border-color: var(--buyer-border-color) !important;
+}
+
+.buyer-text,
+.buyer-table tbody td,
+.receipt-card table tbody td {
+    color: var(--buyer-text-primary) !important;
+}
+
+.buyer-muted,
+.order-description,
+.purchase-date,
+.receipt-meta {
+    color: var(--buyer-text-muted) !important;
+}
+
+.receipt-container {
+    background-color: var(--buyer-card-bg) !important;
+    color: var(--buyer-text-primary) !important;
+    border-color: var(--buyer-border-color) !important;
+}
+
+.receipt-table th,
+.receipt-table td {
+    border-color: var(--buyer-border-color) !important;
+}
+
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    aside,
+    header,
+    .sidebar,
+    .topbar,
+    .no-print,
+    .print-hide {
+        display: none !important;
+    }
+
+    .md\:pl-\[260px\] {
+        padding-left: 0 !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    .receipt-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    .receipt-container *,
+    .receipt-table th,
+    .receipt-table td {
+        color: #000000 !important;
+        border-color: #cccccc !important;
+    }
 }

@@ -16,7 +16,7 @@ return new class extends Migration {
             
             // Add inventory management fields
             $table->integer('low_stock_threshold')->default(10)->after('quantity');
-            $table->string('unit')->default('kg')->after('low_stock_threshold');
+            $table->string('unit', 50)->default('piece')->after('low_stock_threshold');
             $table->date('harvest_date')->nullable()->after('unit');
             $table->string('crop_code')->nullable()->unique()->after('harvest_date');
             

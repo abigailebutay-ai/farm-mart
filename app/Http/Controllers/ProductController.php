@@ -13,24 +13,35 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = $this->marketplaceQuery($request);
 
-        if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('description', 'like', '%' . $request->search . '%');
-        }
-
-        if ($request->has('category') && $request->category !== '') {
-            $query->where('category', $request->category);
-        }
-
-        $products = $query->paginate(12);
+        $products = $query->latest()->paginate(12)->withQueryString();
         $categories = Product::select('category')->distinct()->get();
 
         return view('products.index', [
             'products' => $products,
             'categories' => $categories,
             'search' => $request->search ?? '',
+            'availability' => $request->availability ?? '',
+            'marketplaceRoute' => 'marketplace',
+        ]);
+    }
+
+    /**
+     * Display available products inside the consumer dashboard shell.
+     */
+    public function consumerMarketplace(Request $request)
+    {
+        $query = $this->marketplaceQuery($request)->where('quantity', '>', 0);
+
+        $products = $query->latest()->paginate(12)->withQueryString();
+        $categories = Product::where('quantity', '>', 0)->select('category')->distinct()->get();
+
+        return view('consumer.marketplace', [
+            'products' => $products,
+            'categories' => $categories,
+            'search' => $request->search ?? '',
+            'availability' => $request->availability ?? '',
         ]);
     }
 
@@ -53,13 +64,14 @@ class ProductController extends Controller
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:1',
+            'unit' => 'required|in:' . implode(',', Product::UNITS),
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:51200',
         ]);
 
         $validated['user_id'] = auth()->id();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $request->file('image')->store('products', config('filesystems.default'));
         }
 
         Product::create($validated);
@@ -97,19 +109,46 @@ class ProductController extends Controller
             'category' => 'required|string|max:100',
             'price' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:0',
+            'unit' => 'required|in:' . implode(',', Product::UNITS),
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
             if ($product->image) {
-                Storage::disk('public')->delete($product->image);
+                Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $validated['image'] = $request->file('image')->store('products', config('filesystems.default'));
         }
 
         $product->update($validated);
 
         return redirect()->route('farmer.products.index')->with('success', 'Product updated successfully!');
+    }
+
+    /**
+     * Update only inventory quantities for a farmer product.
+     */
+    public function updateInventory(Request $request, Product $product)
+    {
+        $this->authorize('update', $product);
+
+        $validated = $request->validate([
+            'mode' => 'nullable|in:set,add,reduce',
+            'quantity' => 'required|integer|min:0',
+        ]);
+
+        $mode = $validated['mode'] ?? 'set';
+        $quantity = (int) $validated['quantity'];
+
+        $newQuantity = match ($mode) {
+            'add' => $product->quantity + $quantity,
+            'reduce' => max($product->quantity - $quantity, 0),
+            default => $quantity,
+        };
+
+        $product->update(['quantity' => $newQuantity]);
+
+        return redirect()->route('farmer.inventory.index')->with('success', 'Inventory updated successfully!');
     }
 
     /**
@@ -120,7 +159,7 @@ class ProductController extends Controller
         $this->authorize('delete', $product);
 
         if ($product->image) {
-            Storage::disk('public')->delete($product->image);
+            Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
         }
 
         $product->delete();
@@ -135,5 +174,47 @@ class ProductController extends Controller
     {
         $products = auth()->user()->products()->paginate(10);
         return view('products.farmer-list', ['products' => $products]);
+    }
+
+    /**
+     * Show farmer inventory controls.
+     */
+    public function inventory()
+    {
+        $products = auth()->user()->products()->orderBy('quantity')->paginate(10);
+
+        return view('products.inventory', [
+            'products' => $products,
+            'totalInventoryQuantity' => auth()->user()->products()->sum('quantity'),
+            'lowStockCount' => auth()->user()->products()->whereBetween('quantity', [1, 10])->count(),
+            'outOfStockCount' => auth()->user()->products()->where('quantity', '<=', 0)->count(),
+            'recentStockActivity' => auth()->user()->products()->latest('updated_at')->limit(5)->get(),
+        ]);
+    }
+
+    private function marketplaceQuery(Request $request)
+    {
+        $query = Product::with('farmer');
+
+        if ($request->filled('search')) {
+            $query->where(function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->availability === 'in_stock') {
+            $query->where('quantity', '>', 10);
+        } elseif ($request->availability === 'low_stock') {
+            $query->whereBetween('quantity', [1, 10]);
+        } elseif ($request->availability === 'out_of_stock') {
+            $query->where('quantity', '<=', 0);
+        }
+
+        return $query;
     }
 }

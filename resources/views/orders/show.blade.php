@@ -3,11 +3,13 @@
 @section('page-title', 'Order #' . $order->id)
 
 @section('content')
+    @php($isBuyerOrder = auth()->user()->isConsumer())
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-2 space-y-6">
             <!-- Order Status -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="{{ $isBuyerOrder ? 'order-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Order #{{ $order->id }}</h2>
                 </div>
 
@@ -37,21 +39,20 @@
             </div>
 
             <!-- Order Items -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="{{ $isBuyerOrder ? 'order-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">Order Items</h3>
                 </div>
 
-                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                <div class="buyer-divider divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach($order->items as $item)
                         <div class="p-6 flex gap-6">
-                            @if($item->product->image)
-                                <img src="{{ asset('storage/' . $item->product->image) }}" alt="{{ $item->product->name }}" class="w-20 h-20 object-cover rounded-lg">
-                            @else
-                                <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                    <span class="text-gray-400 text-xs">No img</span>
-                                </div>
-                            @endif
+                            <x-ui.product-image
+                                :product="$item->product"
+                                image-class="h-20 w-20 rounded-lg object-cover"
+                                placeholder-class="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-200 text-gray-400 dark:bg-gray-700"
+                                icon-class="h-7 w-7"
+                            />
 
                             <div class="flex-1">
                                 <h4 class="font-semibold text-gray-900 dark:text-white mb-1">{{ $item->product->name }}</h4>
@@ -59,7 +60,7 @@
                                     From: <strong>{{ $item->farmer->name }}</strong>
                                 </p>
                                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    <p>Qty: {{ $item->quantity }} x ₱{{ number_format($item->price, 2) }}</p>
+                                    <p>Qty: {{ $item->quantity }} {{ $item->product->unit ?? 'piece' }} x ₱{{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
                                 </div>
                             </div>
 
@@ -73,8 +74,8 @@
             </div>
 
             <!-- Customer Info -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="{{ $isBuyerOrder ? 'buyer-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">
                         @if(auth()->user()->isFarmer())
                             Customer Information
@@ -151,8 +152,8 @@
 
         <!-- Order Summary Sidebar -->
         <div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden sticky top-24">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="{{ $isBuyerOrder ? 'receipt-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden sticky top-24">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Order Summary</h2>
                 </div>
 
@@ -175,6 +176,15 @@
                     </div>
 
                     <div class="pt-2">
+                        @if($isBuyerOrder && $order->status === 'completed')
+                            <a href="{{ route('consumer.orders.receipt', $order) }}" class="mb-3 block w-full rounded-lg bg-emerald-700 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-800">
+                                View Receipt
+                            </a>
+                        @elseif($isBuyerOrder)
+                            <div class="mb-3 rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-300">
+                                Receipt available after completion
+                            </div>
+                        @endif
                         <a href="{{ route('orders.index') }}" class="block w-full bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold text-center text-sm">
                             Back to Orders
                         </a>

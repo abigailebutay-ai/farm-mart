@@ -3,132 +3,70 @@
 @section('title', 'Register')
 
 @section('content')
-    <div class="max-w-lg mx-auto mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-green-600 to-green-500 p-6">
-            <h1 class="text-3xl font-bold text-white">Create Account</h1>
-            <p class="text-green-100 mt-2">Join Farmers Marketplace today</p>
+    <div class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+        <div class="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-emerald-900/5">
+            <div class="bg-gradient-to-r from-emerald-950 to-lime-800 p-6 text-white md:p-8">
+                <p class="text-sm font-black uppercase tracking-wide text-amber-300">Create Account</p>
+                <h1 class="mt-2 text-3xl font-black">Join Farm-Mart</h1>
+                <p class="mt-2 text-emerald-100">Register as a farmer seller or buyer to access the digital farm-to-market platform.</p>
+            </div>
+
+            <form method="POST" action="{{ route('register') }}" class="grid gap-5 p-6 md:grid-cols-2 md:p-8">
+                @csrf
+
+                <div class="md:col-span-2">
+                    <label for="name" class="mb-2 block text-sm font-bold text-slate-700">Full Name</label>
+                    <input type="text" id="name" name="name" value="{{ old('name') }}" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 @error('name') border-red-500 @enderror" placeholder="Juan Dela Cruz" autofocus>
+                    @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="email" class="mb-2 block text-sm font-bold text-slate-700">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 @error('email') border-red-500 @enderror" placeholder="your@email.com">
+                    @error('email')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="role" class="mb-2 block text-sm font-bold text-slate-700">Account Type</label>
+                    <select id="role" name="role" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                        <option value="">Select your role</option>
+                        <option value="consumer" @selected(old('role') === 'consumer')>Consumer (Buyer)</option>
+                        <option value="farmer" @selected(old('role') === 'farmer')>Farmer (Seller)</option>
+                    </select>
+                    @error('role')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="phone" class="mb-2 block text-sm font-bold text-slate-700">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" value="{{ old('phone') }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100" placeholder="09XX-XXX-XXXX">
+                    @error('phone')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="address" class="mb-2 block text-sm font-bold text-slate-700">Address</label>
+                    <input type="text" id="address" name="address" value="{{ old('address') }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100" placeholder="City, Province">
+                    @error('address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="password" class="mb-2 block text-sm font-bold text-slate-700">Password</label>
+                    <input type="password" id="password" name="password" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 @error('password') border-red-500 @enderror" placeholder="Create a password">
+                    @error('password')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="password_confirmation" class="mb-2 block text-sm font-bold text-slate-700">Confirm Password</label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" required class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100" placeholder="Confirm your password">
+                </div>
+
+                <div class="md:col-span-2">
+                    <x-ui.primary-button class="w-full py-3">Create Account</x-ui.primary-button>
+                    <p class="mt-4 text-center text-sm text-slate-500">
+                        Already have an account?
+                        <a href="{{ route('login') }}" class="font-bold text-emerald-800 hover:text-emerald-900">Login here</a>
+                    </p>
+                </div>
+            </form>
         </div>
-
-        <form method="POST" action="{{ route('register') }}" class="p-8 space-y-4">
-            @csrf
-
-            <div>
-                <label for="name" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Full Name</label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value="{{ old('name') }}"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('name') border-red-500 @enderror"
-                    placeholder="John Doe"
-                    autofocus
-                >
-                @error('name')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="email" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Email Address</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value="{{ old('email') }}"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('email') border-red-500 @enderror"
-                    placeholder="your@email.com"
-                >
-                @error('email')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="role" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">I am a:</label>
-                <select
-                    id="role"
-                    name="role"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
-                >
-                    <option value="">Select your role</option>
-                    <option value="consumer" @selected(old('role') === 'consumer')>Consumer (Buyer)</option>
-                    <option value="farmer" @selected(old('role') === 'farmer')>Farmer (Seller)</option>
-                </select>
-                @error('role')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="phone" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Phone Number (Optional)</label>
-                <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value="{{ old('phone') }}"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="09XX-XXX-XXXX"
-                >
-                @error('phone')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="address" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Address (Optional)</label>
-                <textarea
-                    id="address"
-                    name="address"
-                    rows="2"
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="123 Main St, City, Province"
-                >{{ old('address') }}</textarea>
-                @error('address')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="password" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Password</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600 @error('password') border-red-500 @enderror"
-                    placeholder="••••••••"
-                >
-                @error('password')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-            </div>
-
-            <div>
-                <label for="password_confirmation" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Confirm Password</label>
-                <input
-                    type="password"
-                    id="password_confirmation"
-                    name="password_confirmation"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
-                    placeholder="••••••••"
-                >
-            </div>
-
-            <button
-                type="submit"
-                class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition mt-6"
-            >
-                Create Account
-            </button>
-
-            <p class="text-center text-gray-600 dark:text-gray-400 mt-4">
-                Already have an account?
-                <a href="{{ route('login') }}" class="text-green-600 hover:text-green-700 font-semibold">Login here</a>
-            </p>
-        </form>
     </div>
 @endsection

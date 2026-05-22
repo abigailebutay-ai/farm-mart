@@ -1,135 +1,121 @@
 @extends('layouts.app')
 
-@section('page-title', 'Consumer Dashboard')
+@section('page-title', 'Buyer Dashboard')
 
 @section('content')
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Cart Items Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Items in Cart</h3>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ $cartItemsCount }}</p>
-                </div>
-                <div class="text-5xl opacity-20">🛒</div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a href="{{ route('cart.index') }}" class="text-sm text-green-600 dark:text-green-400 hover:text-green-700 font-medium">View Cart →</a>
-            </div>
-        </div>
+    <x-ui.page-header
+        title="Welcome to Farm-Mart, {{ auth()->user()->name }}"
+        subtitle="Browse fresh local products, manage your cart, and track farmer-to-buyer orders from checkout to completion."
+        action-url="{{ route('consumer.marketplace') }}"
+        action-label="Browse Marketplace"
+    />
 
-        <!-- Orders Card -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition transform hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-1">Orders Placed</h3>
-                    <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ $recentOrders->count() }}</p>
-                </div>
-                <div class="text-5xl opacity-20">📋</div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <a href="{{ route('orders.index') }}" class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 font-medium">View Orders →</a>
-            </div>
-        </div>
-
-        <!-- Browse Products Card -->
-        <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-6 shadow hover:shadow-lg transition">
-            <h3 class="text-gray-600 dark:text-gray-400 text-sm font-semibold mb-3">Explore</h3>
-            <a href="{{ route('products.index') }}" class="block w-full px-3 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition text-center">
-                🛍️ Browse Products
-            </a>
-        </div>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <x-ui.stat-card label="Available Products" :value="$availableProducts ?? 0" icon="products" trend="Fresh listings ready for buyers." />
+        <x-ui.stat-card label="Cart Items" :value="$cartItemsCount ?? 0" icon="cart" tone="amber" trend="Items ready for checkout." />
+        <x-ui.stat-card label="Pending Orders" :value="$pendingOrders ?? 0" icon="clock" tone="amber" trend="Orders waiting for confirmation." />
+        <x-ui.stat-card label="Completed Orders" :value="$completedOrders ?? 0" icon="check" tone="green" trend="Delivered or fulfilled orders." />
+        <x-ui.stat-card label="Total Purchases" :value="$totalPurchases ?? 0" icon="orders" tone="blue" trend="All buyer order records." />
     </div>
 
-    @if($recentOrders->count() > 0)
-        <div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-green-50 to-transparent dark:from-gray-700 dark:to-transparent">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">📋 Your Recent Orders</h2>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Order ID</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Items</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Total</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Date</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($recentOrders as $order)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">#{{ $order->id }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">{{ $order->items()->count() }}</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">₱{{ number_format($order->total, 2) }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <span class="px-3 py-1 rounded-full text-xs font-semibold
-                                        @if($order->status === 'pending') bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
-                                        @elseif($order->status === 'accepted') bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200
-                                        @elseif($order->status === 'completed') bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
-                                        @else bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 @endif">
-                                        {{ Str::ucfirst($order->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ $order->created_at->format('M d, Y') }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <a href="{{ route('orders.show', $order) }}" class="text-green-600 dark:text-green-400 hover:text-green-700 font-semibold transition">View</a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+    @if(($completedOrdersForFeedback ?? 0) > 0)
+        <div class="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+            <div class="flex gap-3">
+                <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700"><x-ui.icon name="star" /></span>
+                <div>
+                    <p class="font-bold">Feedback Reminder</p>
+                    <p class="mt-1 text-sm leading-relaxed">Help farmers improve by rating your completed orders.</p>
+                </div>
             </div>
         </div>
     @endif
 
-    <div>
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">✨ Recommended Products</h2>
-            <a href="{{ route('products.index') }}" class="text-green-600 dark:text-green-400 font-semibold hover:text-green-700 transition">View All →</a>
-        </div>
+    <div class="mt-5 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+        <x-ui.dashboard-card title="Recommended Products" subtitle="Fresh agricultural products available from local farmers.">
+            @if(($recommendedProducts ?? collect())->count() > 0)
+                <div class="grid gap-4 md:grid-cols-2">
+                    @foreach($recommendedProducts as $product)
+                        <x-ui.product-card :product="$product" compact />
+                    @endforeach
+                </div>
+            @else
+                <x-ui.empty-state title="No recommended products" message="Recommended products will appear once farmers list available inventory." icon="products" />
+            @endif
+        </x-ui.dashboard-card>
 
-        @if($recommendedProducts->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($recommendedProducts as $product)
-                    <div class="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-lg transition transform hover:-translate-y-1">
-                        @if($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-48 object-cover">
-                        @else
-                            <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                <span class="text-4xl">🌾</span>
+        <x-ui.dashboard-card title="Quick Actions" subtitle="Buyer shortcuts for common marketplace tasks.">
+            <div class="grid gap-3">
+                <x-ui.quick-action-card href="{{ route('consumer.marketplace') }}" title="Browse Marketplace" description="Find fresh local products." icon="products" />
+                <x-ui.quick-action-card href="{{ route('cart.index') }}" title="View Cart" description="Review items before checkout." icon="cart" />
+                <x-ui.quick-action-card href="{{ route('orders.index') }}" title="Track Orders" description="See pending and confirmed orders." icon="orders" />
+                <x-ui.quick-action-card href="{{ route('orders.index', ['status' => 'completed']) }}" title="Completed Orders" description="Review completed purchases and receipts." icon="check" />
+                <x-ui.quick-action-card href="{{ route('consumer.feedback') }}" title="Give Feedback" description="Share your Farm-Mart experience." icon="star" />
+            </div>
+        </x-ui.dashboard-card>
+    </div>
+
+    <div class="mt-5 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <x-ui.dashboard-card class="buyer-card" title="Order Tracking" subtitle="Recent order status from pending to completion.">
+            <div class="space-y-3">
+                @forelse($recentOrders ?? [] as $order)
+                    <div class="order-card rounded-2xl border p-4">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p class="buyer-text font-bold">Order #{{ $order->id }}</p>
+                                <p class="buyer-muted text-sm">{{ $order->items->count() }} items - PHP {{ number_format($order->total, 2) }}</p>
                             </div>
-                        @endif
-                        <div class="p-4">
-                            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ $product->name }}</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{{ $product->description }}</p>
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="text-lg font-bold text-green-600 dark:text-green-400">₱{{ number_format($product->price, 2) }}</span>
-                                <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">{{ $product->quantity }} left</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <x-ui.status-badge :status="$order->status" />
+                                <a href="{{ route('orders.show', $order) }}" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800">View</a>
+                                @if($order->status === 'completed')
+                                    <a href="{{ route('consumer.orders.receipt', $order) }}" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">Receipt</a>
+                                @endif
                             </div>
-                            <form method="POST" action="{{ route('cart.add', $product) }}" class="flex gap-2">
-                                @csrf
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition font-semibold">
-                                    Add to Cart
-                                </button>
-                                <a href="{{ route('products.show', $product) }}" class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition font-semibold text-center">
-                                    View
-                                </a>
-                            </form>
+                        </div>
+                        <div class="mt-4 grid grid-cols-4 gap-2 text-xs font-semibold text-slate-400">
+                            @foreach(['Pending', 'Accepted', 'Preparing', 'Completed'] as $step)
+                                <div class="rounded-full px-2 py-1 text-center {{ strtolower($order->status) === strtolower($step) ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200' : 'buyer-card buyer-muted' }}">{{ $step }}</div>
+                            @endforeach
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <x-ui.empty-state title="No orders yet" message="Your order tracking details will appear after checkout." action-url="{{ route('consumer.marketplace') }}" action-label="Browse Products" icon="orders" />
+                @endforelse
             </div>
-        @else
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-12 text-center">
-                <p class="text-2xl mb-4">🌾</p>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">No products available at the moment</p>
-                <a href="{{ route('products.index') }}" class="inline-block px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Browse All Products</a>
-            </div>
-        @endif
+        </x-ui.dashboard-card>
+
+        <x-ui.table-card class="receipt-card" title="Recent Completed Orders" subtitle="Completed purchases with receipt access.">
+            <thead>
+                <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <th class="px-5 py-3">Order</th>
+                    <th class="px-5 py-3">Date</th>
+                    <th class="px-5 py-3">Amount</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">Receipt</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @forelse($recentCompletedOrders ?? [] as $order)
+                    <tr>
+                        <td class="px-5 py-4 text-sm font-bold">#{{ $order->id }}</td>
+                        <td class="purchase-date px-5 py-4 text-sm">{{ optional($order->created_at)->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm font-bold">PHP {{ number_format($order->total, 2) }}</td>
+                        <td class="px-5 py-4"><x-ui.status-badge :status="$order->status" /></td>
+                        <td class="px-5 py-4">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('orders.show', $order) }}" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/40">View</a>
+                                <a href="{{ route('consumer.orders.receipt', $order) }}" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">Receipt</a>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="5" class="px-5 py-5"><x-ui.empty-state title="No purchase history" message="Completed purchases will appear here." icon="orders" /></td></tr>
+                @endforelse
+            </tbody>
+        </x-ui.table-card>
+
+        <div class="xl:col-start-2">
+            <x-ui.secondary-button href="{{ route('orders.index', ['status' => 'completed']) }}" class="w-full">View All Completed Orders</x-ui.secondary-button>
+        </div>
     </div>
 @endsection

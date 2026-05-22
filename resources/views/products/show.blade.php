@@ -3,81 +3,77 @@
 @section('page-title', $product->name)
 
 @section('content')
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div>
-            @if($product->image)
-                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-96 object-cover rounded-lg">
-            @else
-                <div class="w-full h-96 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-lg">
-                    <span class="text-gray-400">No Image Available</span>
+    @php
+        $stockStatus = $product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock');
+        $unit = $product->unit ?? 'piece';
+    @endphp
+
+    <div class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+        <div class="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
+            <x-ui.product-image
+                :product="$product"
+                image-class="h-[28rem] w-full object-cover"
+                placeholder-class="flex h-[28rem] w-full items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-yellow-50 text-emerald-800"
+                icon-class="h-20 w-20"
+            />
+        </div>
+
+        <div class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm md:p-8">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-emerald-800">{{ $product->category }}</span>
+                <x-ui.status-badge :status="$stockStatus" />
+            </div>
+
+            <h1 class="mt-5 text-4xl font-black tracking-tight text-slate-900">{{ $product->name }}</h1>
+            <p class="mt-4 leading-relaxed text-slate-600">{{ $product->description }}</p>
+
+            <div class="mt-6 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl bg-yellow-50 p-5">
+                    <p class="text-xs font-black uppercase tracking-wide text-slate-500">Price</p>
+                    <p class="mt-2 text-3xl font-black text-emerald-800">PHP {{ number_format($product->price, 2) }} / {{ $unit }}</p>
                 </div>
-            @endif
-        </div>
-
-        <div class="space-y-6">
-            <div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Category</p>
-                <p class="text-lg text-gray-900 dark:text-white font-semibold">{{ $product->category }}</p>
+                <div class="rounded-2xl bg-emerald-50 p-5">
+                    <p class="text-xs font-black uppercase tracking-wide text-slate-500">Available Stock</p>
+                    <p class="mt-2 text-3xl font-black text-emerald-900">{{ $product->quantity }} {{ $unit }}</p>
+                </div>
             </div>
 
-            <div>
-                <h1 class="text-4xl font-bold text-gray-900 dark:text-white">{{ $product->name }}</h1>
+            <div class="mt-6 rounded-2xl border border-slate-100 p-5">
+                <p class="text-xs font-black uppercase tracking-wide text-slate-500">Sold by</p>
+                <div class="mt-3 flex items-center gap-3">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-800">
+                        <x-ui.icon name="farmer" />
+                    </span>
+                    <div>
+                        <p class="font-bold text-slate-900">{{ optional($product->farmer)->name ?? 'Local Farmer' }}</p>
+                        <p class="text-sm text-slate-500">{{ optional($product->farmer)->address ?? 'Address not provided' }}</p>
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Sold by</p>
-                <p class="text-lg text-gray-900 dark:text-white font-semibold">{{ $product->farmer->name }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ $product->farmer->address }}</p>
-            </div>
-
-            <div class="bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Price</p>
-                <p class="text-4xl font-bold text-green-600 dark:text-green-400">₱{{ number_format($product->price, 2) }}</p>
-            </div>
-
-            <div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Availability</p>
-                @if($product->quantity > 0)
-                    <p class="text-lg text-green-600 dark:text-green-400 font-semibold">{{ $product->quantity }} in stock</p>
+            <div class="mt-6">
+                @auth
+                    @if(auth()->user()->isConsumer() && $product->quantity > 0)
+                        <form method="POST" action="{{ route('cart.add', $product) }}" class="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                            @csrf
+                            <div>
+                                <label for="quantity" class="mb-2 block text-sm font-bold text-slate-700">Quantity ({{ $unit }})</label>
+                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ $product->quantity }}" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                            </div>
+                            <x-ui.primary-button class="py-3">Add to Cart</x-ui.primary-button>
+                        </form>
+                    @elseif(auth()->user()->isConsumer())
+                        <x-ui.secondary-button href="{{ route('consumer.marketplace') }}">Back to Marketplace</x-ui.secondary-button>
+                    @else
+                        <x-ui.secondary-button href="{{ route('marketplace') }}">Back to Marketplace</x-ui.secondary-button>
+                    @endif
                 @else
-                    <p class="text-lg text-red-600 dark:text-red-400 font-semibold">Out of Stock</p>
-                @endif
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <x-ui.primary-button href="{{ route('login') }}" class="py-3">Login to Buy</x-ui.primary-button>
+                        <x-ui.secondary-button href="{{ route('register') }}" class="py-3">Create Account</x-ui.secondary-button>
+                    </div>
+                @endauth
             </div>
-
-            @auth
-                @if(auth()->user()->isConsumer() && $product->quantity > 0)
-                    <form method="POST" action="{{ route('cart.add', $product) }}" class="flex items-end gap-4">
-                        @csrf
-                        <div class="flex-1">
-                            <label for="quantity" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Quantity</label>
-                            <input
-                                type="number"
-                                id="quantity"
-                                name="quantity"
-                                value="1"
-                                min="1"
-                                max="{{ $product->quantity }}"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
-                            >
-                        </div>
-                        <button
-                            type="submit"
-                            class="bg-green-600 text-white px-8 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
-                        >
-                            Add to Cart
-                        </button>
-                    </form>
-                @endif
-            @else
-                <a href="{{ route('login') }}" class="block w-full bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition font-semibold text-center">
-                    Login to Buy
-                </a>
-            @endauth
         </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 rounded-lg p-8">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Product Description</h2>
-        <p class="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{{ $product->description }}</p>
     </div>
 @endsection

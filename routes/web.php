@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -12,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::view('/about', 'public.about')->name('about');
+Route::get('/marketplace', [ProductController::class, 'index'])->name('marketplace');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
@@ -66,8 +70,21 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+// Consumer routes
+Route::middleware(['auth', 'role:consumer'])->prefix('consumer')->name('consumer.')->group(function () {
+    Route::get('/marketplace', [ProductController::class, 'consumerMarketplace'])->name('marketplace');
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback');
+    Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+    Route::get('/purchase-history', [OrderController::class, 'purchaseHistory'])->name('purchase-history');
+    Route::get('/orders/{order}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
+});
+
 // Farmer routes
 Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->group(function () {
+    Route::get('/decision-support', [DashboardController::class, 'farmerDecisionSupport'])->name('decision-support');
+    Route::get('/sales-summary', [DashboardController::class, 'farmerSalesSummary'])->name('sales-summary');
+    Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory.index');
+    Route::patch('/inventory/{product}', [ProductController::class, 'updateInventory'])->name('inventory.update');
     Route::get('/products', [ProductController::class, 'farmerProducts'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('/products', [ProductController::class, 'store'])->name('products.store');
@@ -76,4 +93,14 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 });
 
-
+// Admin routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products', [AdminController::class, 'products'])->name('products');
+    Route::get('/user-reports', [AdminController::class, 'userReports'])->name('user-reports');
+    Route::get('/announcements', [AdminController::class, 'announcements'])->name('announcements');
+    Route::get('/activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs');
+    Route::patch('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
+    Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
+    Route::patch('/feedback/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('feedback.read');
+    Route::patch('/feedback/{feedback}/resolve', [AdminController::class, 'resolveFeedback'])->name('feedback.resolve');
+});
