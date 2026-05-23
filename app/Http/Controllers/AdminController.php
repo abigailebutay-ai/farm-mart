@@ -18,6 +18,15 @@ class AdminController extends Controller
         ]);
     }
 
+    public function showProduct(Product $product)
+    {
+        $product->load('farmer');
+
+        return view('admin.products.show', [
+            'product' => $product,
+        ]);
+    }
+
     public function userReports()
     {
         $users = User::whereIn('role', ['farmer', 'consumer', 'buyer'])

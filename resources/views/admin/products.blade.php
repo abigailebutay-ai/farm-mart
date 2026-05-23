@@ -52,7 +52,7 @@
                     <td class="px-5 py-4"><x-ui.status-badge :status="$listingStatus" /></td>
                     <td class="px-5 py-4 text-sm text-slate-500">{{ optional($product->created_at)->format('M d, Y') }}</td>
                     <td class="px-5 py-4">
-                        <x-ui.secondary-button href="{{ route('products.show', $product) }}" class="px-3 py-1.5 text-xs">View</x-ui.secondary-button>
+                        <x-ui.secondary-button href="{{ route('admin.products.show', $product) }}" class="px-3 py-1.5 text-xs">View</x-ui.secondary-button>
                     </td>
                 </tr>
             @empty

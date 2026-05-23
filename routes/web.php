@@ -96,6 +96,7 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
 // Admin routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/products', [AdminController::class, 'products'])->name('products');
+    Route::get('/products/{product}', [AdminController::class, 'showProduct'])->name('products.show');
     Route::get('/user-reports', [AdminController::class, 'userReports'])->name('user-reports');
     Route::get('/announcements', [AdminController::class, 'announcements'])->name('announcements');
     Route::get('/activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs');

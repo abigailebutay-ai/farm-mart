@@ -154,11 +154,6 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <div class="relative hidden lg:block">
-                            <x-ui.icon name="products" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input type="search" placeholder="Search workspace" class="w-56 rounded-xl border border-slate-200 bg-stone-50 py-2 pl-9 pr-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100">
-                        </div>
-
                         <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="toggleTheme()" :aria-pressed="theme === 'dark'" aria-label="Toggle light and dark mode">
                             <x-ui.icon name="sun" class="h-4 w-4 dark:hidden" />
                             <x-ui.icon name="moon" class="hidden h-4 w-4 dark:block" />
