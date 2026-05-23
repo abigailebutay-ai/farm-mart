@@ -2,6 +2,7 @@
     'product' => null,
     'src' => null,
     'alt' => null,
+    'class' => null,
     'imageClass' => 'h-20 w-20 rounded-xl object-cover',
     'placeholderClass' => 'flex h-20 w-20 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800',
     'iconClass' => 'h-8 w-8',
@@ -14,6 +15,7 @@
     $imagePath = $src ?? $product?->image;
     $imageUrl = null;
     $altText = $alt ?? $product?->name ?? 'Product image';
+    $resolvedImageClass = $class ?: $imageClass;
 
     if (! empty($imagePath)) {
         $imagePath = str_replace('\\', '/', (string) $imagePath);
@@ -36,7 +38,7 @@
     <img
         src="{{ $imageUrl }}"
         alt="{{ $altText }}"
-        class="{{ $imageClass }}"
+        class="{{ $resolvedImageClass }}"
         loading="lazy"
         onerror="this.classList.add('hidden'); this.nextElementSibling?.classList.remove('hidden');"
     >

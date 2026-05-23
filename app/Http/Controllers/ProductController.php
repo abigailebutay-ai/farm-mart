@@ -71,7 +71,7 @@ class ProductController extends Controller
         $validated['user_id'] = auth()->id();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', config('filesystems.default'));
+            $validated['image'] = $request->file('image')->storePublicly('products', config('filesystems.default'));
         }
 
         Product::create($validated);
@@ -117,7 +117,7 @@ class ProductController extends Controller
             if ($product->image) {
                 Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
             }
-            $validated['image'] = $request->file('image')->store('products', config('filesystems.default'));
+            $validated['image'] = $request->file('image')->storePublicly('products', config('filesystems.default'));
         }
 
         $product->update($validated);
