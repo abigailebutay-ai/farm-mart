@@ -29,7 +29,17 @@
                 }
             }
 
-            $imageUrl = Storage::disk(config('filesystems.default'))->url(ltrim($imagePath, '/'));
+            $imagePath = ltrim($imagePath, '/');
+            $diskName = config('filesystems.default');
+            $disk = Storage::disk($diskName);
+
+            try {
+                $imageUrl = $diskName === 's3'
+                    ? $disk->temporaryUrl($imagePath, now()->addMinutes(30))
+                    : $disk->url($imagePath);
+            } catch (\Throwable $e) {
+                $imageUrl = null;
+            }
         }
     }
 @endphp
