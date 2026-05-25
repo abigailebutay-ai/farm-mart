@@ -135,6 +135,26 @@
             </div>
         </section>
 
+        @if(($publishedAnnouncements ?? collect())->isNotEmpty())
+            <section class="border-y border-emerald-100 bg-white dark:border-gray-800 dark:bg-gray-950">
+                <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                    <div class="mb-5">
+                        <p class="text-xs font-black uppercase tracking-wide text-amber-600">Announcements</p>
+                        <h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">Latest Farm-Mart Updates</h2>
+                    </div>
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        @foreach($publishedAnnouncements as $announcement)
+                            <article class="rounded-2xl border border-slate-100 bg-stone-50/80 p-4 dark:border-gray-800 dark:bg-gray-900">
+                                <p class="text-sm font-black text-slate-900 dark:text-white">{{ $announcement->title }}</p>
+                                <p class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-gray-400">{{ \Illuminate\Support\Str::limit($announcement->body, 140) }}</p>
+                                <p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{{ optional($announcement->published_at)->format('M d, Y') }}</p>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endif
+
         <section class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>

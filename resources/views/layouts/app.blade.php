@@ -55,7 +55,7 @@
                 ['label' => 'User Reports', 'href' => route('admin.user-reports'), 'active' => 'admin.user-reports', 'icon' => 'users'],
                 ['label' => 'Products', 'href' => route('admin.products'), 'active' => 'admin.products', 'icon' => 'products'],
                 ['label' => 'Orders', 'href' => route('orders.index'), 'active' => 'orders.*', 'icon' => 'orders'],
-                ['label' => 'Announcements', 'href' => route('admin.announcements'), 'active' => 'admin.announcements', 'icon' => 'megaphone'],
+                ['label' => 'Announcements', 'href' => route('admin.announcements.index'), 'active' => 'admin.announcements.*', 'icon' => 'megaphone'],
                 ['label' => 'Activity Logs', 'href' => route('admin.activity-logs'), 'active' => 'admin.activity-logs', 'icon' => 'activity'],
             ];
         } elseif ($user->isFarmer()) {

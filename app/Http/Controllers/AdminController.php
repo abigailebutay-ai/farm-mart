@@ -133,13 +133,6 @@ class AdminController extends Controller
         return back()->with('success', 'User rejected successfully.');
     }
 
-    public function announcements()
-    {
-        return view('admin.announcements', [
-            'announcements' => collect(),
-        ]);
-    }
-
     public function activityLogs()
     {
         $activityLogs = collect()

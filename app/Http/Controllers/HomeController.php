@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Announcement;
 use App\Models\Order;
 use App\Models\Product;
 
@@ -33,6 +34,10 @@ class HomeController extends Controller
             'recentOrder' => Order::with(['consumer', 'items.product'])
                 ->latest()
                 ->first(),
+            'publishedAnnouncements' => Announcement::where('status', 'published')
+                ->latest('published_at')
+                ->limit(5)
+                ->get(),
         ]);
     }
 }

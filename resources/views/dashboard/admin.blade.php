@@ -128,7 +128,7 @@
                 <x-ui.quick-action-card href="{{ route('admin.products') }}" title="Manage Products" description="Review marketplace listings." icon="products" />
                 <x-ui.quick-action-card href="{{ route('orders.index') }}" title="View Orders" description="Monitor order fulfillment." icon="orders" />
                 <x-ui.quick-action-card href="{{ route('admin.user-reports') }}" title="Generate Reports" description="Review user verification and account summaries." icon="report" />
-                <x-ui.quick-action-card href="{{ route('admin.announcements') }}" title="Manage Announcements" description="Publish platform updates." icon="megaphone" />
+                <x-ui.quick-action-card href="{{ route('admin.announcements.index') }}" title="Manage Announcements" description="Publish platform updates." icon="megaphone" />
                 <x-ui.quick-action-card href="{{ route('admin.activity-logs') }}" title="View Activity Logs" description="Audit marketplace activity." icon="activity" />
             </div>
         </x-ui.dashboard-card>
