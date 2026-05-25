@@ -210,7 +210,7 @@ class DashboardController extends Controller
 
         return view('prints.farmer-sales-summary', [
             'farmer' => $user,
-            'dateGenerated' => now(),
+            'reportDate' => now(),
             'totalSales' => $completedItems->sum('subtotal'),
             'completedOrderCount' => $completedItems->pluck('order_id')->unique()->count(),
             'soldProductsCount' => $productRows->count(),

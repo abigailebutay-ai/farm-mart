@@ -214,7 +214,7 @@ class ProductController extends Controller
 
         return view('prints.farmer-inventory', [
             'farmer' => $user,
-            'dateGenerated' => now(),
+            'reportDate' => now(),
             'products' => $user->products()->orderBy('name')->get(),
         ]);
     }

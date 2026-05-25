@@ -2,7 +2,7 @@
 
 @section('print-title', 'Sales Summary Report - Farm-Mart')
 @section('print-heading', 'Sales Summary Report')
-@section('print-generated', $dateGenerated->timezone(config('app.timezone'))->format('M d, Y h:i A'))
+@section('print-report-date', $reportDate->timezone(config('app.timezone'))->format('M d, Y h:i A'))
 @section('print-meta')
     Farmer: {{ $farmer->name }}
 @endsection

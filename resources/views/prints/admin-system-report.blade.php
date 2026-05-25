@@ -2,7 +2,7 @@
 
 @section('print-title', 'Admin System Report - Farm-Mart')
 @section('print-heading', 'Admin System Report')
-@section('print-generated', $dateGenerated->timezone(config('app.timezone'))->format('M d, Y h:i A'))
+@section('print-report-date', $reportDate->timezone(config('app.timezone'))->format('M d, Y h:i A'))
 
 @section('content')
     <section class="print-summary">

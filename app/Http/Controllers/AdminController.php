@@ -30,7 +30,7 @@ class AdminController extends Controller
     public function printSystemReport()
     {
         return view('prints.admin-system-report', [
-            'dateGenerated' => now(),
+            'reportDate' => now(),
             'totalUsers' => User::count(),
             'totalFarmers' => User::where('role', 'farmer')->count(),
             'totalBuyers' => User::whereIn('role', ['consumer', 'buyer'])->count(),
@@ -49,7 +49,7 @@ class AdminController extends Controller
     public function printProductsReport()
     {
         return view('prints.admin-products-report', [
-            'dateGenerated' => now(),
+            'reportDate' => now(),
             'products' => Product::with('farmer')->latest()->get(),
         ]);
     }
@@ -57,7 +57,7 @@ class AdminController extends Controller
     public function printOrdersReport()
     {
         return view('prints.admin-orders-report', [
-            'dateGenerated' => now(),
+            'reportDate' => now(),
             'orders' => Order::with(['consumer', 'items.farmer'])->withCount('items')->latest()->get(),
         ]);
     }
