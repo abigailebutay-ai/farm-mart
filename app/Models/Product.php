@@ -59,7 +59,7 @@ class Product extends Model
 
         try {
             if ($diskName === 's3') {
-                return $disk->temporaryUrl($path, now()->addMinutes(60));
+                return $disk->url($path);
             }
 
             return $disk->url($path);
