@@ -159,11 +159,7 @@ class DashboardController extends Controller
     public function farmerSalesSummary()
     {
         $user = auth()->user();
-        $completedItems = OrderItem::with(['product', 'order'])
-            ->where('farmer_id', $user->id)
-            ->whereHas('order', fn ($query) => $query->where('status', 'completed'))
-            ->latest()
-            ->get();
+        $completedItems = $this->farmerCompletedSalesItems($user);
 
         $monthlyRows = $completedItems
             ->groupBy(fn ($item) => optional($item->created_at)->format('F Y') ?? 'Unspecified')
@@ -182,6 +178,49 @@ class DashboardController extends Controller
             'monthlyRows' => $monthlyRows,
             'recentSales' => $completedItems->take(8),
         ]);
+    }
+
+    /**
+     * Printable farmer sales summary report.
+     */
+    public function printFarmerSalesSummary()
+    {
+        $user = auth()->user();
+        $completedItems = $this->farmerCompletedSalesItems($user);
+
+        $productRows = $completedItems
+            ->groupBy(fn ($item) => $item->product_id ?: 'deleted-' . ($item->product->name ?? 'product'))
+            ->map(function ($items) {
+                $firstItem = $items->first();
+                $product = $firstItem->product;
+
+                return [
+                    'name' => $product->name ?? 'Product unavailable',
+                    'unit' => $product->unit ?? 'piece',
+                    'quantity' => $items->sum('quantity'),
+                    'revenue' => $items->sum('subtotal'),
+                ];
+            })
+            ->sortBy('name')
+            ->values();
+
+        return view('prints.farmer-sales-summary', [
+            'farmer' => $user,
+            'dateGenerated' => now(),
+            'totalSales' => $completedItems->sum('subtotal'),
+            'completedOrderCount' => $completedItems->pluck('order_id')->unique()->count(),
+            'soldProductsCount' => $productRows->count(),
+            'productRows' => $productRows,
+        ]);
+    }
+
+    private function farmerCompletedSalesItems($user)
+    {
+        return OrderItem::with(['product', 'order'])
+            ->where('farmer_id', $user->id)
+            ->whereHas('order', fn ($query) => $query->where('status', 'completed'))
+            ->latest()
+            ->get();
     }
 
     /**

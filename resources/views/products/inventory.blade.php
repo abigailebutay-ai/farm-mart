@@ -8,6 +8,12 @@
         subtitle="Manage stock quantities, low-stock status, and availability without changing product descriptions, images, or pricing."
     />
 
+    <div class="mb-5 flex justify-end">
+        <x-ui.secondary-button href="{{ route('farmer.inventory.print') }}">
+            Print Inventory
+        </x-ui.secondary-button>
+    </div>
+
     <div class="grid gap-4 md:grid-cols-3">
         <x-ui.stat-card label="Total Stock Quantity" :value="$totalInventoryQuantity ?? 0" icon="inventory" tone="blue" trend="Combined stock across all listings." />
         <x-ui.stat-card label="Low-Stock Products" :value="$lowStockCount ?? 0" icon="alert" tone="amber" trend="Products with 1 to 10 units remaining." />

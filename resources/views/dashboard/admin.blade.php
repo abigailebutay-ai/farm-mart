@@ -8,6 +8,12 @@
         subtitle="Monitor users, farmer products, buyer orders, verification activity, and overall digital supply chain performance."
     />
 
+    <div class="mb-5 flex justify-end">
+        <x-ui.secondary-button href="{{ route('admin.system-report.print') }}">
+            Print System Report
+        </x-ui.secondary-button>
+    </div>
+
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <x-ui.stat-card label="Total Users" :value="$totalUsers ?? 0" icon="users" trend="All registered system accounts." />
         <x-ui.stat-card label="Pending Verifications" :value="$pendingUsersCount ?? 0" icon="clock" tone="amber" trend="Users waiting for admin review." />

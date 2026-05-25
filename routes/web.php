@@ -83,7 +83,9 @@ Route::middleware(['auth', 'role:consumer'])->prefix('consumer')->name('consumer
 Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->group(function () {
     Route::get('/decision-support', [DashboardController::class, 'farmerDecisionSupport'])->name('decision-support');
     Route::get('/sales-summary', [DashboardController::class, 'farmerSalesSummary'])->name('sales-summary');
+    Route::get('/sales-summary/print', [DashboardController::class, 'printFarmerSalesSummary'])->name('sales-summary.print');
     Route::get('/inventory', [ProductController::class, 'inventory'])->name('inventory.index');
+    Route::get('/inventory/print', [ProductController::class, 'printInventory'])->name('inventory.print');
     Route::patch('/inventory/{product}', [ProductController::class, 'updateInventory'])->name('inventory.update');
     Route::get('/products', [ProductController::class, 'farmerProducts'])->name('products.index');
     Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
@@ -95,8 +97,11 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
 
 // Admin routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/system-report/print', [AdminController::class, 'printSystemReport'])->name('system-report.print');
     Route::get('/products', [AdminController::class, 'products'])->name('products');
+    Route::get('/products-report/print', [AdminController::class, 'printProductsReport'])->name('products.print');
     Route::get('/products/{product}', [AdminController::class, 'showProduct'])->name('products.show');
+    Route::get('/orders-report/print', [AdminController::class, 'printOrdersReport'])->name('orders.print');
     Route::get('/user-reports', [AdminController::class, 'userReports'])->name('user-reports');
     Route::get('/announcements', [AdminController::class, 'announcements'])->name('announcements');
     Route::get('/activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs');

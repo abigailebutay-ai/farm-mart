@@ -8,6 +8,12 @@
         subtitle="Revenue-focused summary of completed farmer orders and recent product sales."
     />
 
+    <div class="mb-5 flex justify-end">
+        <x-ui.secondary-button href="{{ route('farmer.sales-summary.print') }}">
+            Print Report
+        </x-ui.secondary-button>
+    </div>
+
     <div class="grid gap-4 md:grid-cols-3">
         <x-ui.stat-card label="Total Sales" value="PHP {{ number_format($totalSales ?? 0, 2) }}" icon="money" tone="green" trend="Revenue from completed orders." />
         <x-ui.stat-card label="Completed Orders" :value="$completedOrderCount ?? 0" icon="orders" tone="green" trend="Unique completed orders containing your products." />

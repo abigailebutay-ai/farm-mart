@@ -192,6 +192,20 @@ class ProductController extends Controller
         ]);
     }
 
+    /**
+     * Printable farmer inventory report.
+     */
+    public function printInventory()
+    {
+        $user = auth()->user();
+
+        return view('prints.farmer-inventory', [
+            'farmer' => $user,
+            'dateGenerated' => now(),
+            'products' => $user->products()->orderBy('name')->get(),
+        ]);
+    }
+
     private function marketplaceQuery(Request $request)
     {
         $query = Product::with('farmer');

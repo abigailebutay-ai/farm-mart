@@ -27,6 +27,41 @@ class AdminController extends Controller
         ]);
     }
 
+    public function printSystemReport()
+    {
+        return view('prints.admin-system-report', [
+            'dateGenerated' => now(),
+            'totalUsers' => User::count(),
+            'totalFarmers' => User::where('role', 'farmer')->count(),
+            'totalBuyers' => User::whereIn('role', ['consumer', 'buyer'])->count(),
+            'totalProducts' => Product::count(),
+            'pendingVerifications' => User::whereIn('role', ['farmer', 'consumer', 'buyer'])
+                ->get()
+                ->filter(fn (User $user) => $this->isPendingVerificationUser($user))
+                ->count(),
+            'totalOrders' => Order::count(),
+            'completedOrders' => Order::where('status', 'completed')->count(),
+            'cancelledOrders' => Order::where('status', 'cancelled')->count(),
+            'totalRevenue' => Order::where('status', 'completed')->sum('total'),
+        ]);
+    }
+
+    public function printProductsReport()
+    {
+        return view('prints.admin-products-report', [
+            'dateGenerated' => now(),
+            'products' => Product::with('farmer')->latest()->get(),
+        ]);
+    }
+
+    public function printOrdersReport()
+    {
+        return view('prints.admin-orders-report', [
+            'dateGenerated' => now(),
+            'orders' => Order::with(['consumer', 'items.farmer'])->withCount('items')->latest()->get(),
+        ]);
+    }
+
     public function userReports()
     {
         $users = User::whereIn('role', ['farmer', 'consumer', 'buyer'])

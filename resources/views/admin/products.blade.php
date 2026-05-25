@@ -8,6 +8,12 @@
         subtitle="Monitor farmer product listings, stock status, prices, categories, and availability."
     />
 
+    <div class="mb-5 flex justify-end">
+        <x-ui.secondary-button href="{{ route('admin.products.print') }}">
+            Print Products Report
+        </x-ui.secondary-button>
+    </div>
+
     <x-ui.table-card title="Product Listings" subtitle="All farmer marketplace listings currently recorded in the system.">
         <thead class="bg-slate-50">
             <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">

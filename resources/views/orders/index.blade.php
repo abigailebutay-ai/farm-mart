@@ -21,6 +21,14 @@
         subtitle="{{ $isBuyerOrders ? 'Track every order status, review completed purchases, and open printable receipts.' : 'Track farmer-to-buyer transactions and monitor each order status clearly.' }}"
     />
 
+    @if(auth()->user()->isAdmin())
+        <div class="mb-5 flex justify-end">
+            <x-ui.secondary-button href="{{ route('admin.orders.print') }}">
+                Print Orders Report
+            </x-ui.secondary-button>
+        </div>
+    @endif
+
     @if($isBuyerOrders)
         <div class="mb-5 flex flex-wrap gap-2">
             @foreach($statusLabels as $value => $label)
