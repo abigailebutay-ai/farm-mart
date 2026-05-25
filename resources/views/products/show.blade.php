@@ -11,7 +11,7 @@
     <div class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
         <div class="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-sm">
             <x-ui.product-image
-                :src="$product->image"
+                :product="$product"
                 :alt="$product->name"
                 image-class="h-[28rem] w-full object-cover"
                 placeholder-class="flex h-[28rem] w-full items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-yellow-50 text-emerald-800"

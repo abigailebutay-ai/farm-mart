@@ -50,9 +50,22 @@ class Product extends Model
 
         $path = $this->image_storage_path;
 
-        return $path
-            ? Storage::disk(config('filesystems.default'))->url($path)
-            : null;
+        if (! $path) {
+            return null;
+        }
+
+        $diskName = config('filesystems.default');
+        $disk = Storage::disk($diskName);
+
+        try {
+            if ($diskName === 's3') {
+                return $disk->temporaryUrl($path, now()->addMinutes(60));
+            }
+
+            return $disk->url($path);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function getImageStoragePathAttribute(): ?string

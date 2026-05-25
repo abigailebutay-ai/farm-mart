@@ -15,7 +15,7 @@
                         @foreach($cart->items as $item)
                             <div class="p-6 flex gap-6 hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <x-ui.product-image
-                                    :src="$item->product->image"
+                                    :product="$item->product"
                                     :alt="$item->product->name"
                                     image-class="h-24 w-24 rounded-lg object-cover"
                                     placeholder-class="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-200 text-gray-400 dark:bg-gray-700"

@@ -17,7 +17,9 @@
     $altText = $alt ?? $product?->name ?? 'Product image';
     $resolvedImageClass = $class ?: $imageClass;
 
-    if (! empty($imagePath)) {
+    if ($product && (! $src || $src === $product->image)) {
+        $imageUrl = $product->image_url;
+    } elseif (! empty($imagePath)) {
         $imagePath = str_replace('\\', '/', (string) $imagePath);
 
         if (Str::startsWith($imagePath, ['http://', 'https://'])) {
@@ -35,7 +37,7 @@
 
             try {
                 $imageUrl = $diskName === 's3'
-                    ? $disk->temporaryUrl($imagePath, now()->addMinutes(30))
+                    ? $disk->temporaryUrl($imagePath, now()->addMinutes(60))
                     : $disk->url($imagePath);
             } catch (\Throwable $e) {
                 $imageUrl = null;

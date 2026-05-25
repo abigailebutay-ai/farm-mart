@@ -14,7 +14,7 @@
     <a href="{{ route('products.show', $product) }}" class="block">
         <div class="relative">
             <x-ui.product-image
-                :src="$product->image"
+                :product="$product"
                 :alt="$product->name"
                 :image-class="($compact ? 'h-36' : 'h-48') . ' w-full object-cover'"
                 :placeholder-class="($compact ? 'h-36' : 'h-48') . ' flex w-full items-center justify-center bg-gradient-to-br from-emerald-50 via-lime-50 to-yellow-50 text-emerald-800'"

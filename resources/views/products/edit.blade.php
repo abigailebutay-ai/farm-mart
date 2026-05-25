@@ -62,7 +62,7 @@
                 @if($product->image)
                     <div class="mb-4">
                         <x-ui.product-image
-                            :src="$product->image"
+                            :product="$product"
                             :alt="$product->name"
                             image-class="h-48 rounded-lg object-cover shadow-sm"
                             placeholder-class="flex h-48 w-48 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 shadow-sm"

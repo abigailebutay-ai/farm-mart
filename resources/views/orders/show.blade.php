@@ -48,7 +48,7 @@
                     @foreach($order->items as $item)
                         <div class="p-6 flex gap-6">
                             <x-ui.product-image
-                                :src="$item->product->image"
+                                :product="$item->product"
                                 :alt="$item->product->name"
                                 image-class="h-20 w-20 rounded-lg object-cover"
                                 placeholder-class="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-200 text-gray-400 dark:bg-gray-700"

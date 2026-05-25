@@ -17,7 +17,7 @@
     <div class="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
         <x-ui.dashboard-card title="Product Image" subtitle="Current product listing image.">
             <x-ui.product-image
-                :src="$product->image"
+                :product="$product"
                 :alt="$product->name"
                 image-class="h-80 w-full rounded-2xl object-cover"
                 placeholder-class="flex h-80 w-full items-center justify-center rounded-2xl bg-emerald-50 text-emerald-800"

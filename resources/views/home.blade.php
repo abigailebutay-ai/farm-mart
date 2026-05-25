@@ -60,7 +60,7 @@
                                 <div class="rounded-xl border border-slate-100 bg-stone-50 p-3 dark:border-slate-700 dark:bg-slate-800">
                                     <div class="flex items-center gap-3">
                                         <x-ui.product-image
-                                            :src="$previewProduct->image"
+                                            :product="$previewProduct"
                                             :alt="$previewProduct->name"
                                             image-class="h-20 w-20 shrink-0 rounded-xl object-cover"
                                             placeholder-class="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-900/30 dark:text-emerald-200"
