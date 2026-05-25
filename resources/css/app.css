@@ -501,17 +501,27 @@ a {
 }
 
 @media print {
+    @page {
+        size: A4;
+        margin: 16mm;
+    }
+
     body {
         background: #ffffff !important;
-        color: #000000 !important;
+        color: #111827 !important;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        line-height: 1.5;
     }
 
     aside,
     header,
     .sidebar,
     .topbar,
+    .navbar,
     .no-print,
-    .print-hide {
+    .print-hide,
+    button {
         display: none !important;
     }
 
@@ -526,16 +536,98 @@ a {
     .receipt-container {
         width: 100% !important;
         max-width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
         box-shadow: none !important;
         border: none !important;
         background: #ffffff !important;
-        color: #000000 !important;
+        color: #111827 !important;
     }
 
-    .receipt-container *,
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #047857 !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .print-brand {
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        color: #047857 !important;
+    }
+
+    .print-subtitle {
+        font-size: 11px !important;
+        letter-spacing: 0.08em !important;
+        color: #374151 !important;
+        text-transform: uppercase !important;
+    }
+
+    .print-title {
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        margin-bottom: 4px !important;
+        color: #111827 !important;
+    }
+
+    .print-meta,
+    .receipt-meta {
+        font-size: 12px !important;
+        color: #4b5563 !important;
+    }
+
+    .receipt-table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 12px !important;
+    }
+
+    .receipt-table th {
+        background: #ecfdf5 !important;
+        color: #065f46 !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        font-size: 10px !important;
+        letter-spacing: 0.04em !important;
+    }
+
     .receipt-table th,
     .receipt-table td {
-        color: #000000 !important;
-        border-color: #cccccc !important;
+        border: 1px solid #d1d5db !important;
+        padding: 8px !important;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .receipt-table td,
+    .receipt-container * {
+        color: #111827 !important;
+    }
+
+    .receipt-table .text-right,
+    .text-right {
+        text-align: right !important;
+    }
+
+    .print-total-row {
+        font-weight: 800 !important;
+        background: #f3f4f6 !important;
+        padding: 10px !important;
+    }
+
+    .print-footer {
+        margin-top: 24px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid #d1d5db !important;
+        text-align: center !important;
+        font-size: 11px !important;
+        color: #6b7280 !important;
+    }
+
+    a[href]::after {
+        content: "";
     }
 }

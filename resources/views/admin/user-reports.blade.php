@@ -36,7 +36,7 @@
                         <td class="px-5 py-4">
                             <x-ui.status-badge :status="$reportedUser->verification_status ?? ($reportedUser->is_verified ? 'Approved' : 'Pending')" />
                         </td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($reportedUser->created_at)->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($reportedUser->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -81,7 +81,7 @@
                         </td>
                         <td class="max-w-md px-5 py-4 text-sm leading-relaxed text-slate-600">{{ $feedbackItem->message }}</td>
                         <td class="px-5 py-4"><x-ui.status-badge :status="$feedbackItem->status" /></td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($feedbackItem->created_at)->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($feedbackItem->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4">
                             <div class="flex flex-wrap gap-2">
                                 @if($feedbackItem->status === 'unread')

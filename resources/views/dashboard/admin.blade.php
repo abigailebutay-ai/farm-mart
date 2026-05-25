@@ -46,7 +46,7 @@
                             <p class="text-sm text-slate-500">{{ $pendingUser->email }}</p>
                         </td>
                         <td class="px-5 py-4 text-sm text-slate-600">{{ \Illuminate\Support\Str::title($pendingUser->role) }}</td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($pendingUser->created_at)->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($pendingUser->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4"><x-ui.status-badge :status="$pendingUser->verification_status ?? 'Pending'" /></td>
                         <td class="px-5 py-4">
                             <div class="flex gap-2">
@@ -113,7 +113,7 @@
                         <td class="px-5 py-4 text-sm text-slate-600">{{ optional($order->items->first()?->farmer)->name ?? 'Multiple farmers' }}</td>
                         <td class="px-5 py-4"><x-ui.status-badge :status="$order->status" /></td>
                         <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($order->total, 2) }}</td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($order->created_at)->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($order->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="6" class="px-5 py-5"><x-ui.empty-state title="No orders yet" message="Orders will appear after buyers complete checkout." icon="orders" /></td></tr>

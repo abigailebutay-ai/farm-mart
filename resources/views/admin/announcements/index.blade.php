@@ -37,7 +37,7 @@
                                 </td>
                                 <td class="px-5 py-4"><x-ui.status-badge :status="$announcement->status" /></td>
                                 <td class="px-5 py-4 text-sm text-slate-500 dark:text-gray-400">
-                                    {{ optional($announcement->published_at)->format('M d, Y h:i A') ?? 'Not published' }}
+                                    {{ optional($announcement->published_at)->timezone(config('app.timezone'))->format('M d, Y h:i A') ?? 'Not published' }}
                                 </td>
                                 <td class="px-5 py-4 text-sm text-slate-600 dark:text-gray-300">
                                     {{ $announcement->creator->name ?? 'Admin' }}

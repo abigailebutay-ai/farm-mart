@@ -88,7 +88,7 @@
                     <td class="px-5 py-4 font-bold text-slate-900">{{ $product->name }}</td>
                     <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
                     <td class="px-5 py-4"><x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" /></td>
-                    <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->format('M d, Y h:i A') }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="4" class="px-5 py-5"><x-ui.empty-state title="No stock activity yet" message="Inventory updates will appear here." icon="inventory" /></td></tr>

@@ -166,7 +166,7 @@ class DashboardController extends Controller
         $completedItems = $this->farmerCompletedSalesItems($user);
 
         $monthlyRows = $completedItems
-            ->groupBy(fn ($item) => optional($item->created_at)->format('F Y') ?? 'Unspecified')
+            ->groupBy(fn ($item) => optional($item->created_at)->timezone(config('app.timezone'))->format('F Y') ?? 'Unspecified')
             ->map(fn ($items, $month) => [
                 'month' => $month,
                 'orders' => $items->pluck('order_id')->unique()->count(),

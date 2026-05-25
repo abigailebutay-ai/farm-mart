@@ -27,12 +27,12 @@
 
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400 mb-1">Order Date</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->created_at->format('M d, Y h:i A') }}</p>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1">Ordered At</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
                         </div>
                         <div>
                             <p class="text-gray-600 dark:text-gray-400 mb-1">Last Updated</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->updated_at->format('M d, Y h:i A') }}</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->updated_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
                         </div>
                     </div>
                 </div>

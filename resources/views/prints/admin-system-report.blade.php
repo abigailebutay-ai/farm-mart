@@ -1,43 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin System Report - Farm-Mart</title>
-    @include('prints.partials.styles')
-</head>
-<body>
-    <div class="report-actions no-print">
-        <a href="{{ url()->previous() }}">Back</a>
-        <button type="button" onclick="window.print()">Print / Save as PDF</button>
-    </div>
+@extends('layouts.print')
 
-    <main class="print-container">
-        <div class="report-brand">Farm-Mart</div>
-        <h1 class="print-title">Admin System Report</h1>
-        <div class="print-meta">
-            Date generated: {{ $dateGenerated->format('M d, Y h:i A') }}
-        </div>
+@section('print-title', 'Admin System Report - Farm-Mart')
+@section('print-heading', 'Admin System Report')
+@section('print-generated', $dateGenerated->timezone(config('app.timezone'))->format('M d, Y h:i A'))
 
-        <section class="summary-grid">
-            <div class="summary-card"><span>Total users</span><strong>{{ $totalUsers }}</strong></div>
-            <div class="summary-card"><span>Total farmers</span><strong>{{ $totalFarmers }}</strong></div>
-            <div class="summary-card"><span>Total buyers/consumers</span><strong>{{ $totalBuyers }}</strong></div>
-            <div class="summary-card"><span>Total products</span><strong>{{ $totalProducts }}</strong></div>
-            <div class="summary-card"><span>Pending verifications</span><strong>{{ $pendingVerifications }}</strong></div>
-            <div class="summary-card"><span>Total orders</span><strong>{{ $totalOrders }}</strong></div>
-            <div class="summary-card"><span>Completed orders</span><strong>{{ $completedOrders }}</strong></div>
-            <div class="summary-card"><span>Cancelled orders</span><strong>{{ $cancelledOrders }}</strong></div>
-        </section>
-
-        <table>
-            <tbody>
-                <tr>
-                    <th>Total revenue</th>
-                    <td class="text-right">PHP {{ number_format($totalRevenue, 2) }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </main>
-</body>
-</html>
+@section('content')
+    <section class="print-summary">
+        <div class="print-summary-card"><span class="print-summary-label">Total Users</span><strong class="print-summary-value">{{ $totalUsers }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Total Farmers</span><strong class="print-summary-value">{{ $totalFarmers }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Total Buyers/Consumers</span><strong class="print-summary-value">{{ $totalBuyers }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Total Products</span><strong class="print-summary-value">{{ $totalProducts }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Pending Verifications</span><strong class="print-summary-value">{{ $pendingVerifications }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Total Orders</span><strong class="print-summary-value">{{ $totalOrders }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Completed Orders</span><strong class="print-summary-value">{{ $completedOrders }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Cancelled Orders</span><strong class="print-summary-value">{{ $cancelledOrders }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Total Revenue</span><strong class="print-summary-value">PHP {{ number_format($totalRevenue, 2) }}</strong></div>
+    </section>
+@endsection

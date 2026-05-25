@@ -77,7 +77,7 @@
                         <td class="px-5 py-4 text-sm text-slate-600">{{ $product->category }}</td>
                         <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
                         <td class="px-5 py-4"><x-ui.status-badge :status="$product->quantity > 0 ? 'Active' : 'Out of Stock'" /></td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="5" class="px-5 py-5"><x-ui.empty-state title="No products yet" message="Add your first product to see activity here." icon="products" /></td></tr>

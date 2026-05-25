@@ -30,7 +30,7 @@
                         <option value="">No specific order</option>
                         @foreach($orders as $order)
                             <option value="{{ $order->id }}" @selected((string) old('order_id') === (string) $order->id)>
-                                Order #{{ $order->id }} - {{ $order->created_at->format('M d, Y') }} - PHP {{ number_format($order->total, 2) }}
+                                Order #{{ $order->id }} - {{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y') }} - PHP {{ number_format($order->total, 2) }}
                             </option>
                         @endforeach
                     </select>

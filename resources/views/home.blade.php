@@ -123,7 +123,7 @@
                                 <p class="truncate text-sm font-black text-slate-900 dark:text-slate-100">{{ $recentOrder ? 'Order #' . $recentOrder->id : 'Recent Order' }}</p>
                                 <p class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-300">{{ $recentOrderDescription }}</p>
                                 @if($recentOrder)
-                                    <p class="mt-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400">{{ optional($recentOrder->consumer)->name ?? 'Buyer' }} - {{ $recentOrder->created_at->format('M d, Y') }}</p>
+                                    <p class="mt-1 text-[11px] font-semibold text-slate-400 dark:text-slate-400">{{ optional($recentOrder->consumer)->name ?? 'Buyer' }} - {{ $recentOrder->created_at->timezone(config('app.timezone'))->format('M d, Y') }}</p>
                                 @endif
                             </div>
                             <div class="shrink-0">
@@ -147,7 +147,7 @@
                             <article class="rounded-2xl border border-slate-100 bg-stone-50/80 p-4 dark:border-gray-800 dark:bg-gray-900">
                                 <p class="text-sm font-black text-slate-900 dark:text-white">{{ $announcement->title }}</p>
                                 <p class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-gray-400">{{ \Illuminate\Support\Str::limit($announcement->body, 140) }}</p>
-                                <p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{{ optional($announcement->published_at)->format('M d, Y') }}</p>
+                                <p class="mt-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{{ optional($announcement->published_at)->timezone(config('app.timezone'))->format('M d, Y') }}</p>
                             </article>
                         @endforeach
                     </div>

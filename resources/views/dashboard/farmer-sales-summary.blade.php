@@ -59,7 +59,7 @@
                         <td class="px-5 py-4 font-bold text-slate-900">{{ $item->product->name ?? 'Product' }}</td>
                         <td class="px-5 py-4 text-sm text-slate-600">{{ $item->quantity }}</td>
                         <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($item->subtotal, 2) }}</td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ $item->created_at->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ $item->created_at->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                     </tr>
                 @empty
                     <tr><td colspan="4" class="px-5 py-5"><x-ui.empty-state title="No recent sales" message="Completed sales will appear here." icon="orders" /></td></tr>

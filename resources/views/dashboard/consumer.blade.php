@@ -98,7 +98,7 @@
                 @forelse($recentCompletedOrders ?? [] as $order)
                     <tr>
                         <td class="px-5 py-4 text-sm font-bold">#{{ $order->id }}</td>
-                        <td class="purchase-date px-5 py-4 text-sm">{{ optional($order->created_at)->format('M d, Y') }}</td>
+                        <td class="purchase-date px-5 py-4 text-sm">{{ optional($order->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4 text-sm font-bold">PHP {{ number_format($order->total, 2) }}</td>
                         <td class="px-5 py-4"><x-ui.status-badge :status="$order->status" /></td>
                         <td class="px-5 py-4">

@@ -77,7 +77,7 @@
                                 <td class="px-6 py-4 text-sm">
                                     <x-ui.status-badge :status="$order->status" />
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-500">{{ $order->created_at->format('M d, Y h:i A') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">{{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</td>
                                 <td class="px-6 py-4 text-sm">
                                     <div class="flex flex-wrap gap-2">
                                         <a href="{{ route('orders.show', $order) }}" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/40">View</a>

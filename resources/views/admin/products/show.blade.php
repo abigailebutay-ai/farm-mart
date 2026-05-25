@@ -60,12 +60,12 @@
 
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Created Date</p>
-                    <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ optional($product->created_at)->format('M d, Y h:i A') }}</p>
+                    <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ optional($product->created_at)->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
                 </div>
 
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
                     <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Updated Date</p>
-                    <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ optional($product->updated_at)->format('M d, Y h:i A') }}</p>
+                    <p class="mt-1 font-semibold text-slate-900 dark:text-white">{{ optional($product->updated_at)->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
                 </div>
             </div>
 
