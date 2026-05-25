@@ -9,6 +9,7 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +19,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/about', 'public.about')->name('about');
 Route::get('/marketplace', [ProductController::class, 'index'])->name('marketplace');
 Route::get('/products', [ProductController::class, 'redirectToMarketplace'])->name('products.index');
+Route::get('/product-image/{path}', [ProductImageController::class, 'show'])
+    ->where('path', '.*')
+    ->name('product.image');
 
 Route::middleware(['auth', 'role:farmer'])->group(function () {
     Route::get('/products/create', fn () => redirect()->route('farmer.products.create'));

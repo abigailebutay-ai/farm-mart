@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -48,26 +47,13 @@ class Product extends Model
             return $this->image;
         }
 
-        $path = $this->image_storage_path;
+        $path = $this->image_storage_path ?? ltrim($this->image, '/');
 
         if (! $path) {
             return null;
         }
 
-        $diskName = config('filesystems.default');
-        $disk = Storage::disk($diskName);
-
-        try {
-            if ($diskName === 's3') {
-                return $disk->url($path);
-            }
-
-            return $disk->url($path);
-        } catch (\Throwable $e) {
-            report($e);
-
-            return null;
-        }
+        return route('product.image', ['path' => $path]);
     }
 
     public function getImageStoragePathAttribute(): ?string

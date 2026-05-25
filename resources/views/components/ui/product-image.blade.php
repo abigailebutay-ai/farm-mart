@@ -30,10 +30,11 @@
             }
 
             $path = ltrim($imagePath, '/');
-            $diskName = config('filesystems.default');
 
             try {
-                $imageUrl = Storage::disk($diskName)->url($path);
+                $imageUrl = Str::startsWith($path, 'products/')
+                    ? route('product.image', ['path' => $path])
+                    : Storage::disk(config('filesystems.default'))->url($path);
             } catch (\Throwable $e) {
                 report($e);
                 $imageUrl = null;
