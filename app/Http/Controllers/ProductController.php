@@ -45,6 +45,11 @@ class ProductController extends Controller
         ]);
     }
 
+    public function redirectToMarketplace()
+    {
+        return redirect()->route('marketplace');
+    }
+
     /**
      * Show the form for creating a new product (farmer).
      */

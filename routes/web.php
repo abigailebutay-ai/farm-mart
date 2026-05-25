@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/about', 'public.about')->name('about');
 Route::get('/marketplace', [ProductController::class, 'index'])->name('marketplace');
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products', [ProductController::class, 'redirectToMarketplace'])->name('products.index');
 Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
 
 // Authentication routes
@@ -33,20 +33,22 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 // Authenticated user routes
 Route::middleware('auth')->group(function () {
     // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('role:admin,farmer,consumer,buyer')
+        ->name('dashboard');
     
-    // Profile routes
-    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])->name('profile.password');
-    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
-
-    // Settings routes
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    // Farmer account routes
+    Route::middleware('role:farmer')->group(function () {
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])->name('profile.password');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    });
 
     // Cart routes (consumers only)
-    Route::middleware('role:consumer')->group(function () {
+    Route::middleware('role:consumer,buyer')->group(function () {
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
         Route::post('/cart/{product}', [CartController::class, 'add'])->name('cart.add');
         Route::put('/cart-item/{cartItem}', [CartController::class, 'updateQuantity'])->name('cart.update-quantity');
@@ -54,12 +56,14 @@ Route::middleware('auth')->group(function () {
         Route::delete('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
     });
 
-    // Order routes
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    // Role-scoped order routes
+    Route::middleware('role:admin,farmer,consumer,buyer')->group(function () {
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+    });
 
     // Checkout routes (consumers only)
-    Route::middleware('role:consumer')->group(function () {
+    Route::middleware('role:consumer,buyer')->group(function () {
         Route::get('/checkout', [OrderController::class, 'showCheckout'])->name('checkout.show');
         Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout.store');
     });
@@ -71,7 +75,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Consumer routes
-Route::middleware(['auth', 'role:consumer'])->prefix('consumer')->name('consumer.')->group(function () {
+Route::middleware(['auth', 'role:consumer,buyer'])->prefix('consumer')->name('consumer.')->group(function () {
     Route::get('/marketplace', [ProductController::class, 'consumerMarketplace'])->name('marketplace');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');

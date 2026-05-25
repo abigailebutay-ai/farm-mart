@@ -25,7 +25,11 @@ class DashboardController extends Controller
             return $this->farmerDashboard($user);
         }
 
-        return $this->consumerDashboard($user);
+        if ($user->isConsumer()) {
+            return $this->consumerDashboard($user);
+        }
+
+        abort(403, 'Unauthorized role.');
     }
 
     /**
@@ -83,7 +87,7 @@ class DashboardController extends Controller
             'totalUsers' => User::count(),
             'pendingUsersCount' => (clone $pendingUsersQuery)->count(),
             'totalFarmers' => User::where('role', 'farmer')->count(),
-            'totalBuyers' => User::where('role', 'consumer')->count(),
+            'totalBuyers' => User::whereIn('role', ['consumer', 'buyer'])->count(),
             'totalProducts' => Product::count(),
             'pendingProducts' => Product::where('quantity', '<=', 0)->count(),
             'totalOrders' => Order::count(),

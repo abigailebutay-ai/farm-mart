@@ -200,8 +200,10 @@
                                     <span class="mt-2 inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">{{ \Illuminate\Support\Str::title($user->role) }}</span>
                                 </div>
                                 <div class="py-2">
-                                    <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
-                                    <a href="{{ route('settings.index') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Settings</a>
+                                    @if($user->isFarmer())
+                                        <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
+                                        <a href="{{ route('settings.index') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Settings</a>
+                                    @endif
                                 </div>
                                 <form method="POST" action="{{ route('logout') }}" class="border-t border-slate-100 pt-2 dark:border-gray-800">
                                     @csrf
@@ -298,7 +300,9 @@
                                 </button>
                                 <div x-cloak x-show="publicProfileOpen" x-transition class="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-3 shadow-xl dark:border-gray-800 dark:bg-gray-900">
                                     <a href="{{ route('dashboard') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Dashboard</a>
-                                    <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
+                                    @if(auth()->user()->isFarmer())
+                                        <a href="{{ route('profile.edit') }}" class="block rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-stone-50 dark:text-gray-300 dark:hover:bg-gray-800">Profile</a>
+                                    @endif
                                     <form method="POST" action="{{ route('logout') }}" class="mt-2 border-t border-slate-100 pt-2 dark:border-gray-800">
                                         @csrf
                                         <button type="submit" class="w-full rounded-xl px-3 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50">Logout</button>

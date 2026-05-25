@@ -50,7 +50,7 @@
                             <strong>Phone:</strong> {{ auth()->user()->phone ?? 'Not provided' }}
                         </p>
                         <p class="text-xs text-blue-700 dark:text-blue-400 mt-2">
-                            <a href="{{ route('profile.edit') }}" class="underline font-semibold">Update delivery details</a>
+                            <span class="font-semibold">Use the account details saved during registration.</span>
                         </p>
                     </div>
 

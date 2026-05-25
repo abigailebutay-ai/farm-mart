@@ -145,7 +145,7 @@ class User extends Authenticatable
      */
     public function isConsumer(): bool
     {
-        return $this->role === 'consumer';
+        return in_array($this->role, ['consumer', 'buyer'], true);
     }
 
     /**
