@@ -64,6 +64,8 @@ class Product extends Model
 
             return $disk->url($path);
         } catch (\Throwable $e) {
+            report($e);
+
             return null;
         }
     }

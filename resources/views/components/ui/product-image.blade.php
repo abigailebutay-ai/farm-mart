@@ -13,13 +13,11 @@
     use Illuminate\Support\Str;
 
     $imagePath = $src ?? $product?->image;
-    $imageUrl = null;
+    $imageUrl = $product?->image_url ?? null;
     $altText = $alt ?? $product?->name ?? 'Product image';
     $resolvedImageClass = $class ?: $imageClass;
 
-    if ($product && (! $src || $src === $product->image)) {
-        $imageUrl = $product->image_url;
-    } elseif (! empty($imagePath)) {
+    if (! $imageUrl && ! empty($imagePath)) {
         $imagePath = str_replace('\\', '/', (string) $imagePath);
 
         if (Str::startsWith($imagePath, ['http://', 'https://'])) {

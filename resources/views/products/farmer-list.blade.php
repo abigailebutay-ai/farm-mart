@@ -39,6 +39,18 @@
                                         <div>
                                             <p class="product-name font-semibold">{{ $product->name }}</p>
                                             <p class="product-description text-xs">{{ \Illuminate\Support\Str::limit($product->description, 40) }}</p>
+                                            @if($product->image)
+                                                <small style="display:block;color:#facc15;">
+                                                    DB image: {{ $product->image }}
+                                                </small>
+                                                <small style="display:block;color:#67e8f9;">
+                                                    Image URL: {{ $product->image_url }}
+                                                </small>
+                                            @else
+                                                <small style="display:block;color:#f87171;">
+                                                    No image saved in DB
+                                                </small>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>

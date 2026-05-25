@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -76,7 +77,10 @@ class ProductController extends Controller
         $validated['user_id'] = auth()->id();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->storePublicly('products', config('filesystems.default'));
+            $validated['image'] = $request->file('image')
+                ->storePublicly('products', config('filesystems.default'));
+
+            $this->logProductImageUpload($validated['image']);
         }
 
         Product::create($validated);
@@ -119,10 +123,14 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($product->image) {
+            if ($product->image_storage_path) {
                 Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
             }
-            $validated['image'] = $request->file('image')->storePublicly('products', config('filesystems.default'));
+
+            $validated['image'] = $request->file('image')
+                ->storePublicly('products', config('filesystems.default'));
+
+            $this->logProductImageUpload($validated['image']);
         }
 
         $product->update($validated);
@@ -163,7 +171,7 @@ class ProductController extends Controller
     {
         $this->authorize('delete', $product);
 
-        if ($product->image) {
+        if ($product->image_storage_path) {
             Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
         }
 
@@ -235,5 +243,14 @@ class ProductController extends Controller
         }
 
         return $query;
+    }
+
+    private function logProductImageUpload(string $path): void
+    {
+        Log::info('Product image uploaded', [
+            'disk' => config('filesystems.default'),
+            'path' => $path,
+            'exists' => Storage::disk(config('filesystems.default'))->exists($path),
+        ]);
     }
 }
