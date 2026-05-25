@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +63,7 @@ class ProductController extends Controller
     /**
      * Store a newly created product (farmer).
      */
-    public function store(Request $request)
+    public function store(Request $request, NotificationService $notifications)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -83,7 +84,16 @@ class ProductController extends Controller
             $this->logProductImageUpload($validated['image']);
         }
 
-        Product::create($validated);
+        $product = Product::create($validated);
+
+        $notifications->sendToAdmins(
+            'product.created',
+            'New product listed',
+            auth()->user()->name . " listed {$product->name}.",
+            'products',
+            route('admin.products.show', $product),
+            ['product_id' => $product->id]
+        );
 
         return redirect()->route('farmer.products.index')->with('success', 'Product created successfully!');
     }
@@ -108,7 +118,7 @@ class ProductController extends Controller
     /**
      * Update the specified product (farmer).
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Product $product, NotificationService $notifications)
     {
         $this->authorize('update', $product);
 
@@ -133,7 +143,13 @@ class ProductController extends Controller
             $this->logProductImageUpload($validated['image']);
         }
 
+        $oldQuantity = $product->quantity;
+
         $product->update($validated);
+
+        if ($oldQuantity !== $product->quantity) {
+            $this->notifyStockStatus($product->fresh(), $notifications);
+        }
 
         return redirect()->route('farmer.products.index')->with('success', 'Product updated successfully!');
     }
@@ -141,7 +157,7 @@ class ProductController extends Controller
     /**
      * Update only inventory quantities for a farmer product.
      */
-    public function updateInventory(Request $request, Product $product)
+    public function updateInventory(Request $request, Product $product, NotificationService $notifications)
     {
         $this->authorize('update', $product);
 
@@ -160,6 +176,8 @@ class ProductController extends Controller
         };
 
         $product->update(['quantity' => $newQuantity]);
+
+        $this->notifyStockStatus($product->fresh(), $notifications);
 
         return redirect()->route('farmer.inventory.index')->with('success', 'Inventory updated successfully!');
     }
@@ -266,5 +284,40 @@ class ProductController extends Controller
             'image.mimes' => 'Please upload a JPG, PNG, GIF, or WEBP image up to 5MB.',
             'image.max' => 'Please upload a JPG, PNG, GIF, or WEBP image up to 5MB.',
         ];
+    }
+
+    private function notifyStockStatus(Product $product, NotificationService $notifications): void
+    {
+        $farmer = $product->farmer;
+
+        if (! $farmer) {
+            return;
+        }
+
+        if ($product->quantity <= 0) {
+            $notifications->send(
+                $farmer,
+                'product.out_of_stock',
+                'Product out of stock',
+                "{$product->name} is now out of stock.",
+                'alert',
+                route('farmer.inventory.index'),
+                ['product_id' => $product->id]
+            );
+
+            return;
+        }
+
+        if ($product->quantity <= 10) {
+            $notifications->send(
+                $farmer,
+                'product.low_stock',
+                'Low stock alert',
+                "{$product->name} is down to {$product->quantity} {$product->unit}.",
+                'inventory',
+                route('farmer.inventory.index'),
+                ['product_id' => $product->id]
+            );
+        }
     }
 }

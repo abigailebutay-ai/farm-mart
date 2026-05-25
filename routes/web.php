@@ -7,6 +7,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
@@ -46,6 +47,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 // Authenticated user routes
 Route::middleware('auth')->group(function () {
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+        ->name('notifications.read-all');
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('role:admin,farmer,consumer,buyer')

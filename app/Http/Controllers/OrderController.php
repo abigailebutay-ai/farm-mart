@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -121,7 +122,7 @@ class OrderController extends Controller
     /**
      * Checkout - create order from cart.
      */
-    public function checkout(Request $request)
+    public function checkout(Request $request, NotificationService $notifications)
     {
         $user = auth()->user();
 
@@ -168,6 +169,33 @@ class OrderController extends Controller
             ]);
         }
 
+        $order->loadMissing(['consumer', 'items.farmer']);
+
+        $order->items
+            ->pluck('farmer')
+            ->filter()
+            ->unique('id')
+            ->each(function ($farmer) use ($order, $notifications) {
+                $notifications->send(
+                    $farmer,
+                    'order.created',
+                    'New order received',
+                    "Order #{$order->id} includes one or more of your products.",
+                    'orders',
+                    route('orders.show', $order),
+                    ['order_id' => $order->id]
+                );
+            });
+
+        $notifications->sendToAdmins(
+            'order.created',
+            'New order placed',
+            ($order->consumer->name ?? 'A buyer') . " placed Order #{$order->id}.",
+            'orders',
+            route('orders.show', $order),
+            ['order_id' => $order->id]
+        );
+
         // Clear cart
         $cart->items()->delete();
 
@@ -181,7 +209,7 @@ class OrderController extends Controller
     /**
      * Update order status (for farmers).
      */
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(Request $request, Order $order, NotificationService $notifications)
     {
         $user = auth()->user();
 
@@ -206,6 +234,20 @@ class OrderController extends Controller
         $order->status = $validated['status'];
 
         $order->save();
+
+        $order->loadMissing(['consumer', 'items.product']);
+
+        if ($oldStatus !== $order->status && $order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'order.status_updated',
+                'Order status updated',
+                "Order #{$order->id} is now " . ucfirst($order->status) . '.',
+                $order->status === 'cancelled' ? 'alert' : 'orders',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'status' => $order->status]
+            );
+        }
 
         /**
          * Reduce product quantity
@@ -234,6 +276,8 @@ class OrderController extends Controller
                     }
 
                     $product->save();
+
+                    $this->notifyStockStatus($product, $notifications);
                 }
             }
         }
@@ -241,6 +285,41 @@ class OrderController extends Controller
         return redirect()
             ->route('orders.show', $order)
             ->with('success', 'Order status updated!');
+    }
+
+    private function notifyStockStatus($product, NotificationService $notifications): void
+    {
+        $farmer = $product->farmer;
+
+        if (! $farmer) {
+            return;
+        }
+
+        if ($product->quantity <= 0) {
+            $notifications->send(
+                $farmer,
+                'product.out_of_stock',
+                'Product out of stock',
+                "{$product->name} is now out of stock.",
+                'alert',
+                route('farmer.inventory.index'),
+                ['product_id' => $product->id]
+            );
+
+            return;
+        }
+
+        if ($product->quantity <= 10) {
+            $notifications->send(
+                $farmer,
+                'product.low_stock',
+                'Low stock alert',
+                "{$product->name} is down to {$product->quantity} {$product->unit}.",
+                'inventory',
+                route('farmer.inventory.index'),
+                ['product_id' => $product->id]
+            );
+        }
     }
 
     /**

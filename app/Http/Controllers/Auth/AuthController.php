@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class AuthController
     /**
      * Handle the registration.
      */
-    public function register(Request $request)
+    public function register(Request $request, NotificationService $notifications)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -45,6 +46,15 @@ class AuthController
         ]);
 
         event(new Registered($user));
+
+        $notifications->sendToAdmins(
+            'user.registered',
+            'New account awaiting verification',
+            "{$user->name} registered as " . ucfirst($user->role) . ' and needs approval.',
+            'users',
+            route('admin.user-reports'),
+            ['user_id' => $user->id]
+        );
 
         Auth::login($user);
 

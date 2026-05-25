@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class AdminAnnouncementController extends Controller
@@ -21,14 +23,18 @@ class AdminAnnouncementController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NotificationService $notifications)
     {
         $validated = $this->validateAnnouncement($request);
         $validated['status'] = $validated['status'] ?? 'published';
         $validated['published_at'] = $validated['status'] === 'published' ? now() : null;
         $validated['created_by'] = auth()->id();
 
-        Announcement::create($validated);
+        $announcement = Announcement::create($validated);
+
+        if ($announcement->status === 'published') {
+            $this->notifyPublishedAnnouncement($announcement, $notifications);
+        }
 
         return redirect()
             ->route('admin.announcements.index')
@@ -42,10 +48,11 @@ class AdminAnnouncementController extends Controller
         ]);
     }
 
-    public function update(Request $request, Announcement $announcement)
+    public function update(Request $request, Announcement $announcement, NotificationService $notifications)
     {
         $validated = $this->validateAnnouncement($request);
         $validated['status'] = $validated['status'] ?? 'published';
+        $wasPublished = $announcement->status === 'published';
 
         if ($validated['status'] === 'published' && ! $announcement->published_at) {
             $validated['published_at'] = now();
@@ -56,6 +63,10 @@ class AdminAnnouncementController extends Controller
         }
 
         $announcement->update($validated);
+
+        if (! $wasPublished && $announcement->status === 'published') {
+            $this->notifyPublishedAnnouncement($announcement, $notifications);
+        }
 
         return redirect()
             ->route('admin.announcements.index')
@@ -78,5 +89,18 @@ class AdminAnnouncementController extends Controller
             'body' => ['required', 'string'],
             'status' => ['nullable', 'in:published,draft'],
         ]);
+    }
+
+    private function notifyPublishedAnnouncement(Announcement $announcement, NotificationService $notifications): void
+    {
+        $notifications->sendToUsers(
+            User::whereIn('role', ['farmer', 'consumer', 'buyer'])->get(),
+            'announcement.published',
+            'New announcement',
+            $announcement->title,
+            'megaphone',
+            route('home'),
+            ['announcement_id' => $announcement->id]
+        );
     }
 }

@@ -117,6 +117,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Get unread notifications for this user.
+     */
+    public function unreadNotifications(): HasMany
+    {
+        return $this->notifications()->whereNull('read_at');
+    }
+
+    /**
+     * Get read notifications for this user.
+     */
+    public function readNotifications(): HasMany
+    {
+        return $this->notifications()->whereNotNull('read_at');
+    }
+
+    /**
      * Get all inventory alerts for this user (farmer).
      */
     public function inventoryAlerts(): HasMany

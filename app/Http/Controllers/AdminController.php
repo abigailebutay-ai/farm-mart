@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Feedback;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\NotificationService;
 
 class AdminController extends Controller
 {
@@ -94,7 +95,7 @@ class AdminController extends Controller
         return back()->with('success', 'Feedback marked as resolved.');
     }
 
-    public function approveUser(User $user)
+    public function approveUser(User $user, NotificationService $notifications)
     {
         if ($user->role === 'admin') {
             return back()->with('error', 'Admin accounts do not need approval.');
@@ -111,10 +112,19 @@ class AdminController extends Controller
             'email_verified_at' => $user->email_verified_at ?? now(),
         ]);
 
+        $notifications->send(
+            $user,
+            'user.approved',
+            'Account approved',
+            'Your Farm-Mart account has been approved. You can now use your dashboard.',
+            'check',
+            route('dashboard')
+        );
+
         return back()->with('success', 'User approved successfully.');
     }
 
-    public function rejectUser(User $user)
+    public function rejectUser(User $user, NotificationService $notifications)
     {
         if ($user->role === 'admin') {
             return back()->with('error', 'Admin accounts cannot be rejected.');
@@ -129,6 +139,15 @@ class AdminController extends Controller
             'verification_status' => 'rejected',
             'verified_at' => null,
         ]);
+
+        $notifications->send(
+            $user,
+            'user.rejected',
+            'Account verification rejected',
+            'Your Farm-Mart account verification was rejected. Please contact the administrator for assistance.',
+            'alert',
+            route('dashboard')
+        );
 
         return back()->with('success', 'User rejected successfully.');
     }

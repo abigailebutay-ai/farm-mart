@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Feedback;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,7 @@ class FeedbackController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, NotificationService $notifications)
     {
         $validated = $request->validate([
             'feedback_type' => ['required', Rule::in(self::TYPES)],
@@ -39,7 +40,7 @@ class FeedbackController extends Controller
             'message' => ['required', 'string', 'max:1000'],
         ]);
 
-        Feedback::create([
+        $feedback = Feedback::create([
             'user_id' => auth()->id(),
             'order_id' => $validated['order_id'] ?? null,
             'feedback_type' => $validated['feedback_type'],
@@ -47,6 +48,35 @@ class FeedbackController extends Controller
             'message' => $validated['message'],
             'status' => 'unread',
         ]);
+
+        $feedback->loadMissing(['user', 'order.items.farmer']);
+
+        $notifications->sendToAdmins(
+            'feedback.submitted',
+            'New feedback submitted',
+            ($feedback->user->name ?? 'A buyer') . " submitted {$feedback->feedback_type} feedback.",
+            'star',
+            route('admin.user-reports'),
+            ['feedback_id' => $feedback->id]
+        );
+
+        if ($feedback->order) {
+            $feedback->order->items
+                ->pluck('farmer')
+                ->filter()
+                ->unique('id')
+                ->each(function ($farmer) use ($feedback, $notifications) {
+                    $notifications->send(
+                        $farmer,
+                        'feedback.submitted',
+                        'Buyer feedback received',
+                        ($feedback->user->name ?? 'A buyer') . " submitted feedback for Order #{$feedback->order_id}.",
+                        'star',
+                        route('orders.show', $feedback->order),
+                        ['feedback_id' => $feedback->id, 'order_id' => $feedback->order_id]
+                    );
+                });
+        }
 
         return back()->with('success', 'Feedback submitted successfully.');
     }

@@ -78,23 +78,11 @@
             ];
         }
 
-        $notificationItems = [];
-        if ($user->isFarmer()) {
-            $notificationItems = [
-                ['title' => 'Inventory check', 'message' => 'Review low-stock products before accepting new orders.', 'icon' => 'alert'],
-                ['title' => 'Order queue', 'message' => 'Pending buyer orders will appear in your dashboard.', 'icon' => 'orders'],
-            ];
-        } elseif ($user->isConsumer()) {
-            $notificationItems = [
-                ['title' => 'Marketplace updates', 'message' => 'Fresh product recommendations are available.', 'icon' => 'products'],
-                ['title' => 'Order tracking', 'message' => 'Track pending and completed purchases from your dashboard.', 'icon' => 'orders'],
-            ];
-        } else {
-            $notificationItems = [
-                ['title' => 'Verification queue', 'message' => 'Monitor pending farmer and buyer approvals.', 'icon' => 'users'],
-                ['title' => 'Platform activity', 'message' => 'Recent product and order activity is summarized below.', 'icon' => 'activity'],
-            ];
-        }
+        $notificationItems = $user->notifications()
+            ->latest()
+            ->limit(8)
+            ->get();
+        $unreadNotificationCount = $user->unreadNotifications()->count();
     @endphp
 
     <div x-data="{ ...farmMartThemeShell(), sidebarOpen: false, profileOpen: false, notificationsOpen: false }" class="min-h-screen">
@@ -163,21 +151,44 @@
                         <div class="relative" @click.outside="notificationsOpen = false">
                             <button type="button" class="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="notificationsOpen = !notificationsOpen; profileOpen = false">
                                 <x-ui.icon name="bell" class="h-5 w-5" />
-                                <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-500"></span>
+                                @if($unreadNotificationCount > 0)
+                                    <span class="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-black text-white">{{ $unreadNotificationCount > 9 ? '9+' : $unreadNotificationCount }}</span>
+                                @endif
                             </button>
                             <div x-cloak x-show="notificationsOpen" x-transition class="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-100 bg-white p-3 shadow-xl dark:border-gray-800 dark:bg-gray-900">
-                                <p class="px-2 pb-2 text-sm font-black text-slate-900 dark:text-white">Notifications</p>
+                                <div class="flex items-center justify-between gap-3 px-2 pb-2">
+                                    <p class="text-sm font-black text-slate-900 dark:text-white">Notifications</p>
+                                    @if($unreadNotificationCount > 0)
+                                        <form method="POST" action="{{ route('notifications.read-all') }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs font-bold text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-emerald-200">Read all</button>
+                                        </form>
+                                    @endif
+                                </div>
                                 <div class="space-y-2">
-                                    @forelse($notificationItems as $item)
-                                        <div class="flex gap-3 rounded-xl bg-stone-50 p-3 dark:bg-gray-800">
-                                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                                <x-ui.icon :name="$item['icon']" class="h-4 w-4" />
-                                            </span>
-                                            <div>
-                                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ $item['title'] }}</p>
-                                                <p class="text-xs leading-relaxed text-slate-500 dark:text-gray-400">{{ $item['message'] }}</p>
-                                            </div>
-                                        </div>
+                                    @forelse($notificationItems as $notification)
+                                        @php
+                                            $notificationData = $notification->data ?? [];
+                                            $notificationIcon = $notificationData['icon'] ?? 'bell';
+                                        @endphp
+                                        <form method="POST" action="{{ route('notifications.read', $notification) }}">
+                                            @csrf
+                                            <button type="submit" class="flex w-full gap-3 rounded-xl p-3 text-left transition hover:bg-emerald-50 dark:hover:bg-gray-800 {{ $notification->isUnread() ? 'bg-emerald-50/80 ring-1 ring-emerald-100 dark:bg-emerald-950/30 dark:ring-emerald-900' : 'bg-stone-50 dark:bg-gray-800/70' }}">
+                                                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg {{ $notification->isUnread() ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' }}">
+                                                    <x-ui.icon :name="$notificationIcon" class="h-4 w-4" />
+                                                </span>
+                                                <span class="min-w-0 flex-1">
+                                                    <span class="flex items-start justify-between gap-2">
+                                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $notification->title }}</span>
+                                                        @if($notification->isUnread())
+                                                            <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500"></span>
+                                                        @endif
+                                                    </span>
+                                                    <span class="block text-xs leading-relaxed text-slate-500 dark:text-gray-400">{{ $notification->message }}</span>
+                                                    <span class="mt-1 block text-[11px] font-semibold text-slate-400 dark:text-gray-500">{{ $notification->created_at?->diffForHumans() }}</span>
+                                                </span>
+                                            </button>
+                                        </form>
                                     @empty
                                         <p class="rounded-xl bg-stone-50 p-3 text-sm text-slate-500 dark:bg-gray-800 dark:text-gray-400">No new notifications.</p>
                                     @endforelse
