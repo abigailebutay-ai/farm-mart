@@ -71,8 +71,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:1',
             'unit' => 'required|in:' . implode(',', Product::UNITS),
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:51200',
-        ]);
+            'image' => $this->imageValidationRule(),
+        ], $this->imageValidationMessages());
 
         $validated['user_id'] = auth()->id();
 
@@ -119,8 +119,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0.01',
             'quantity' => 'required|integer|min:0',
             'unit' => 'required|in:' . implode(',', Product::UNITS),
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+            'image' => $this->imageValidationRule(),
+        ], $this->imageValidationMessages());
 
         if ($request->hasFile('image')) {
             if ($product->image_storage_path) {
@@ -252,5 +252,19 @@ class ProductController extends Controller
             'path' => $path,
             'exists' => Storage::disk(config('filesystems.default'))->exists($path),
         ]);
+    }
+
+    private function imageValidationRule(): string
+    {
+        return 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120';
+    }
+
+    private function imageValidationMessages(): array
+    {
+        return [
+            'image.image' => 'Please upload a JPG, PNG, GIF, or WEBP image up to 5MB.',
+            'image.mimes' => 'Please upload a JPG, PNG, GIF, or WEBP image up to 5MB.',
+            'image.max' => 'Please upload a JPG, PNG, GIF, or WEBP image up to 5MB.',
+        ];
     }
 }

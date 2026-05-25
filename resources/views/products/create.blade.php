@@ -58,8 +58,8 @@
 
             <div>
                 <label for="image" class="mb-2 block text-sm font-semibold text-gray-700">Product Image</label>
-                <input id="image" name="image" type="file" accept="image/*" class="block w-full rounded-lg border border-gray-200 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-green-800 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-green-900">
-                <p class="mt-2 text-xs text-gray-500">PNG, JPG, or GIF. Use a clear product photo when available.</p>
+                <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" class="block w-full rounded-lg border border-gray-200 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-green-800 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-green-900">
+                <p class="mt-2 text-xs text-gray-500">JPG, PNG, GIF, or WEBP up to 5MB. Use a clear product photo when available.</p>
                 @error('image')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
