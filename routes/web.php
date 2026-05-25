@@ -17,7 +17,16 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::view('/about', 'public.about')->name('about');
 Route::get('/marketplace', [ProductController::class, 'index'])->name('marketplace');
 Route::get('/products', [ProductController::class, 'redirectToMarketplace'])->name('products.index');
-Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
+
+Route::middleware(['auth', 'role:farmer'])->group(function () {
+    Route::get('/products/create', fn () => redirect()->route('farmer.products.create'));
+    Route::get('/products/{product}/edit', fn (App\Models\Product $product) => redirect()->route('farmer.products.edit', $product))
+        ->whereNumber('product');
+});
+
+Route::get('/products/{product}', [ProductController::class, 'show'])
+    ->whereNumber('product')
+    ->name('products.show');
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -76,15 +85,30 @@ Route::middleware('auth')->group(function () {
 
 // Consumer routes
 Route::middleware(['auth', 'role:consumer,buyer'])->prefix('consumer')->name('consumer.')->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
     Route::get('/marketplace', [ProductController::class, 'consumerMarketplace'])->name('marketplace');
+    Route::get('/cart', fn () => redirect()->route('cart.index'))->name('cart');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
+    Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
     Route::get('/purchase-history', [OrderController::class, 'purchaseHistory'])->name('purchase-history');
     Route::get('/orders/{order}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
+    Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
+});
+
+// Buyer routes mirror consumer access for copied buyer-prefixed URLs.
+Route::middleware(['auth', 'role:consumer,buyer'])->prefix('buyer')->name('buyer.')->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
+    Route::get('/marketplace', fn () => redirect()->route('consumer.marketplace'))->name('marketplace');
+    Route::get('/cart', fn () => redirect()->route('cart.index'))->name('cart');
+    Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
+    Route::get('/feedback', fn () => redirect()->route('consumer.feedback'))->name('feedback');
+    Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });
 
 // Farmer routes
 Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
     Route::get('/decision-support', [DashboardController::class, 'farmerDecisionSupport'])->name('decision-support');
     Route::get('/sales-summary', [DashboardController::class, 'farmerSalesSummary'])->name('sales-summary');
     Route::get('/sales-summary/print', [DashboardController::class, 'printFarmerSalesSummary'])->name('sales-summary.print');
@@ -97,10 +121,13 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });
 
 // Admin routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
+    Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
     Route::get('/system-report/print', [AdminController::class, 'printSystemReport'])->name('system-report.print');
     Route::get('/products', [AdminController::class, 'products'])->name('products');
     Route::get('/products-report/print', [AdminController::class, 'printProductsReport'])->name('products.print');
@@ -113,4 +140,5 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
     Route::patch('/feedback/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('feedback.read');
     Route::patch('/feedback/{feedback}/resolve', [AdminController::class, 'resolveFeedback'])->name('feedback.resolve');
+    Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });
