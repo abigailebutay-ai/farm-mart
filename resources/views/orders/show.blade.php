@@ -19,6 +19,7 @@
                         <span class="px-4 py-2 rounded-full font-semibold inline-block
                             @if($order->status === 'pending') bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200
                             @elseif($order->status === 'accepted') bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200
+                            @elseif($order->status === 'preparing') bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200
                             @elseif($order->status === 'completed') bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200
                             @else bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 @endif">
                             {{ Str::ucfirst($order->status) }}
@@ -135,6 +136,7 @@
                             >
                                 <option value="pending" @selected($order->status === 'pending')>Pending</option>
                                 <option value="accepted" @selected($order->status === 'accepted')>Accepted</option>
+                                <option value="preparing" @selected($order->status === 'preparing')>Preparing</option>
                                 <option value="completed" @selected($order->status === 'completed')>Completed</option>
                                 <option value="cancelled" @selected($order->status === 'cancelled')>Cancelled</option>
                             </select>

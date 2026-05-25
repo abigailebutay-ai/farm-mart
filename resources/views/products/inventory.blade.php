@@ -44,17 +44,34 @@
                             <x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" />
                         </td>
                         <td class="px-5 py-4">
-                            <form method="POST" action="{{ route('farmer.inventory.update', $product) }}" class="flex min-w-[300px] flex-wrap gap-2">
+                            <div class="space-y-2">
+                                <form method="POST" action="{{ route('farmer.products.restock', $product) }}" class="flex min-w-[300px] flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 p-2 dark:border-emerald-900 dark:bg-emerald-950/30">
+                                    @csrf
+                                    @method('PATCH')
+                                    <span class="text-xs font-bold text-emerald-900 dark:text-emerald-200">Restock</span>
+                                    <input
+                                        name="quantity"
+                                        type="number"
+                                        min="1"
+                                        placeholder="Add"
+                                        aria-label="Quantity to add for {{ $product->name }}"
+                                        class="w-24 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 dark:border-emerald-800 dark:bg-gray-900 dark:text-white"
+                                    >
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-gray-300">{{ $product->unit ?? 'piece' }}</span>
+                                    <button type="submit" class="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-800">Add Stock</button>
+                                </form>
+
+                                <form method="POST" action="{{ route('farmer.inventory.update', $product) }}" class="flex min-w-[300px] flex-wrap gap-2">
                                 @csrf
                                 @method('PATCH')
-                                <select name="mode" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                                <select name="mode" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
                                     <option value="set">Set stock</option>
-                                    <option value="add">Add stock</option>
                                     <option value="reduce">Reduce stock</option>
                                 </select>
-                                <input name="quantity" type="number" min="0" value="{{ $product->quantity }}" class="w-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                                <input name="quantity" type="number" min="0" value="{{ $product->quantity }}" class="w-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white">
                                 <button type="submit" class="rounded-xl bg-emerald-700 px-3 py-2 text-sm font-bold text-white hover:bg-emerald-800">Update</button>
-                            </form>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

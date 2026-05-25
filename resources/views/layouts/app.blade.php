@@ -170,6 +170,8 @@
                                         @php
                                             $notificationData = $notification->data ?? [];
                                             $notificationIcon = $notificationData['icon'] ?? 'bell';
+                                            $notificationTitle = $notificationData['title'] ?? $notification->title;
+                                            $notificationMessage = $notificationData['message'] ?? $notification->message;
                                         @endphp
                                         <form method="POST" action="{{ route('notifications.read', $notification) }}">
                                             @csrf
@@ -179,12 +181,12 @@
                                                 </span>
                                                 <span class="min-w-0 flex-1">
                                                     <span class="flex items-start justify-between gap-2">
-                                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $notification->title }}</span>
+                                                        <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $notificationTitle }}</span>
                                                         @if($notification->isUnread())
                                                             <span class="mt-1 h-2 w-2 shrink-0 rounded-full bg-amber-500"></span>
                                                         @endif
                                                     </span>
-                                                    <span class="block text-xs leading-relaxed text-slate-500 dark:text-gray-400">{{ $notification->message }}</span>
+                                                    <span class="block text-xs leading-relaxed text-slate-500 dark:text-gray-400">{{ $notificationMessage }}</span>
                                                     <span class="mt-1 block text-[11px] font-semibold text-slate-400 dark:text-gray-500">{{ $notification->created_at?->diffForHumans() }}</span>
                                                 </span>
                                             </button>

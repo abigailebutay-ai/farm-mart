@@ -224,7 +224,7 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,completed,cancelled',
+            'status' => 'required|in:pending,accepted,preparing,completed,cancelled',
         ]);
 
         // Store old status
@@ -264,6 +264,7 @@ class OrderController extends Controller
                 $product = $item->product;
 
                 if ($product) {
+                    $oldQuantity = $product->quantity;
 
                     // Prevent negative stock
                     if ($product->quantity >= $item->quantity) {
@@ -277,7 +278,7 @@ class OrderController extends Controller
 
                     $product->save();
 
-                    $this->notifyStockStatus($product, $notifications);
+                    $this->notifyStockStatus($product, $notifications, $oldQuantity);
                 }
             }
         }
@@ -287,7 +288,7 @@ class OrderController extends Controller
             ->with('success', 'Order status updated!');
     }
 
-    private function notifyStockStatus($product, NotificationService $notifications): void
+    private function notifyStockStatus($product, NotificationService $notifications, ?int $oldQuantity = null): void
     {
         $farmer = $product->farmer;
 
@@ -295,7 +296,7 @@ class OrderController extends Controller
             return;
         }
 
-        if ($product->quantity <= 0) {
+        if ($product->quantity <= 0 && ($oldQuantity === null || $oldQuantity > 0)) {
             $notifications->send(
                 $farmer,
                 'product.out_of_stock',
@@ -309,7 +310,7 @@ class OrderController extends Controller
             return;
         }
 
-        if ($product->quantity <= 10) {
+        if ($product->quantity <= 10 && $product->quantity > 0 && ($oldQuantity === null || $oldQuantity > 10)) {
             $notifications->send(
                 $farmer,
                 'product.low_stock',

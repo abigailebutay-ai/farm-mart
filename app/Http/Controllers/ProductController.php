@@ -148,7 +148,7 @@ class ProductController extends Controller
         $product->update($validated);
 
         if ($oldQuantity !== $product->quantity) {
-            $this->notifyStockStatus($product->fresh(), $notifications);
+            $this->notifyStockStatus($product->fresh(), $notifications, $oldQuantity);
         }
 
         return redirect()->route('farmer.products.index')->with('success', 'Product updated successfully!');
@@ -175,11 +175,45 @@ class ProductController extends Controller
             default => $quantity,
         };
 
+        $oldQuantity = $product->quantity;
+
         $product->update(['quantity' => $newQuantity]);
 
-        $this->notifyStockStatus($product->fresh(), $notifications);
+        $this->notifyStockStatus($product->fresh(), $notifications, $oldQuantity);
 
         return redirect()->route('farmer.inventory.index')->with('success', 'Inventory updated successfully!');
+    }
+
+    public function restock(Request $request, Product $product, NotificationService $notifications)
+    {
+        $this->authorize('update', $product);
+
+        $validated = $request->validate([
+            'quantity' => ['required', 'integer', 'min:1'],
+        ], [
+            'quantity.required' => 'Please enter a valid quantity.',
+            'quantity.integer' => 'Please enter a valid quantity.',
+            'quantity.min' => 'Please enter a valid quantity.',
+        ]);
+
+        $oldQuantity = $product->quantity;
+
+        $product->increment('quantity', $validated['quantity']);
+        $product->refresh();
+
+        if ($oldQuantity <= 0 && $product->quantity > 0) {
+            $notifications->send(
+                auth()->user(),
+                'product.restocked',
+                'Product restocked',
+                "{$product->name} has been restocked to {$product->quantity} {$product->unit}.",
+                'inventory',
+                route('farmer.inventory.index'),
+                ['product_id' => $product->id]
+            );
+        }
+
+        return back()->with('success', 'Product restocked successfully.');
     }
 
     /**
@@ -286,7 +320,7 @@ class ProductController extends Controller
         ];
     }
 
-    private function notifyStockStatus(Product $product, NotificationService $notifications): void
+    private function notifyStockStatus(Product $product, NotificationService $notifications, ?int $oldQuantity = null): void
     {
         $farmer = $product->farmer;
 
@@ -294,7 +328,7 @@ class ProductController extends Controller
             return;
         }
 
-        if ($product->quantity <= 0) {
+        if ($product->quantity <= 0 && ($oldQuantity === null || $oldQuantity > 0)) {
             $notifications->send(
                 $farmer,
                 'product.out_of_stock',
@@ -308,7 +342,7 @@ class ProductController extends Controller
             return;
         }
 
-        if ($product->quantity <= 10) {
+        if ($product->quantity <= 10 && $product->quantity > 0 && ($oldQuantity === null || $oldQuantity > 10)) {
             $notifications->send(
                 $farmer,
                 'product.low_stock',

@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Notification;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -66,5 +69,76 @@ class NotificationTest extends TestCase
 
         $this->assertSame(0, $user->unreadNotifications()->count());
         $this->assertNull($otherNotification->fresh()->read_at);
+    }
+
+    public function test_farmer_can_restock_owned_product_from_inventory(): void
+    {
+        $farmer = User::factory()->farmer()->create();
+        $product = Product::factory()->for($farmer, 'farmer')->create([
+            'quantity' => 5,
+            'unit' => 'kg',
+        ]);
+
+        $this->actingAs($farmer)
+            ->patch(route('farmer.products.restock', $product), [
+                'quantity' => 20,
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success', 'Product restocked successfully.');
+
+        $this->assertSame(25, $product->fresh()->quantity);
+    }
+
+    public function test_farmer_cannot_restock_another_farmers_product(): void
+    {
+        $farmer = User::factory()->farmer()->create();
+        $product = Product::factory()->create(['quantity' => 5]);
+
+        $this->actingAs($farmer)
+            ->patch(route('farmer.products.restock', $product), [
+                'quantity' => 20,
+            ])
+            ->assertForbidden();
+
+        $this->assertSame(5, $product->fresh()->quantity);
+    }
+
+    public function test_order_status_update_notifies_buyer_and_low_stock_crossing_notifies_farmer(): void
+    {
+        $farmer = User::factory()->farmer()->create();
+        $buyer = User::factory()->consumer()->create();
+        $product = Product::factory()->for($farmer, 'farmer')->create([
+            'quantity' => 12,
+            'unit' => 'kg',
+        ]);
+        $order = Order::factory()->for($buyer, 'consumer')->create(['status' => 'accepted']);
+        OrderItem::factory()->for($order)->create([
+            'product_id' => $product->id,
+            'farmer_id' => $farmer->id,
+            'quantity' => 3,
+            'price' => $product->price,
+            'subtotal' => $product->price * 3,
+        ]);
+
+        $this->actingAs($farmer)
+            ->put(route('orders.update-status', $order), [
+                'status' => 'completed',
+            ])
+            ->assertRedirect(route('orders.show', $order))
+            ->assertSessionHas('success', 'Order status updated!');
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $buyer->id,
+            'type' => 'order.status_updated',
+            'title' => 'Order status updated',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $farmer->id,
+            'type' => 'product.low_stock',
+            'title' => 'Low stock alert',
+        ]);
+
+        $this->assertSame(9, $product->fresh()->quantity);
     }
 }

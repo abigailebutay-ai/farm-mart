@@ -27,6 +27,8 @@ class NotificationService
             'title' => $title,
             'message' => $message,
             'data' => array_merge($data, [
+                'title' => $title,
+                'message' => $message,
                 'icon' => $icon,
                 'url' => $url,
             ]),
