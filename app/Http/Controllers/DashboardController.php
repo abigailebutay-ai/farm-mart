@@ -110,13 +110,7 @@ class DashboardController extends Controller
     {
         return User::query()
             ->whereIn('role', ['farmer', 'consumer', 'buyer'])
-            ->where(function ($query) {
-                $query->where('verification_status', 'pending')
-                    ->orWhere(function ($query) {
-                        $query->where('is_verified', false)
-                            ->whereNull('verification_status');
-                    });
-            });
+            ->where('verification_status', 'pending');
     }
 
     /**

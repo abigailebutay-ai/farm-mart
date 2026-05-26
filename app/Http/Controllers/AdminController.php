@@ -198,6 +198,6 @@ class AdminController extends Controller
     private function isPendingVerificationUser(User $user): bool
     {
         return in_array($user->role, ['farmer', 'consumer', 'buyer'], true)
-            && ($user->verification_status === 'pending' || (! $user->is_verified && $user->verification_status === null));
+            && $user->verification_status === 'pending';
     }
 }

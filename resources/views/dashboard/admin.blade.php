@@ -58,7 +58,7 @@
                                 <form method="POST" action="{{ route('admin.users.reject', $pendingUser) }}">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60">Reject</button>
+                                    <button type="submit" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" onclick="return confirm('Reject this registration?')">Reject</button>
                                 </form>
                             </div>
                         </td>
@@ -66,7 +66,7 @@
                 @empty
                     <tr>
                         <td colspan="5" class="px-5 py-5">
-                            <x-ui.empty-state title="No pending verifications" message="All farmer and buyer accounts are currently reviewed." icon="check" />
+                            <x-ui.empty-state title="No pending verifications." message="All farmer and buyer accounts are currently reviewed." icon="check" />
                         </td>
                     </tr>
                 @endforelse

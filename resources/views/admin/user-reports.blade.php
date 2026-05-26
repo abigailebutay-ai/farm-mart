@@ -23,6 +23,7 @@
                     <th class="px-5 py-3">Role</th>
                     <th class="px-5 py-3">Verification</th>
                     <th class="px-5 py-3">Registered</th>
+                    <th class="px-5 py-3">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -37,10 +38,28 @@
                             <x-ui.status-badge :status="$reportedUser->verification_status ?? ($reportedUser->is_verified ? 'Approved' : 'Pending')" />
                         </td>
                         <td class="px-5 py-4 text-sm text-slate-500">{{ optional($reportedUser->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
+                        <td class="px-5 py-4">
+                            @if($reportedUser->verification_status === 'pending' && in_array($reportedUser->role, ['farmer', 'consumer', 'buyer'], true))
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <form method="POST" action="{{ route('admin.users.approve', $reportedUser) }}" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-emerald-900/60">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.users.reject', $reportedUser) }}" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" onclick="return confirm('Reject this registration?')">Reject</button>
+                                    </form>
+                                </div>
+                            @else
+                                <span class="text-sm text-slate-400">No action</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-5 py-5">
+                        <td colspan="5" class="px-5 py-5">
                             <x-ui.empty-state title="No user reports yet" message="Farmer and buyer account reports will appear here." icon="users" />
                         </td>
                     </tr>
