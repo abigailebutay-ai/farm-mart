@@ -23,6 +23,8 @@ class RouteSecurityTest extends TestCase
         $this->get('/consumer/cart')->assertRedirect('/login');
         $this->get('/buyer/cart')->assertRedirect('/login');
         $this->get('/products/create')->assertRedirect('/login');
+        $this->get('/profile/edit')->assertRedirect('/login');
+        $this->get('/settings')->assertRedirect('/login');
     }
 
     public function test_admin_cannot_access_farmer_or_consumer_routes(): void
@@ -44,8 +46,8 @@ class RouteSecurityTest extends TestCase
         $this->actingAs($admin)->get('/cart')->assertRedirect('/login');
         $this->assertGuest();
 
-        $this->actingAs($admin)->get('/settings')->assertRedirect('/login');
-        $this->assertGuest();
+        $this->actingAs($admin)->get('/profile/edit')->assertOk();
+        $this->actingAs($admin)->get('/settings')->assertOk();
     }
 
     public function test_farmer_cannot_access_admin_or_consumer_routes(): void
@@ -54,6 +56,7 @@ class RouteSecurityTest extends TestCase
 
         $this->actingAs($farmer)->get('/dashboard')->assertOk();
         $this->actingAs($farmer)->get('/farmer/inventory')->assertOk();
+        $this->actingAs($farmer)->get('/profile/edit')->assertOk();
         $this->actingAs($farmer)->get('/settings')->assertOk();
 
         $this->actingAs($farmer)
@@ -69,7 +72,7 @@ class RouteSecurityTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_consumer_cannot_access_admin_farmer_or_farmer_settings_routes(): void
+    public function test_consumer_cannot_access_admin_or_farmer_routes(): void
     {
         $consumer = User::factory()->consumer()->create();
         $product = Product::factory()->create();
@@ -77,6 +80,8 @@ class RouteSecurityTest extends TestCase
         $this->actingAs($consumer)->get('/dashboard')->assertOk();
         $this->actingAs($consumer)->get('/consumer/marketplace')->assertOk();
         $this->actingAs($consumer)->get('/cart')->assertOk();
+        $this->actingAs($consumer)->get('/profile/edit')->assertOk();
+        $this->actingAs($consumer)->get('/settings')->assertOk();
 
         $this->actingAs($consumer)
             ->get('/admin/products')
@@ -85,9 +90,6 @@ class RouteSecurityTest extends TestCase
         $this->assertGuest();
 
         $this->actingAs($consumer)->get('/farmer/inventory')->assertRedirect('/login');
-        $this->assertGuest();
-
-        $this->actingAs($consumer)->get('/settings')->assertRedirect('/login');
         $this->assertGuest();
 
         $this->actingAs($consumer)->get('/products/create')->assertRedirect('/login');

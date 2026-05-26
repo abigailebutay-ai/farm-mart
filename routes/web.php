@@ -57,15 +57,13 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:admin,farmer,consumer,buyer')
         ->name('dashboard');
     
-    // Farmer account routes
-    Route::middleware('role:farmer')->group(function () {
-        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])->name('profile.password');
-        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
-    });
+    // Account routes
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])->name('profile.password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
     // Cart routes (consumers only)
     Route::middleware('role:consumer,buyer')->group(function () {
