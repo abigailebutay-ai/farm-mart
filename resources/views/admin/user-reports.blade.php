@@ -78,9 +78,8 @@
                     <th class="px-5 py-3">Rating</th>
                     <th class="px-5 py-3">Order</th>
                     <th class="px-5 py-3">Message</th>
-                    <th class="px-5 py-3">Status</th>
                     <th class="px-5 py-3">Submitted</th>
-                    <th class="px-5 py-3">Actions</th>
+                    <th class="px-5 py-3">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -100,31 +99,21 @@
                             @endif
                         </td>
                         <td class="max-w-md px-5 py-4 text-sm leading-relaxed text-slate-600">{{ $feedbackItem->message }}</td>
-                        <td class="px-5 py-4"><x-ui.status-badge :status="$feedbackItem->status" /></td>
                         <td class="px-5 py-4 text-sm text-slate-500">{{ optional($feedbackItem->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4">
-                            <div class="flex flex-wrap gap-2">
-                                @if($feedbackItem->status === 'unread')
-                                    <form method="POST" action="{{ route('admin.feedback.read', $feedbackItem) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50">Mark as Read</button>
-                                    </form>
-                                @endif
-                                @if($feedbackItem->status !== 'resolved')
-                                    <form method="POST" action="{{ route('admin.feedback.resolve', $feedbackItem) }}" onsubmit="return confirm('Mark this feedback as resolved?')">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">Mark as Resolved</button>
-                                    </form>
-                                @endif
-                            </div>
+                            <form method="POST" action="{{ route('admin.feedback.destroy', $feedbackItem) }}" onsubmit="return confirm('Delete this feedback? This action cannot be undone.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-50 dark:border-red-900/60 dark:bg-gray-950 dark:text-red-300 dark:hover:bg-red-950/30">
+                                    Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-5 py-5">
-                            <x-ui.empty-state title="No feedback submitted yet" message="Buyer feedback will appear here after submission." icon="star" />
+                        <td colspan="7" class="px-5 py-5">
+                            <x-ui.empty-state title="No buyer feedback yet." message="Buyer feedback will appear here after submission." icon="star" />
                         </td>
                     </tr>
                 @endforelse

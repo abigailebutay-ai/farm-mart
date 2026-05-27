@@ -169,5 +169,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
     Route::patch('/feedback/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('feedback.read');
     Route::patch('/feedback/{feedback}/resolve', [AdminController::class, 'resolveFeedback'])->name('feedback.resolve');
+    Route::delete('/feedback/{feedback}', [AdminController::class, 'destroyFeedback'])->name('feedback.destroy');
     Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });

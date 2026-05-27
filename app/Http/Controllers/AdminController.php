@@ -96,6 +96,15 @@ class AdminController extends Controller
         return back()->with('success', 'Feedback marked as resolved.');
     }
 
+    public function destroyFeedback(Feedback $feedback)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $feedback->delete();
+
+        return back()->with('success', 'Feedback deleted successfully.');
+    }
+
     public function updatePaymentStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
