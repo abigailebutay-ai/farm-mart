@@ -7,7 +7,7 @@
         <div class="overflow-hidden rounded-[2rem] border border-slate-100 bg-white shadow-xl shadow-emerald-900/5">
             <div class="bg-gradient-to-r from-emerald-950 to-lime-800 p-6 text-white md:p-8">
                 <p class="text-sm font-black uppercase tracking-wide text-amber-300">Create Account</p>
-                <h1 class="mt-2 text-3xl font-black">Join Farm-Mart</h1>
+                <h1 class="mt-2 text-3xl font-black">Join SariwaLink</h1>
                 <p class="mt-2 text-emerald-100">Register as a farmer seller or buyer to access the digital farm-to-market platform.</p>
             </div>
 

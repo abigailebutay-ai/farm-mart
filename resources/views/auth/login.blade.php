@@ -5,14 +5,14 @@
 @section('content')
     <div class="mx-auto grid min-h-[calc(100vh-80px)] max-w-6xl items-center gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
         <div class="hidden rounded-[2rem] bg-gradient-to-br from-emerald-950 to-lime-800 p-8 text-white shadow-xl lg:block">
-            <p class="text-sm font-black uppercase tracking-wide text-amber-300">Farm-Mart Access</p>
+            <p class="text-sm font-black uppercase tracking-wide text-amber-300">SariwaLink Access</p>
             <h1 class="mt-4 text-4xl font-black">Fresh produce marketplace and decision-support dashboard.</h1>
             <p class="mt-4 leading-relaxed text-emerald-100">Sign in to manage products, monitor orders, browse fresh local produce, or review supply chain activity.</p>
         </div>
 
         <div class="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-xl shadow-emerald-900/5 md:p-8">
             <h1 class="text-3xl font-black text-slate-900">Login</h1>
-            <p class="mt-2 text-slate-500">Sign in to your Farm-Mart account.</p>
+            <p class="mt-2 text-slate-500">Sign in to your SariwaLink account.</p>
 
             <form method="POST" action="{{ route('login') }}" class="mt-8 space-y-5">
                 @csrf

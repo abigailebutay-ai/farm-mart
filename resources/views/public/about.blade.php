@@ -5,8 +5,8 @@
 @section('content')
     <main class="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
         <x-ui.page-header
-            title="About Farm-Mart"
-            subtitle="Farm-Mart is a thesis system for farmer-to-buyer transactions, inventory monitoring, order fulfillment, sales summaries, and decision support."
+            title="About SariwaLink"
+            subtitle="SariwaLink is a thesis system for farmer-to-buyer transactions, inventory monitoring, order fulfillment, sales summaries, and decision support."
         />
 
         <div class="mb-6 h-px bg-gradient-to-r from-transparent via-emerald-200 to-transparent dark:via-emerald-800/70"></div>

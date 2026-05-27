@@ -34,8 +34,8 @@
                         <x-ui.icon name="farmer" class="h-5 w-5" />
                     </span>
                     <div>
-                        <p class="print-brand text-xl font-black">Farm-Mart</p>
-                        <p class="print-subtitle receipt-meta text-sm">Farm-to-Market Platform</p>
+                        <p class="print-brand text-xl font-black">SariwaLink</p>
+                        <p class="print-subtitle receipt-meta text-sm">FARM-TO-MARKET PLATFORM</p>
                     </div>
                 </div>
                 <h2 class="print-title mt-6 text-3xl font-black">Official Receipt</h2>
@@ -102,7 +102,7 @@
         </div>
 
         <div class="print-footer receipt-meta mt-8 border-t border-slate-200 pt-5 text-center text-sm">
-            <p>Prepared by Farm-Mart System</p>
+            <p>Prepared by SariwaLink System</p>
             <p>Thank you for supporting local farmers.</p>
         </div>
     </section>

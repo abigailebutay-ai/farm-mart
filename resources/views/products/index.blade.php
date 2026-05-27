@@ -6,7 +6,7 @@
     <div class="mb-6 overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-r from-white via-emerald-50 to-lime-50 p-5 shadow-sm md:p-6">
         <div class="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-                <p class="text-xs font-black uppercase tracking-wide text-amber-600">Farm-Mart Marketplace</p>
+                <p class="text-xs font-black uppercase tracking-wide text-amber-600">SariwaLink Marketplace</p>
                 <h1 class="mt-1 text-2xl font-black text-slate-900 md:text-3xl">Shop Fresh Products Directly from Local Farmers</h1>
                 <p class="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">
                     Search agricultural products, compare availability, and order directly from farmers through the digital supply chain.

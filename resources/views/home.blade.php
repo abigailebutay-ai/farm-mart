@@ -16,7 +16,7 @@
                         From Local Farms to Your Basket — Smarter, Faster, Fairer.
                     </h1>
                     <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">
-                        Farm-Mart helps farmers sell fresh products directly to buyers while managing inventory, orders, sales, and decision-support insights in one platform.
+                        SariwaLink helps farmers sell fresh products directly to buyers while managing inventory, orders, sales, and decision-support insights in one platform.
                     </p>
 
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -140,7 +140,7 @@
                 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     <div class="mb-5">
                         <p class="text-xs font-black uppercase tracking-wide text-amber-600">Announcements</p>
-                        <h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">Latest Farm-Mart Updates</h2>
+                        <h2 class="mt-1 text-2xl font-black text-slate-900 dark:text-white">Latest SariwaLink Updates</h2>
                     </div>
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         @foreach($publishedAnnouncements as $announcement)
@@ -282,7 +282,7 @@
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div>
                         <h2 class="text-2xl font-black text-slate-900">Ready to connect farms and buyers?</h2>
-                        <p class="mt-1 text-sm text-slate-600">Start browsing local produce or create an account for Farm-Mart.</p>
+                        <p class="mt-1 text-sm text-slate-600">Start browsing local produce or create an account for SariwaLink.</p>
                     </div>
                     <div class="flex flex-col gap-2 sm:flex-row">
                         <x-ui.secondary-button href="{{ route('marketplace') }}">Browse Marketplace</x-ui.secondary-button>
@@ -295,11 +295,11 @@
         <footer class="border-t border-slate-200 bg-white">
             <div class="mx-auto grid max-w-7xl gap-3 px-4 py-7 text-sm text-slate-500 sm:px-6 md:grid-cols-[1fr_auto] lg:px-8">
                 <div>
-                    <p class="font-black text-emerald-900">Farm-Mart</p>
+                    <p class="font-black text-emerald-900">SariwaLink</p>
                     <p>Farmers Digital Supply Chain with Decision Support</p>
                     <p>Capstone Project - St. Paul University Philippines</p>
                 </div>
-                <p class="font-semibold">© 2026 Farm-Mart</p>
+                <p class="font-semibold">© 2026 SariwaLink</p>
             </div>
         </footer>
     </main>

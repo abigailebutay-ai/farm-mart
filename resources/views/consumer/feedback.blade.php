@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Feedback"
-        subtitle="Share your experience with Farm-Mart."
+        subtitle="Share your experience with SariwaLink."
     />
 
     <div class="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">

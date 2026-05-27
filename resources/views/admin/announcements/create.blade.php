@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Create Announcement"
-        subtitle="Publish a platform update for Farm-Mart users."
+        subtitle="Publish a platform update for SariwaLink users."
     />
 
     <x-ui.dashboard-card class="max-w-3xl" title="Announcement Details" subtitle="Published announcements can be shown to users outside the admin area.">

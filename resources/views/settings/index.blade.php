@@ -14,27 +14,6 @@
                 @method('PUT')
 
                 <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Display Preferences</h3>
-                    
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-1">
-                            <label for="dark_mode" class="block text-sm font-semibold text-gray-900 dark:text-white mb-1">Dark Mode</label>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Enable dark mode for a comfortable viewing experience</p>
-                        </div>
-                        <div>
-                            <input
-                                type="checkbox"
-                                id="dark_mode"
-                                name="dark_mode"
-                                value="1"
-                                @checked($user->dark_mode)
-                                class="h-6 w-6 text-green-600 focus:ring-green-500 border-gray-300 rounded cursor-pointer"
-                            >
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Settings</h3>
                     
                     <div class="flex items-center space-x-4">

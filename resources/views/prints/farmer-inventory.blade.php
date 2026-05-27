@@ -1,6 +1,6 @@
 @extends('layouts.print')
 
-@section('print-title', 'Inventory Report - Farm-Mart')
+@section('print-title', 'Inventory Report - SariwaLink')
 @section('print-heading', 'Inventory Report')
 @section('print-report-date', $reportDate->timezone(config('app.timezone'))->format('M d, Y h:i A'))
 @section('print-meta')

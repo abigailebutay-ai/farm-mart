@@ -116,7 +116,7 @@ class AdminController extends Controller
             $user,
             'user.approved',
             'Account approved',
-            'Your Farm-Mart account has been approved. You can now use your dashboard.',
+            'Your SariwaLink account has been approved. You can now use your dashboard.',
             'check',
             route('dashboard')
         );
@@ -144,7 +144,7 @@ class AdminController extends Controller
             $user,
             'user.rejected',
             'Account verification rejected',
-            'Your Farm-Mart account verification was rejected. Please contact the administrator for assistance.',
+            'Your SariwaLink account verification was rejected. Please contact the administrator for assistance.',
             'alert',
             route('dashboard')
         );

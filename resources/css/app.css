@@ -500,6 +500,69 @@ a {
     border-color: var(--buyer-border-color) !important;
 }
 
+.dark .bg-white,
+.dark .bg-stone-50,
+.dark .bg-slate-50,
+.dark .bg-emerald-50,
+.dark .bg-lime-50,
+.dark .bg-amber-50,
+.dark .bg-blue-50 {
+    background-color: var(--fm-surface) !important;
+}
+
+.dark .bg-white\/90,
+.dark .bg-stone-50\/80,
+.dark .bg-emerald-50\/60,
+.dark .bg-emerald-50\/80,
+.dark .bg-amber-50\/80,
+.dark .bg-lime-50\/80 {
+    background-color: color-mix(in srgb, var(--fm-surface) 88%, transparent) !important;
+}
+
+.dark .from-stone-50,
+.dark .via-white,
+.dark .to-emerald-50,
+.dark .from-emerald-50,
+.dark .to-lime-50 {
+    --tw-gradient-from: #111827 var(--tw-gradient-from-position) !important;
+    --tw-gradient-via: #111827 var(--tw-gradient-via-position) !important;
+    --tw-gradient-to: #064e3b var(--tw-gradient-to-position) !important;
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-emerald-900 {
+    color: var(--fm-text-strong) !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600,
+.dark .text-gray-700,
+.dark .text-gray-600 {
+    color: var(--fm-text) !important;
+}
+
+.dark .text-slate-500,
+.dark .text-gray-500 {
+    color: var(--fm-text-muted) !important;
+}
+
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-emerald-100,
+.dark .border-lime-100,
+.dark .border-amber-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .ring-slate-100,
+.dark .ring-gray-100 {
+    border-color: var(--fm-border) !important;
+    --tw-ring-color: var(--fm-border) !important;
+}
+
 @media print {
     @page {
         size: A4;

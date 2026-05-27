@@ -4,7 +4,7 @@
 
 @section('content')
     <x-ui.page-header
-        title="Welcome to Farm-Mart, {{ auth()->user()->name }}"
+        title="Welcome to SariwaLink, {{ auth()->user()->name }}"
         subtitle="Browse fresh local products, manage your cart, and track farmer-to-buyer orders from checkout to completion."
         action-url="{{ route('consumer.marketplace') }}"
         action-label="Browse Marketplace"
@@ -49,7 +49,7 @@
                 <x-ui.quick-action-card href="{{ route('cart.index') }}" title="View Cart" description="Review items before checkout." icon="cart" />
                 <x-ui.quick-action-card href="{{ route('orders.index') }}" title="Track Orders" description="See pending and confirmed orders." icon="orders" />
                 <x-ui.quick-action-card href="{{ route('orders.index', ['status' => 'completed']) }}" title="Completed Orders" description="Review completed purchases and receipts." icon="check" />
-                <x-ui.quick-action-card href="{{ route('consumer.feedback') }}" title="Give Feedback" description="Share your Farm-Mart experience." icon="star" />
+                <x-ui.quick-action-card href="{{ route('consumer.feedback') }}" title="Give Feedback" description="Share your SariwaLink experience." icon="star" />
             </div>
         </x-ui.dashboard-card>
     </div>

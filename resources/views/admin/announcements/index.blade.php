@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Announcements"
-        subtitle="Prepare and monitor platform announcements for Farm-Mart users."
+        subtitle="Prepare and monitor platform announcements for SariwaLink users."
     />
 
     <x-ui.dashboard-card title="Announcements" subtitle="Published platform updates will appear here.">

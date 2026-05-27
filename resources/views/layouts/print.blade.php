@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('print-title', 'Farm-Mart Report')</title>
+    <title>@yield('print-title', 'SariwaLink Report')</title>
     @include('prints.partials.styles')
 </head>
 <body>
@@ -15,8 +15,8 @@
     <main class="print-container">
         <header class="print-header">
             <div>
-                <div class="print-brand">Farm-Mart</div>
-                <div class="print-subtitle">Farm-to-Market Platform</div>
+                <div class="print-brand">SariwaLink</div>
+                <div class="print-subtitle">FARM-TO-MARKET PLATFORM</div>
             </div>
             <div class="print-header-meta">
                 <div class="print-title">@yield('print-heading', 'Report')</div>
@@ -30,7 +30,7 @@
         @yield('content')
 
         <footer class="print-footer">
-            <p>Prepared by Farm-Mart System</p>
+            <p>Prepared by SariwaLink System</p>
             <p>Thank you for supporting local farmers.</p>
         </footer>
     </main>

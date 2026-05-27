@@ -1,39 +1,12 @@
 <!DOCTYPE html>
-<html lang="en" @if(auth()->user() && auth()->user()->dark_mode) class="dark" @endif>
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Farm-Mart') - Farm-Mart</title>
+    <title>@yield('title', 'SariwaLink') - SariwaLink</title>
     <script>
-        (() => {
-            try {
-                const savedTheme = localStorage.getItem('farmMartTheme');
-                if (savedTheme === 'dark') document.documentElement.classList.add('dark');
-                if (savedTheme === 'light') document.documentElement.classList.remove('dark');
-                document.documentElement.dataset.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-            } catch (error) {}
-        })();
-
-        window.farmMartThemeShell = function () {
-            return {
-                theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
-                setTheme(theme) {
-                    this.theme = theme;
-                    document.documentElement.classList.toggle('dark', theme === 'dark');
-                    document.documentElement.dataset.theme = theme;
-                    try {
-                        localStorage.setItem('farmMartTheme', theme);
-                    } catch (error) {}
-                },
-                toggleTheme() {
-                    this.setTheme(this.theme === 'dark' ? 'light' : 'dark');
-                },
-            };
-        };
-
         window.farmMartPublicShell = function () {
             return {
-                ...window.farmMartThemeShell(),
                 publicMenuOpen: false,
                 publicProfileOpen: false,
             };
@@ -85,7 +58,7 @@
         $unreadNotificationCount = $user->unreadNotifications()->count();
     @endphp
 
-    <div x-data="{ ...farmMartThemeShell(), sidebarOpen: false, profileOpen: false, notificationsOpen: false }" class="min-h-screen">
+    <div x-data="{ sidebarOpen: false, profileOpen: false, notificationsOpen: false }" class="min-h-screen">
         <aside class="fixed inset-y-0 left-0 z-40 w-[260px] -translate-x-full border-r border-slate-200 bg-white transition duration-200 md:translate-x-0 dark:border-gray-800 dark:bg-gray-950" :class="{ 'translate-x-0 shadow-2xl': sidebarOpen }">
             <div class="flex h-full flex-col">
                 <div class="border-b border-slate-100 px-4 py-4 dark:border-gray-800">
@@ -94,8 +67,8 @@
                             <x-ui.icon name="farmer" class="h-5 w-5" />
                         </span>
                         <span>
-                            <span class="block text-lg font-black text-emerald-900 dark:text-emerald-400">Farm-Mart</span>
-                            <span class="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Farm-to-Market</span>
+                            <span class="block text-lg font-black text-emerald-900 dark:text-emerald-400">SariwaLink</span>
+                            <span class="block text-[11px] font-semibold uppercase tracking-wide text-slate-400">FARM-TO-MARKET PLATFORM</span>
                         </span>
                     </a>
                     <button type="button" class="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100 md:hidden" @click="sidebarOpen = false">
@@ -136,18 +109,12 @@
                             <x-ui.icon name="menu" class="h-5 w-5" />
                         </button>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-amber-600">Farm-Mart Workspace</p>
+                            <p class="text-[11px] font-bold uppercase tracking-wide text-amber-600 dark:text-emerald-400">SARIWALINK</p>
                             <h1 class="truncate text-lg font-black text-slate-900 dark:text-white md:text-xl">@yield('page-title', 'Dashboard')</h1>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="toggleTheme()" :aria-pressed="theme === 'dark'" aria-label="Toggle light and dark mode">
-                            <x-ui.icon name="sun" class="h-4 w-4 dark:hidden" />
-                            <x-ui.icon name="moon" class="hidden h-4 w-4 dark:block" />
-                            <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Dark' : 'Light'">Light</span>
-                        </button>
-
                         <div class="relative" @click.outside="notificationsOpen = false">
                             <button type="button" class="relative rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="notificationsOpen = !notificationsOpen; profileOpen = false">
                                 <x-ui.icon name="bell" class="h-5 w-5" />
@@ -268,8 +235,8 @@
                         <x-ui.icon name="farmer" class="h-5 w-5" />
                     </span>
                     <span class="mt-4">
-                        <span class="block text-xl font-black text-emerald-900 dark:text-emerald-400">Farm-Mart</span>
-                        <span class="hidden text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-gray-500 sm:block">Farm-to-Market Platform</span>
+                        <span class="block text-xl font-black text-emerald-900 dark:text-emerald-400">SariwaLink</span>
+                        <span class="hidden text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-gray-500 sm:block">FARM-TO-MARKET PLATFORM</span>
                     </span>
                 </a>
 
@@ -294,15 +261,10 @@
                         <button type="button" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 md:hidden" @click="publicMenuOpen = !publicMenuOpen" aria-label="Open navigation menu">
                             <x-ui.icon name="menu" class="h-5 w-5" />
                         </button>
-                        <span class="truncate text-sm font-black text-emerald-900 dark:text-emerald-400 md:hidden">Farm-Mart</span>
+                        <span class="truncate text-sm font-black text-emerald-900 dark:text-emerald-400 md:hidden">SariwaLink</span>
                     </div>
 
                     <div class="flex items-center gap-2 text-sm font-semibold">
-                        <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-700 shadow-sm transition hover:bg-stone-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800" @click="toggleTheme()" :aria-pressed="theme === 'dark'" aria-label="Toggle light and dark mode">
-                            <x-ui.icon name="sun" class="h-4 w-4 dark:hidden" />
-                            <x-ui.icon name="moon" class="hidden h-4 w-4 dark:block" />
-                            <span class="hidden sm:inline" x-text="theme === 'dark' ? 'Dark' : 'Light'">Light</span>
-                        </button>
                         @auth
                             <div class="relative" @click.outside="publicProfileOpen = false">
                                 <button type="button" class="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-2 shadow-sm dark:border-gray-800 dark:bg-gray-900" @click="publicProfileOpen = !publicProfileOpen">
