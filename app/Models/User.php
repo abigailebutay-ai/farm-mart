@@ -55,6 +55,16 @@ class User extends Authenticatable
         ];
     }
 
+    public function getNameAttribute(?string $value): string
+    {
+        return html_entity_decode($value ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    }
+
+    public function setNameAttribute(?string $value): void
+    {
+        $this->attributes['name'] = trim(html_entity_decode($value ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
     /**
      * Get all products created by this farmer.
      */

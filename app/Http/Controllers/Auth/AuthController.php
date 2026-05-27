@@ -34,6 +34,8 @@ class AuthController
             'address' => 'nullable|string|max:500',
         ]);
 
+        $validated['name'] = trim(html_entity_decode($validated['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],

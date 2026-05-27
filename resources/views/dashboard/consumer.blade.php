@@ -3,8 +3,10 @@
 @section('page-title', 'Consumer Dashboard')
 
 @section('content')
+    @php($displayName = html_entity_decode(auth()->user()->name, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+
     <x-ui.page-header
-        title="Welcome to SariwaLink, {{ auth()->user()->name }}"
+        :title="'Welcome to SariwaLink, ' . $displayName"
         subtitle="Browse products, check your cart, and track your orders in one place."
         action-url="{{ route('consumer.marketplace') }}"
         action-label="Browse Marketplace"

@@ -29,6 +29,8 @@ class ProfileController extends Controller
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        $validated['name'] = trim(html_entity_decode($validated['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
         $user = auth()->user();
 
         if ($request->hasFile('profile_picture')) {

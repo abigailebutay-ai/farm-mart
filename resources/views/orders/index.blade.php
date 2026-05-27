@@ -190,6 +190,13 @@
                                     </div>
                                 </td>
                             </tr>
+                            @if($isBuyerOrders)
+                                <tr>
+                                    <td colspan="6" class="px-6 pb-5">
+                                        <x-ui.order-progress :order="$order" />
+                                    </td>
+                                </tr>
+                            @endif
                         @endforeach
                     </tbody>
                 </table>

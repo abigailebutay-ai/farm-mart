@@ -33,6 +33,10 @@
                         <x-ui.status-badge :status="$order->status" />
                     </div>
 
+                    @if($isBuyerOrder)
+                        <x-ui.order-progress :order="$order" class="mb-6" />
+                    @endif
+
                     <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
                             <p class="text-gray-600 dark:text-gray-400 mb-1">Ordered At</p>
@@ -110,41 +114,43 @@
                 </div>
             </div>
 
-            <div class="{{ $isBuyerOrder ? 'buyer-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
-                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Order Tracking</h3>
-                </div>
+            @if(! $isBuyerOrder)
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white">Order Tracking</h3>
+                    </div>
 
-                <div class="p-6">
-                    <div class="space-y-4">
-                        @foreach($trackingSteps as $stepStatus => $label)
-                            @php
-                                $stepIndex = array_search($stepStatus, $statusOrder, true);
-                                $isCancelledStep = $stepStatus === 'cancelled';
-                                $isDone = $isCancelledStep
-                                    ? $order->status === 'cancelled'
-                                    : $stepIndex !== false && $stepIndex <= $currentStepIndex && $order->status !== 'cancelled';
-                                $timestamp = null;
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            @foreach($trackingSteps as $stepStatus => $label)
+                                @php
+                                    $stepIndex = array_search($stepStatus, $statusOrder, true);
+                                    $isCancelledStep = $stepStatus === 'cancelled';
+                                    $isDone = $isCancelledStep
+                                        ? $order->status === 'cancelled'
+                                        : $stepIndex !== false && $stepIndex <= $currentStepIndex && $order->status !== 'cancelled';
+                                    $timestamp = null;
 
-                                if ($stepStatus === 'pending') {
-                                    $timestamp = $order->created_at;
-                                } elseif ($stepStatus === $order->status) {
-                                    $timestamp = $order->updated_at;
-                                }
-                            @endphp
-                            <div class="flex gap-3">
-                                <div class="mt-1 h-4 w-4 rounded-full {{ $isCancelledStep && $isDone ? 'bg-red-600' : ($isDone ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-600') }}"></div>
-                                <div>
-                                    <p class="font-bold {{ $isCancelledStep && $isDone ? 'text-red-700 dark:text-red-300' : ($isDone ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400') }}">{{ $label }}</p>
-                                    @if($timestamp)
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $timestamp->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
-                                    @endif
+                                    if ($stepStatus === 'pending') {
+                                        $timestamp = $order->created_at;
+                                    } elseif ($stepStatus === $order->status) {
+                                        $timestamp = $order->updated_at;
+                                    }
+                                @endphp
+                                <div class="flex gap-3">
+                                    <div class="mt-1 h-4 w-4 rounded-full {{ $isCancelledStep && $isDone ? 'bg-red-600' : ($isDone ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-600') }}"></div>
+                                    <div>
+                                        <p class="font-bold {{ $isCancelledStep && $isDone ? 'text-red-700 dark:text-red-300' : ($isDone ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400') }}">{{ $label }}</p>
+                                        @if($timestamp)
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $timestamp->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
             <div class="{{ $isBuyerOrder ? 'order-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
                 <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
