@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Order extends Model
@@ -103,7 +102,10 @@ class Order extends Model
             return null;
         }
 
-        return Storage::disk(config('filesystems.default'))->url($this->payment_proof);
+        $path = str_replace('\\', '/', $this->payment_proof);
+        $path = ltrim($path, '/');
+
+        return route('payment.proof', ['path' => $path]);
     }
 
     public function paymentProofIsImage(): bool
@@ -112,7 +114,7 @@ class Order extends Model
             return false;
         }
 
-        return in_array(Str::lower(pathinfo($this->payment_proof, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp'], true);
+        return in_array(Str::lower(pathinfo($this->payment_proof, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
     }
 
     /**
