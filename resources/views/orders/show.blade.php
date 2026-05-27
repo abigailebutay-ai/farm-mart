@@ -234,31 +234,35 @@
                     </div>
 
                     <div class="p-6">
+                        <p class="mb-4 text-sm font-semibold text-gray-600 dark:text-gray-300">
+                            Update this order step by step so the buyer can track the progress.
+                        </p>
+
                         <div class="flex flex-wrap gap-3">
                             @if($order->status === 'pending')
-                                <form method="POST" action="{{ route('farmer.orders.accept', $order) }}">
+                                <form method="POST" action="{{ route('farmer.orders.accept', $order) }}" onsubmit="return confirm('Accept this order?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Accept Order</button>
                                 </form>
-                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Cancel Order</button>
                                 </form>
                             @elseif($order->status === 'accepted')
-                                <form method="POST" action="{{ route('farmer.orders.preparing', $order) }}">
+                                <form method="POST" action="{{ route('farmer.orders.preparing', $order) }}" onsubmit="return confirm('Mark this order as preparing?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Mark as Preparing</button>
                                 </form>
-                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Cancel Order</button>
                                 </form>
                             @elseif($order->status === 'preparing')
-                                <form method="POST" action="{{ route('farmer.orders.complete', $order) }}">
+                                <form method="POST" action="{{ route('farmer.orders.complete', $order) }}" onsubmit="return confirm('Mark this order as completed?')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Mark as Completed</button>
