@@ -73,7 +73,8 @@
                             <div class="mt-4 space-y-4">
                                 <div>
                                     <label for="payment_reference" class="block text-base font-semibold text-gray-900 dark:text-white mb-2">GCash Reference Number</label>
-                                    <input type="text" id="payment_reference" name="payment_reference" value="{{ old('payment_reference') }}" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Enter GCash reference number">
+                                    <input type="text" id="payment_reference" name="payment_reference" value="{{ old('payment_reference') }}" inputmode="numeric" pattern="[0-9]{11}" minlength="11" maxlength="11" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Enter 11-digit GCash reference number">
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">GCash reference number must be exactly 11 digits.</p>
                                     @error('payment_reference')
                                         <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
                                     @enderror
@@ -142,4 +143,12 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('input', function (event) {
+            if (event.target.name === 'payment_reference') {
+                event.target.value = event.target.value.replace(/\D/g, '').slice(0, 11);
+            }
+        });
+    </script>
 @endsection

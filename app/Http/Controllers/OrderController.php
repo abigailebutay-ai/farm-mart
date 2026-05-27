@@ -163,20 +163,22 @@ class OrderController extends Controller
         $validated = $request->validate([
             'notes' => 'nullable|string|max:1000',
             'payment_method' => 'required|in:cod,gcash',
-            'payment_reference' => 'nullable|string|max:255',
+            'payment_reference' => 'nullable|string',
             'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ]);
 
-        if ($validated['payment_method'] === 'gcash' && empty($validated['payment_reference'])) {
-            return back()
-                ->withErrors(['payment_reference' => 'GCash reference number is required.'])
-                ->withInput();
-        }
+        if ($validated['payment_method'] === 'gcash') {
+            if (empty($validated['payment_reference']) || ! preg_match('/^\d{11}$/', $validated['payment_reference'])) {
+                return back()
+                    ->withErrors(['payment_reference' => 'GCash reference number must be exactly 11 digits.'])
+                    ->withInput();
+            }
 
-        if ($validated['payment_method'] === 'gcash' && ! $request->hasFile('payment_proof')) {
-            return back()
-                ->withErrors(['payment_proof' => 'Proof of payment is required for GCash orders.'])
-                ->withInput();
+            if (! $request->hasFile('payment_proof')) {
+                return back()
+                    ->withErrors(['payment_proof' => 'Proof of payment is required for GCash orders.'])
+                    ->withInput();
+            }
         }
 
         $paymentData = [
