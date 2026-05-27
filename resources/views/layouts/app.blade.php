@@ -108,7 +108,6 @@
                         <button type="button" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 md:hidden" @click="sidebarOpen = true">
                             <x-ui.icon name="menu" class="h-5 w-5" />
                         </button>
-                        <h1 class="truncate text-xl font-black text-slate-900 dark:text-white">@yield('page-title', 'Dashboard')</h1>
                     </div>
 
                     <div class="flex items-center gap-2">
