@@ -85,9 +85,14 @@ class Order extends Model
 
     public function paymentStatusLabel(): string
     {
+        if (in_array($this->payment_method, ['cod', null], true)) {
+            return $this->status === 'completed' ? 'Paid' : 'Pending';
+        }
+
         return match ($this->payment_status) {
             'pending_verification' => 'Pending Verification',
             'paid' => 'Paid',
+            'cancelled' => 'Cancelled',
             default => 'Pending',
         };
     }
@@ -125,6 +130,11 @@ class Order extends Model
     public function complete(): void
     {
         $this->status = 'completed';
+
+        if (in_array($this->payment_method, ['cod', null], true)) {
+            $this->payment_status = 'paid';
+        }
+
         $this->save();
     }
 

@@ -451,7 +451,13 @@ class OrderController extends Controller
         }
 
         $oldStatus = $order->status;
-        $order->update(['status' => $nextStatus]);
+        $updates = ['status' => $nextStatus];
+
+        if ($nextStatus === 'completed' && in_array($order->payment_method, ['cod', null], true)) {
+            $updates['payment_status'] = 'paid';
+        }
+
+        $order->update($updates);
         $order->loadMissing(['consumer', 'items.product']);
 
         if ($oldStatus !== $order->status && $order->consumer) {
