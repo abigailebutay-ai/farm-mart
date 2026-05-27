@@ -91,6 +91,7 @@ class Order extends Model
         return match ($this->payment_status) {
             'pending_verification' => 'Pending Verification',
             'paid' => 'Paid',
+            'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',
             default => 'Pending',
         };

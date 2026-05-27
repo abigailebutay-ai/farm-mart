@@ -250,6 +250,17 @@ class OrderController extends Controller
             ['order_id' => $order->id]
         );
 
+        if ($order->payment_method === 'gcash') {
+            $notifications->sendToAdmins(
+                'payment.proof_uploaded',
+                'GCash payment proof uploaded',
+                ($order->consumer->name ?? 'A buyer') . " uploaded proof for Order #{$order->id}.",
+                'money',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => $order->payment_status]
+            );
+        }
+
         $successMessage = $order->payment_method === 'gcash'
             ? 'Order placed successfully. Your payment is pending verification.'
             : 'Order placed successfully. Please prepare cash upon delivery.';
@@ -448,6 +459,15 @@ class OrderController extends Controller
     ): array {
         if (! in_array($order->status, $allowedCurrentStatuses, true)) {
             return ['ok' => false, 'message' => $failureMessage];
+        }
+
+        if ($nextStatus === 'completed' && $order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
+            return [
+                'ok' => false,
+                'message' => $order->payment_status === 'rejected'
+                    ? 'Payment proof was rejected. Please wait for valid payment before completing this order.'
+                    : 'GCash payment must be verified by admin before completing this order.',
+            ];
         }
 
         $oldStatus = $order->status;

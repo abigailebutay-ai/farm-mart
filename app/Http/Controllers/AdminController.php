@@ -99,14 +99,84 @@ class AdminController extends Controller
     public function updatePaymentStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'payment_status' => 'required|in:pending,pending_verification,paid',
+            'payment_status' => 'required|in:pending_verification,paid,rejected',
         ]);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments require verification.');
+        }
+
+        if ($validated['payment_status'] === 'paid' && ! $order->payment_proof) {
+            return back()->with('error', 'No proof of payment uploaded.');
+        }
 
         $order->update([
             'payment_status' => $validated['payment_status'],
         ]);
 
         return back()->with('success', 'Payment status updated successfully.');
+    }
+
+    public function markPaymentPaid(Order $order, NotificationService $notifications)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments require verification.');
+        }
+
+        if (! $order->payment_proof) {
+            return back()->with('error', 'No proof of payment uploaded.');
+        }
+
+        $order->update([
+            'payment_status' => 'paid',
+        ]);
+
+        $order->loadMissing('consumer');
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'payment.verified',
+                'GCash payment verified',
+                "Your GCash payment for Order #{$order->id} has been verified.",
+                'check',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => 'paid']
+            );
+        }
+
+        return back()->with('success', 'GCash payment marked as paid.');
+    }
+
+    public function rejectPayment(Order $order, NotificationService $notifications)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments can be rejected.');
+        }
+
+        $order->update([
+            'payment_status' => 'rejected',
+        ]);
+
+        $order->loadMissing('consumer');
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'payment.rejected',
+                'GCash payment rejected',
+                "Your GCash proof for Order #{$order->id} was rejected. Please contact admin for assistance.",
+                'alert',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => 'rejected']
+            );
+        }
+
+        return back()->with('success', 'GCash payment rejected.');
     }
 
     public function approveUser(User $user, NotificationService $notifications)

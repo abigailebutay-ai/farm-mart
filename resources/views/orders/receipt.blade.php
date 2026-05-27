@@ -48,6 +48,9 @@
                 <p class="font-semibold">{{ $order->paymentMethodLabel() }}</p>
                 <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Payment Status</p>
                 <p class="font-semibold">{{ $order->paymentStatusLabel() }}</p>
+                @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
+                    <p class="mt-1 text-sm font-semibold text-amber-700">Payment not yet verified.</p>
+                @endif
                 @if($order->payment_reference)
                     <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">GCash Reference Number</p>
                     <p class="font-semibold">{{ $order->payment_reference }}</p>

@@ -127,7 +127,7 @@
                                         @if($order->payment_method === 'gcash')
                                             GCash - {{ $order->paymentStatusLabel() }}
                                         @else
-                                            Cash on Delivery
+                                            Cash on Delivery - {{ $order->paymentStatusLabel() }}
                                         @endif
                                     </div>
                                 </td>
@@ -176,11 +176,17 @@
                                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700">Cancel Order</button>
                                                 </form>
                                             @elseif($order->status === 'preparing')
-                                                <form method="POST" action="{{ route('farmer.orders.complete', $order) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Mark as Completed</button>
-                                                </form>
+                                                @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
+                                                    <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
+                                                        Payment must be verified before completion
+                                                    </span>
+                                                @else
+                                                    <form method="POST" action="{{ route('farmer.orders.complete', $order) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Mark as Completed</button>
+                                                    </form>
+                                                @endif
                                             @elseif($order->status === 'completed')
                                                 <span class="rounded-lg bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">Completed</span>
                                             @elseif($order->status === 'cancelled')

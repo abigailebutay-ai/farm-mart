@@ -5,6 +5,7 @@
 @section('content')
     @php
         $isBuyerOrder = auth()->user()->isConsumer();
+        $isGcashPayment = $order->payment_method === 'gcash';
         $visibleItems = auth()->user()->isFarmer()
             ? $order->items->where('farmer_id', auth()->id())
             : $order->items;
@@ -77,7 +78,33 @@
                                 <p class="font-semibold text-gray-900 dark:text-white">{{ $order->payment_reference }}</p>
                             </div>
                         @endif
+                        @if(auth()->user()->isAdmin() && $isGcashPayment)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Order Total Amount</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">PHP {{ number_format($order->total, 2) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Buyer Name</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->consumer->name ?? 'Buyer' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Order Date</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
+                            </div>
+                        @endif
                     </div>
+
+                    @if($isBuyerOrder && $isGcashPayment)
+                        <div class="rounded-lg border px-4 py-3 text-sm font-semibold {{ $order->payment_status === 'paid' ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100' : ($order->payment_status === 'rejected' ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-100' : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100') }}">
+                            @if($order->payment_status === 'paid')
+                                Your GCash payment has been verified.
+                            @elseif($order->payment_status === 'rejected')
+                                Your payment proof was rejected. Please contact admin or upload valid proof if re-upload is supported.
+                            @else
+                                Your payment proof is waiting for admin verification.
+                            @endif
+                        </div>
+                    @endif
 
                     @if($order->payment_proof)
                         <div>
@@ -94,22 +121,58 @@
                         </div>
                     @endif
 
-                    @if(auth()->user()->isAdmin() && $order->payment_method === 'gcash')
-                        <form method="POST" action="{{ route('admin.orders.payment-status', $order) }}" class="flex flex-wrap items-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
-                            @csrf
-                            @method('PATCH')
-                            <div>
-                                <label for="payment_status" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Update Payment Status</label>
-                                <select id="payment_status" name="payment_status" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                                    <option value="pending" @selected($order->payment_status === 'pending')>Pending</option>
-                                    <option value="pending_verification" @selected($order->payment_status === 'pending_verification')>Pending Verification</option>
-                                    <option value="paid" @selected($order->payment_status === 'paid')>Paid</option>
-                                </select>
+                    @if(auth()->user()->isAdmin() && $isGcashPayment)
+                        <div class="border-t border-gray-200 pt-4 dark:border-gray-700">
+                            <h4 class="text-base font-bold text-gray-900 dark:text-white">Payment Verification</h4>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Check the GCash proof, reference number, buyer name, and order total before marking payment as paid.</p>
+
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                @if($order->payment_status === 'pending_verification')
+                                    <form method="POST" action="{{ route('admin.orders.payment.paid', $order) }}" onsubmit="return confirm('Mark this GCash payment as paid?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                            Mark as Paid
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.orders.payment.reject', $order) }}" onsubmit="return confirm('Reject this GCash payment proof?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">
+                                            Reject Payment
+                                        </button>
+                                    </form>
+                                @elseif($order->payment_status === 'paid')
+                                    <x-ui.status-badge status="Paid" />
+                                    <form method="POST" action="{{ route('admin.orders.payment-status', $order) }}" onsubmit="return confirm('Set this GCash payment back to pending verification?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="payment_status" value="pending_verification">
+                                        <button type="submit" class="rounded-lg border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-200 dark:hover:bg-amber-900/30">
+                                            Set Back to Pending Verification
+                                        </button>
+                                    </form>
+                                @elseif($order->payment_status === 'rejected')
+                                    <x-ui.status-badge status="Rejected" />
+                                    <form method="POST" action="{{ route('admin.orders.payment.paid', $order) }}" onsubmit="return confirm('Mark this rejected GCash payment as paid?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                            Mark as Paid
+                                        </button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.orders.payment-status', $order) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="payment_status" value="pending_verification">
+                                        <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">
+                                            Mark Pending Verification
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
-                            <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
-                                Save Payment Status
-                            </button>
-                        </form>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -262,11 +325,17 @@
                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Cancel Order</button>
                                 </form>
                             @elseif($order->status === 'preparing')
-                                <form method="POST" action="{{ route('farmer.orders.complete', $order) }}" onsubmit="return confirm('Mark this order as completed?')">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Mark as Completed</button>
-                                </form>
+                                @if($isGcashPayment && $order->payment_status !== 'paid')
+                                    <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                                        {{ $order->payment_status === 'rejected' ? 'Payment proof was rejected. Please wait for valid payment before completing this order.' : 'GCash payment is pending admin verification. You can complete this order after payment is marked paid.' }}
+                                    </div>
+                                @else
+                                    <form method="POST" action="{{ route('farmer.orders.complete', $order) }}" onsubmit="return confirm('Mark this order as completed?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Mark as Completed</button>
+                                    </form>
+                                @endif
                             @elseif($order->status === 'completed')
                                 <span class="rounded-lg bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">Completed</span>
                             @elseif($order->status === 'cancelled')
