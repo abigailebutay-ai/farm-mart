@@ -1,16 +1,16 @@
 @extends('layouts.print')
 
-@section('print-title', 'Admin System Report - SariwaLink')
-@section('print-heading', 'Admin System Report')
+@section('print-title', 'System Report - SariwaLink')
+@section('print-heading', 'System Report')
 @section('print-report-date', $reportDate->timezone(config('app.timezone'))->format('M d, Y h:i A'))
 
 @section('content')
     <section class="print-summary">
         <div class="print-summary-card"><span class="print-summary-label">Total Users</span><strong class="print-summary-value">{{ $totalUsers }}</strong></div>
         <div class="print-summary-card"><span class="print-summary-label">Total Farmers</span><strong class="print-summary-value">{{ $totalFarmers }}</strong></div>
-        <div class="print-summary-card"><span class="print-summary-label">Total Buyers/Consumers</span><strong class="print-summary-value">{{ $totalBuyers }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Consumers</span><strong class="print-summary-value">{{ $totalBuyers }}</strong></div>
         <div class="print-summary-card"><span class="print-summary-label">Total Products</span><strong class="print-summary-value">{{ $totalProducts }}</strong></div>
-        <div class="print-summary-card"><span class="print-summary-label">Pending Verifications</span><strong class="print-summary-value">{{ $pendingVerifications }}</strong></div>
+        <div class="print-summary-card"><span class="print-summary-label">Pending User Approvals</span><strong class="print-summary-value">{{ $pendingVerifications }}</strong></div>
         <div class="print-summary-card"><span class="print-summary-label">Total Orders</span><strong class="print-summary-value">{{ $totalOrders }}</strong></div>
         <div class="print-summary-card"><span class="print-summary-label">Completed Orders</span><strong class="print-summary-value">{{ $completedOrders }}</strong></div>
         <div class="print-summary-card"><span class="print-summary-label">Cancelled Orders</span><strong class="print-summary-value">{{ $cancelledOrders }}</strong></div>

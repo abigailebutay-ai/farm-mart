@@ -5,14 +5,14 @@
 @section('content')
     <x-ui.page-header
         title="Create Announcement"
-        subtitle="Publish a platform update for SariwaLink users."
+        subtitle="Write a clear message for users."
     />
 
-    <x-ui.dashboard-card class="max-w-3xl" title="Announcement Details" subtitle="Published announcements can be shown to users outside the admin area.">
+    <x-ui.dashboard-card class="max-w-3xl" title="Announcement Details" subtitle="Published announcements can be shown to users in the system.">
         <form method="POST" action="{{ route('admin.announcements.store') }}">
             @include('admin.announcements._form', [
                 'announcement' => $announcement,
-                'submitLabel' => 'Save Announcement',
+                'submitLabel' => 'Publish Announcement',
             ])
         </form>
     </x-ui.dashboard-card>

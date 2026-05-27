@@ -1,29 +1,30 @@
 @extends('layouts.app')
 
-@section('page-title', 'User Reports')
+@section('page-title', 'User Approvals')
 
 @section('content')
     <x-ui.page-header
-        title="User Reports"
-        subtitle="Review farmer and buyer account activity, verification status, and registration summaries."
+        title="User Approvals"
+        subtitle="Review new farmer and consumer accounts before they can fully use the system."
     />
 
     <div class="grid gap-4 md:grid-cols-4">
         <x-ui.stat-card label="Farmers" :value="$totalFarmers ?? 0" icon="farmer" trend="Registered farmer sellers." />
-        <x-ui.stat-card label="Buyers" :value="$totalBuyers ?? 0" icon="buyer" tone="blue" trend="Registered marketplace buyers." />
-        <x-ui.stat-card label="Pending Reviews" :value="$pendingVerifications ?? 0" icon="clock" tone="amber" trend="Accounts waiting for verification." />
+        <x-ui.stat-card label="Consumers" :value="$totalBuyers ?? 0" icon="buyer" tone="blue" trend="Registered marketplace buyers." />
+        <x-ui.stat-card label="Pending User Approvals" :value="$pendingVerifications ?? 0" icon="clock" tone="amber" trend="Users waiting for admin approval." />
         <x-ui.stat-card label="Unread Feedback" :value="$unreadFeedbackCount ?? 0" icon="star" tone="amber" trend="Buyer feedback waiting for review." />
     </div>
 
     <div class="mt-5">
-        <x-ui.table-card title="User Reports" subtitle="Farmer and buyer accounts available for admin review.">
+        <x-ui.table-card title="Pending User Approvals" subtitle="Approve or reject registered farmers and consumers.">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                    <th class="px-5 py-3">User</th>
+                    <th class="px-5 py-3">Name</th>
+                    <th class="px-5 py-3">Email</th>
                     <th class="px-5 py-3">Role</th>
-                    <th class="px-5 py-3">Verification</th>
-                    <th class="px-5 py-3">Registered</th>
-                    <th class="px-5 py-3">Actions</th>
+                    <th class="px-5 py-3">Date Registered</th>
+                    <th class="px-5 py-3">Status</th>
+                    <th class="px-5 py-3">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -31,25 +32,25 @@
                     <tr class="hover:bg-slate-50">
                         <td class="px-5 py-4">
                             <p class="font-bold text-slate-900">{{ $reportedUser->name }}</p>
-                            <p class="text-sm text-slate-500">{{ $reportedUser->email }}</p>
                         </td>
+                        <td class="px-5 py-4 text-sm text-slate-600">{{ $reportedUser->email }}</td>
                         <td class="px-5 py-4 text-sm text-slate-600">{{ \Illuminate\Support\Str::title($reportedUser->role) }}</td>
+                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($reportedUser->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4">
                             <x-ui.status-badge :status="$reportedUser->verification_status ?? ($reportedUser->is_verified ? 'Approved' : 'Pending')" />
                         </td>
-                        <td class="px-5 py-4 text-sm text-slate-500">{{ optional($reportedUser->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                         <td class="px-5 py-4">
                             @if($reportedUser->verification_status === 'pending' && in_array($reportedUser->role, ['farmer', 'consumer', 'buyer'], true))
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <form method="POST" action="{{ route('admin.users.approve', $reportedUser) }}" class="inline">
+                                    <form method="POST" action="{{ route('admin.users.approve', $reportedUser) }}" class="inline" onsubmit="return confirm('Approve this user account?')">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-200 dark:hover:bg-emerald-900/60">Approve</button>
                                     </form>
-                                    <form method="POST" action="{{ route('admin.users.reject', $reportedUser) }}" class="inline">
+                                    <form method="POST" action="{{ route('admin.users.reject', $reportedUser) }}" class="inline" onsubmit="return confirm('Reject this user account?')">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60" onclick="return confirm('Reject this registration?')">Reject</button>
+                                        <button type="submit" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 transition hover:bg-red-100 dark:bg-red-900/40 dark:text-red-200 dark:hover:bg-red-900/60">Reject</button>
                                     </form>
                                 </div>
                             @else
@@ -59,8 +60,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-5 py-5">
-                            <x-ui.empty-state title="No user reports yet" message="Farmer and buyer account reports will appear here." icon="users" />
+                        <td colspan="6" class="px-5 py-5">
+                            <x-ui.empty-state title="No users waiting for approval." message="New farmer and consumer registrations will appear here." icon="users" />
                         </td>
                     </tr>
                 @endforelse
@@ -107,14 +108,14 @@
                                     <form method="POST" action="{{ route('admin.feedback.read', $feedbackItem) }}">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50">Read</button>
+                                        <button type="submit" class="rounded-lg border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50">Mark as Read</button>
                                     </form>
                                 @endif
                                 @if($feedbackItem->status !== 'resolved')
-                                    <form method="POST" action="{{ route('admin.feedback.resolve', $feedbackItem) }}">
+                                    <form method="POST" action="{{ route('admin.feedback.resolve', $feedbackItem) }}" onsubmit="return confirm('Mark this feedback as resolved?')">
                                         @csrf
                                         @method('PATCH')
-                                        <button type="submit" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">Resolve</button>
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-800">Mark as Resolved</button>
                                     </form>
                                 @endif
                             </div>

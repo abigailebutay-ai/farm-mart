@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Edit Announcement"
-        subtitle="Update announcement content and publication status."
+        subtitle="Update the announcement message or status."
     />
 
     <x-ui.dashboard-card class="max-w-3xl" title="Announcement Details" subtitle="Keep published updates clear and current for users.">
@@ -13,7 +13,7 @@
             @method('PUT')
             @include('admin.announcements._form', [
                 'announcement' => $announcement,
-                'submitLabel' => 'Update Announcement',
+                'submitLabel' => 'Save Changes',
             ])
         </form>
     </x-ui.dashboard-card>

@@ -25,7 +25,7 @@
         if ($user->isAdmin()) {
             $navItems = [
                 ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => 'dashboard', 'icon' => 'dashboard'],
-                ['label' => 'User Reports', 'href' => route('admin.user-reports'), 'active' => 'admin.user-reports', 'icon' => 'users'],
+                ['label' => 'User Approvals', 'href' => route('admin.user-reports'), 'active' => 'admin.user-reports', 'icon' => 'users'],
                 ['label' => 'Products', 'href' => route('admin.products'), 'active' => 'admin.products', 'icon' => 'products'],
                 ['label' => 'Orders', 'href' => route('orders.index'), 'active' => 'orders.*', 'icon' => 'orders'],
                 ['label' => 'Announcements', 'href' => route('admin.announcements.index'), 'active' => 'admin.announcements.*', 'icon' => 'megaphone'],

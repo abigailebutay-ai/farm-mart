@@ -5,10 +5,10 @@
 @section('content')
     <x-ui.page-header
         title="Activity Logs"
-        subtitle="Review recent farmer, buyer, product, and order activity across the platform."
+        subtitle="View recent system actions such as user registrations, product updates, and order activity."
     />
 
-    <x-ui.dashboard-card title="Activity Logs" subtitle="Recent marketplace activity for admin monitoring.">
+    <x-ui.dashboard-card title="Activity Logs" subtitle="Readable summaries of what happened and when.">
         <div class="space-y-3">
             @forelse($activityLogs ?? [] as $activity)
                 <div class="flex gap-3 rounded-xl border border-slate-100 p-3 dark:border-gray-800">

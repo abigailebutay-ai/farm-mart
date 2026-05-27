@@ -5,6 +5,7 @@
 @section('content')
     @php
         $isBuyerOrders = auth()->user()->isConsumer();
+        $isAdminOrders = auth()->user()->isAdmin();
         $currentStatus = $status ?? 'all';
         $statusLabels = [
             'all' => 'All',
@@ -17,8 +18,8 @@
     @endphp
 
     <x-ui.page-header
-        title="{{ $isBuyerOrders ? 'My Orders' : 'Order Fulfillment' }}"
-        subtitle="{{ $isBuyerOrders ? 'Track your orders and view receipts.' : 'View buyer orders and update their status.' }}"
+        title="{{ $isBuyerOrders ? 'My Orders' : ($isAdminOrders ? 'Orders' : 'Order Fulfillment') }}"
+        subtitle="{{ $isBuyerOrders ? 'Track your orders and view receipts.' : ($isAdminOrders ? 'Review buyer orders, order status, and payment information.' : 'View buyer orders and update their status.') }}"
     />
 
     @if(auth()->user()->isFarmer())
@@ -84,18 +85,23 @@
                 <table class="{{ $isBuyerOrders ? 'buyer-table' : '' }} w-full">
                     <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Number</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">
-                                @if(auth()->user()->isFarmer())
-                                    Customer
-                                @else
-                                    Items
-                                @endif
-                            </th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Total Amount</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Current Status</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Date</th>
-                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Next Action</th>
+                            @if($isAdminOrders)
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order No.</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Buyer</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Total Amount</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Payment Method</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Payment Status</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Status</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Date</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Action</th>
+                            @else
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Number</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">{{ auth()->user()->isFarmer() ? 'Customer' : 'Items' }}</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Total Amount</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Current Status</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Order Date</th>
+                                <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Next Action</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -109,28 +115,40 @@
                             <tr>
                                 <td class="px-6 py-4 font-semibold text-gray-800">#{{ $order->id }}</td>
                                 <td class="px-6 py-4 text-gray-600">
-                                    @if(auth()->user()->isFarmer())
+                                    @if(auth()->user()->isFarmer() || $isAdminOrders)
                                         <div class="font-semibold text-gray-800 dark:text-gray-100">{{ $order->consumer->name ?? 'Buyer' }}</div>
-                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            @foreach($farmerItems as $item)
-                                                <div>{{ optional($item->product)->name ?? 'Product unavailable' }} x {{ $item->quantity }} {{ optional($item->product)->unit ?? 'piece' }}</div>
-                                            @endforeach
-                                        </div>
+                                        @if(auth()->user()->isFarmer())
+                                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                @foreach($farmerItems as $item)
+                                                    <div>{{ optional($item->product)->name ?? 'Product unavailable' }} x {{ $item->quantity }} {{ optional($item->product)->unit ?? 'piece' }}</div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     @else
                                         {{ $order->items_count ?? $order->items()->count() }} items
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-gray-800">PHP {{ number_format(auth()->user()->isFarmer() ? $farmerSubtotal : $order->total, 2) }}</td>
-                                <td class="px-6 py-4">
-                                    <x-ui.status-badge :status="$order->status" />
-                                    <div class="mt-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
-                                        @if($order->payment_method === 'gcash')
-                                            GCash - {{ $order->paymentStatusLabel() }}
-                                        @else
-                                            Cash on Delivery - {{ $order->paymentStatusLabel() }}
-                                        @endif
-                                    </div>
-                                </td>
+                                @if($isAdminOrders)
+                                    <td class="px-6 py-4 text-gray-600">{{ $order->paymentMethodLabel() }}</td>
+                                    <td class="px-6 py-4"><x-ui.status-badge :status="$order->paymentStatusLabel()" /></td>
+                                    <td class="px-6 py-4"><x-ui.status-badge :status="$order->status" /></td>
+                                @else
+                                    <td class="px-6 py-4">
+                                        <x-ui.status-badge :status="$order->status" />
+                                @endif
+                                    @unless($isAdminOrders)
+                                        <div class="mt-2 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                            @if($order->payment_method === 'gcash')
+                                                GCash - {{ $order->paymentStatusLabel() }}
+                                            @else
+                                                Cash on Delivery - {{ $order->paymentStatusLabel() }}
+                                            @endif
+                                        </div>
+                                    @endunless
+                                @unless($isAdminOrders)
+                                    </td>
+                                @endunless
                                 <td class="px-6 py-4 text-gray-500">{{ $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</td>
                                 <td class="px-6 py-4">
                                     <div class="flex flex-wrap gap-2">

@@ -2,7 +2,7 @@
 
 <div class="space-y-5">
     <div>
-        <label for="title" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-200">Title</label>
+        <label for="title" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-200">Announcement Title</label>
         <input
             id="title"
             name="title"
@@ -18,7 +18,7 @@
     </div>
 
     <div>
-        <label for="body" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-200">Body</label>
+        <label for="body" class="mb-2 block text-sm font-semibold text-slate-700 dark:text-gray-200">Message</label>
         <textarea
             id="body"
             name="body"

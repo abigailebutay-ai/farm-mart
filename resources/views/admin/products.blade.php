@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('page-title', 'Products Management')
+@section('page-title', 'Products')
 
 @section('content')
     <x-ui.page-header
-        title="Products Management"
-        subtitle="Monitor farmer product listings, stock status, prices, categories, and availability."
+        title="Products"
+        subtitle="View products listed by farmers."
     />
 
     <div class="mb-5 flex justify-end">
@@ -14,7 +14,7 @@
         </x-ui.secondary-button>
     </div>
 
-    <x-ui.table-card title="Product Listings" subtitle="All farmer marketplace listings currently recorded in the system.">
+    <x-ui.table-card title="Products" subtitle="Review product details, seller, price, stock, and status.">
         <thead class="bg-slate-50">
             <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
                 <th class="px-5 py-3">Product</th>
@@ -22,17 +22,14 @@
                 <th class="px-5 py-3">Category</th>
                 <th class="px-5 py-3">Price</th>
                 <th class="px-5 py-3">Stock</th>
-                <th class="px-5 py-3">Stock Status</th>
-                <th class="px-5 py-3">Listing Status</th>
-                <th class="px-5 py-3">Created</th>
-                <th class="px-5 py-3">Actions</th>
+                <th class="px-5 py-3">Status</th>
+                <th class="px-5 py-3">Action</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
             @forelse($products as $product)
                 @php
                     $stockStatus = $product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock');
-                    $listingStatus = $product->status ?? ($product->quantity > 0 ? 'Active' : 'Out of Stock');
                 @endphp
                 <tr class="hover:bg-slate-50">
                     <td class="px-5 py-4">
@@ -55,15 +52,13 @@
                     <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
                     <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
                     <td class="px-5 py-4"><x-ui.status-badge :status="$stockStatus" /></td>
-                    <td class="px-5 py-4"><x-ui.status-badge :status="$listingStatus" /></td>
-                    <td class="px-5 py-4 text-sm text-slate-500">{{ optional($product->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                     <td class="px-5 py-4">
-                        <x-ui.secondary-button href="{{ route('admin.products.show', $product) }}" class="px-3 py-1.5 text-xs">View</x-ui.secondary-button>
+                        <x-ui.secondary-button href="{{ route('admin.products.show', $product) }}" class="px-3 py-1.5 text-xs">View Details</x-ui.secondary-button>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="px-5 py-5">
+                    <td colspan="7" class="px-5 py-5">
                         <x-ui.empty-state title="No products found" message="Farmer product listings will appear here once products are created." icon="products" />
                     </td>
                 </tr>

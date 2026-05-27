@@ -11,7 +11,7 @@
 
     <x-ui.page-header
         title="Product Details"
-        subtitle="Review farmer listing information, stock status, pricing, and availability."
+        subtitle="Review the product, farmer, price, stock, and status."
     />
 
     <div class="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
@@ -28,7 +28,7 @@
         <x-ui.dashboard-card title="{{ $product->name }}" subtitle="Admin product monitoring details.">
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
-                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Farmer / Seller</p>
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Farmer</p>
                     <p class="mt-1 font-black text-slate-900 dark:text-white">{{ $product->farmer->name ?? 'Unknown farmer' }}</p>
                     <p class="mt-1 text-sm text-slate-500 dark:text-gray-400">{{ $product->farmer->email ?? 'Email unavailable' }}</p>
                 </div>
@@ -39,12 +39,12 @@
                 </div>
 
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
-                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Price Per Unit</p>
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Price</p>
                     <p class="mt-1 font-black text-emerald-800 dark:text-emerald-300">PHP {{ number_format($product->price, 2) }} / {{ $unit }}</p>
                 </div>
 
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
-                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Stock Quantity</p>
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Stock</p>
                     <p class="mt-1 font-black text-slate-900 dark:text-white">{{ $product->quantity }} {{ $unit }}</p>
                 </div>
 
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="rounded-xl border border-slate-100 p-4 dark:border-gray-800">
-                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Listing Status</p>
+                    <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Status</p>
                     <div class="mt-2"><x-ui.status-badge :status="$listingStatus" /></div>
                 </div>
 

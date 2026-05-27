@@ -8,13 +8,14 @@
     <table>
         <thead>
             <tr>
-                <th>Order ID</th>
-                <th>Buyer name</th>
-                <th>Farmer/seller</th>
-                <th>Items count</th>
-                <th>Total amount</th>
-                <th>Status</th>
-                <th>Date created/completed</th>
+                <th>Order No.</th>
+                <th>Buyer</th>
+                <th>Farmer</th>
+                <th>Items</th>
+                <th>Total Amount</th>
+                <th>Payment</th>
+                <th>Order Status</th>
+                <th>Order Date</th>
             </tr>
         </thead>
         <tbody>
@@ -32,16 +33,17 @@
                     <td>{{ $farmers->isNotEmpty() ? $farmers->join(', ') : 'Not available' }}</td>
                     <td>{{ $order->items_count ?? $order->items->count() }}</td>
                     <td>PHP {{ number_format($order->total, 2) }}</td>
+                    <td>{{ $order->paymentMethodLabel() }} - {{ $order->paymentStatusLabel() }}</td>
                     <td>{{ ucfirst($order->status) }}</td>
                     <td>
-                        Date Created: {{ $createdDate }}
+                        Ordered: {{ $createdDate }}
                         @if($completedDate)
                             <br>Completed At: {{ $completedDate }}
                         @endif
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="empty-row">No orders found.</td></tr>
+                <tr><td colspan="8" class="empty-row">No orders found.</td></tr>
             @endforelse
         </tbody>
     </table>

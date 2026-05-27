@@ -5,10 +5,10 @@
 @section('content')
     <x-ui.page-header
         title="Announcements"
-        subtitle="Prepare and monitor platform announcements for SariwaLink users."
+        subtitle="Create announcements that users can see in the system."
     />
 
-    <x-ui.dashboard-card title="Announcements" subtitle="Published platform updates will appear here.">
+    <x-ui.dashboard-card title="Announcements" subtitle="Create and manage user announcements.">
         <div class="mb-4 flex justify-end">
             <x-ui.primary-button href="{{ route('admin.announcements.create') }}" class="gap-2">
                 <x-ui.icon name="megaphone" class="h-4 w-4" />
@@ -64,7 +64,7 @@
                 {{ $announcements->links() }}
             </div>
         @else
-            <x-ui.empty-state title="No announcements yet" message="Create an announcement when you are ready to publish a platform update." icon="megaphone" />
+            <x-ui.empty-state title="No announcements posted yet." message="Create an announcement when you are ready to publish a platform update." icon="megaphone" />
         @endif
     </x-ui.dashboard-card>
 @endsection
