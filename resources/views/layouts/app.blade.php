@@ -61,7 +61,7 @@
     <div x-data="{ sidebarOpen: false, profileOpen: false, notificationsOpen: false }" class="min-h-screen">
         <aside class="fixed inset-y-0 left-0 z-40 w-[260px] -translate-x-full border-r border-slate-200 bg-white transition duration-200 md:translate-x-0 dark:border-gray-800 dark:bg-gray-950" :class="{ 'translate-x-0 shadow-2xl': sidebarOpen }">
             <div class="flex h-full flex-col">
-                <div class="border-b border-slate-100 px-4 py-4 dark:border-gray-800">
+                <div class="flex min-h-[72px] items-center border-b border-slate-100 px-4 dark:border-gray-800">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
                         <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-700 text-white shadow-sm">
                             <x-ui.icon name="farmer" class="h-5 w-5" />
@@ -102,16 +102,13 @@
         </aside>
 
         <div class="md:pl-[260px]">
-            <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95 md:px-6">
-                <div class="flex items-center justify-between gap-4">
+            <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 px-4 py-0 backdrop-blur dark:border-gray-800 dark:bg-gray-950/95 md:px-6">
+                <div class="flex min-h-[72px] items-center justify-between gap-4">
                     <div class="flex min-w-0 items-center gap-3">
                         <button type="button" class="rounded-xl border border-slate-200 bg-white p-2 text-slate-700 shadow-sm dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 md:hidden" @click="sidebarOpen = true">
                             <x-ui.icon name="menu" class="h-5 w-5" />
                         </button>
-                        <div class="min-w-0">
-                            <p class="text-[11px] font-bold uppercase tracking-wide text-amber-600 dark:text-emerald-400">SARIWALINK</p>
-                            <h1 class="truncate text-lg font-black text-slate-900 dark:text-white md:text-xl">@yield('page-title', 'Dashboard')</h1>
-                        </div>
+                        <h1 class="truncate text-xl font-black text-slate-900 dark:text-white">@yield('page-title', 'Dashboard')</h1>
                     </div>
 
                     <div class="flex items-center gap-2">
