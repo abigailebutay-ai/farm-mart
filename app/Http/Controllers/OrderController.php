@@ -38,7 +38,11 @@ class OrderController extends Controller
 
                 $query->where('farmer_id', $user->id);
 
-            })->withCount('items')->latest()->paginate(10);
+            })
+                ->with(['consumer', 'items.product'])
+                ->withCount('items')
+                ->latest()
+                ->paginate(10);
 
         } else {
 
@@ -211,30 +215,194 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, Order $order, NotificationService $notifications)
     {
-        $user = auth()->user();
-
-        // Verify farmer owns products in this order
-        if (
-            !$user->isFarmer() ||
-            !$order->items()
-                ->where('farmer_id', $user->id)
-                ->exists()
-        ) {
-            abort(403);
-        }
+        $this->ensureFarmerOwnsOrder($order);
 
         $validated = $request->validate([
             'status' => 'required|in:pending,accepted,preparing,completed,cancelled',
         ]);
 
-        // Store old status
+        if ($validated['status'] === $order->status) {
+            return redirect()
+                ->route('orders.show', $order)
+                ->with('success', 'Order status updated!');
+        }
+
+        $result = match ($validated['status']) {
+            'accepted' => $this->transitionOrder(
+                $order,
+                'accepted',
+                ['pending'],
+                'Only pending orders can be accepted.',
+                'Your order has been accepted.',
+                $notifications
+            ),
+            'preparing' => $this->transitionOrder(
+                $order,
+                'preparing',
+                ['accepted'],
+                'This order must be accepted before preparing.',
+                'Your order is now being prepared.',
+                $notifications
+            ),
+            'completed' => $this->transitionOrder(
+                $order,
+                'completed',
+                ['preparing'],
+                'This order must be preparing before completion.',
+                'Your order has been completed.',
+                $notifications
+            ),
+            'cancelled' => $this->transitionOrder(
+                $order,
+                'cancelled',
+                ['pending', 'accepted'],
+                'This order can no longer be cancelled.',
+                'Your order was cancelled.',
+                $notifications
+            ),
+            default => ['ok' => false, 'message' => 'Invalid order status update.'],
+        };
+
+        if (! $result['ok']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Order status updated!');
+    }
+
+    public function cancelByConsumer(Order $order, NotificationService $notifications)
+    {
+        if ($order->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        if (! in_array($order->status, ['pending', 'accepted'], true)) {
+            return back()->with('error', 'This order can no longer be cancelled.');
+        }
+
+        if ($order->created_at->lt(now()->subDay())) {
+            return back()->with('error', 'Cancellation is only allowed within 24 hours after ordering.');
+        }
+
+        $order->update([
+            'status' => 'cancelled',
+        ]);
+
+        $order->loadMissing('items.farmer');
+
+        $order->items
+            ->pluck('farmer')
+            ->filter()
+            ->unique('id')
+            ->each(function ($farmer) use ($order, $notifications) {
+                $notifications->send(
+                    $farmer,
+                    'order.cancelled',
+                    'Order cancelled',
+                    "Order #{$order->id} was cancelled by the buyer.",
+                    'alert',
+                    route('orders.show', $order),
+                    ['order_id' => $order->id, 'status' => 'cancelled']
+                );
+            });
+
+        return back()->with('success', 'Order cancelled successfully.');
+    }
+
+    public function acceptOrder(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $result = $this->transitionOrder(
+            $order,
+            'accepted',
+            ['pending'],
+            'Only pending orders can be accepted.',
+            'Your order has been accepted.',
+            $notifications
+        );
+
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order accepted successfully.');
+    }
+
+    public function markPreparing(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $result = $this->transitionOrder(
+            $order,
+            'preparing',
+            ['accepted'],
+            'This order must be accepted before preparing.',
+            'Your order is now being prepared.',
+            $notifications
+        );
+
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order marked as preparing.');
+    }
+
+    public function markCompleted(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $result = $this->transitionOrder(
+            $order,
+            'completed',
+            ['preparing'],
+            'This order must be preparing before completion.',
+            'Your order has been completed.',
+            $notifications
+        );
+
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order marked as completed.');
+    }
+
+    public function cancelByFarmer(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $result = $this->transitionOrder(
+            $order,
+            'cancelled',
+            ['pending', 'accepted'],
+            'This order can no longer be cancelled.',
+            'Your order was cancelled.',
+            $notifications
+        );
+
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order cancelled successfully.');
+    }
+
+    private function ensureFarmerOwnsOrder(Order $order): void
+    {
+        $user = auth()->user();
+
+        if (
+            ! $user?->isFarmer() ||
+            ! $order->items()
+                ->where('farmer_id', $user->id)
+                ->exists()
+        ) {
+            abort(403);
+        }
+    }
+
+    private function transitionOrder(
+        Order $order,
+        string $nextStatus,
+        array $allowedCurrentStatuses,
+        string $failureMessage,
+        string $buyerMessage,
+        NotificationService $notifications
+    ): array {
+        if (! in_array($order->status, $allowedCurrentStatuses, true)) {
+            return ['ok' => false, 'message' => $failureMessage];
+        }
+
         $oldStatus = $order->status;
-
-        // Update status
-        $order->status = $validated['status'];
-
-        $order->save();
-
+        $order->update(['status' => $nextStatus]);
         $order->loadMissing(['consumer', 'items.product']);
 
         if ($oldStatus !== $order->status && $order->consumer) {
@@ -242,50 +410,46 @@ class OrderController extends Controller
                 $order->consumer,
                 'order.status_updated',
                 'Order status updated',
-                "Order #{$order->id} is now " . ucfirst($order->status) . '.',
+                $buyerMessage,
                 $order->status === 'cancelled' ? 'alert' : 'orders',
                 route('orders.show', $order),
                 ['order_id' => $order->id, 'status' => $order->status]
             );
         }
 
-        /**
-         * Reduce product quantity
-         * ONLY when changing to completed
-         * and only once
-         */
-        if (
-            $validated['status'] === 'completed' &&
-            $oldStatus !== 'completed'
-        ) {
+        if ($nextStatus === 'completed') {
+            $this->reduceOrderStock($order, $notifications);
+        }
 
-            foreach ($order->items as $item) {
+        return ['ok' => true, 'message' => null];
+    }
 
-                $product = $item->product;
-
-                if ($product) {
-                    $oldQuantity = $product->quantity;
-
-                    // Prevent negative stock
-                    if ($product->quantity >= $item->quantity) {
-
-                        $product->quantity -= $item->quantity;
-
-                    } else {
-
-                        $product->quantity = 0;
-                    }
-
-                    $product->save();
-
-                    $this->notifyStockStatus($product, $notifications, $oldQuantity);
-                }
-            }
+    private function redirectAfterFarmerTransition(Order $order, array $result, string $successMessage)
+    {
+        if (! $result['ok']) {
+            return back()->with('error', $result['message']);
         }
 
         return redirect()
             ->route('orders.show', $order)
-            ->with('success', 'Order status updated!');
+            ->with('success', $successMessage);
+    }
+
+    private function reduceOrderStock(Order $order, NotificationService $notifications): void
+    {
+        foreach ($order->items as $item) {
+            $product = $item->product;
+
+            if (! $product) {
+                continue;
+            }
+
+            $oldQuantity = $product->quantity;
+            $product->quantity = max($product->quantity - $item->quantity, 0);
+            $product->save();
+
+            $this->notifyStockStatus($product, $notifications, $oldQuantity);
+        }
     }
 
     private function notifyStockStatus($product, NotificationService $notifications, ?int $oldQuantity = null): void

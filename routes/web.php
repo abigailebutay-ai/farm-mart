@@ -100,6 +100,7 @@ Route::middleware(['auth', 'role:consumer,buyer'])->prefix('consumer')->name('co
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
     Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelByConsumer'])->name('orders.cancel');
     Route::get('/purchase-history', [OrderController::class, 'purchaseHistory'])->name('purchase-history');
     Route::get('/orders/{order}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
     Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
@@ -111,6 +112,7 @@ Route::middleware(['auth', 'role:consumer,buyer'])->prefix('buyer')->name('buyer
     Route::get('/marketplace', fn () => redirect()->route('consumer.marketplace'))->name('marketplace');
     Route::get('/cart', fn () => redirect()->route('cart.index'))->name('cart');
     Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelByConsumer'])->name('orders.cancel');
     Route::get('/feedback', fn () => redirect()->route('consumer.feedback'))->name('feedback');
     Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });
@@ -131,6 +133,10 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::patch('/products/{product}/restock', [ProductController::class, 'restock'])->name('products.restock');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    Route::patch('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
+    Route::patch('/orders/{order}/preparing', [OrderController::class, 'markPreparing'])->name('orders.preparing');
+    Route::patch('/orders/{order}/complete', [OrderController::class, 'markCompleted'])->name('orders.complete');
+    Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelByFarmer'])->name('orders.cancel');
     Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });
 

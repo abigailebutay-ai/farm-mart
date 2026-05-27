@@ -40,6 +40,34 @@ class Order extends Model
         return $this->hasMany(Feedback::class);
     }
 
+    public function canBeCancelledByConsumer(): bool
+    {
+        return $this->user_id === auth()->id()
+            && in_array($this->status, ['pending', 'accepted'], true)
+            && $this->created_at?->greaterThanOrEqualTo(now()->subDay());
+    }
+
+    public function consumerCancellationMessage(): string
+    {
+        if ($this->status === 'cancelled') {
+            return 'Order is already cancelled';
+        }
+
+        if ($this->status === 'preparing') {
+            return 'Order is already being prepared';
+        }
+
+        if ($this->status === 'completed') {
+            return 'Completed orders cannot be cancelled';
+        }
+
+        if ($this->created_at?->lt(now()->subDay())) {
+            return 'Cancellation period ended';
+        }
+
+        return 'This order can no longer be cancelled';
+    }
+
     /**
      * Mark order as accepted.
      */
