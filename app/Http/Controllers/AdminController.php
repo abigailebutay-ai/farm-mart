@@ -7,6 +7,7 @@ use App\Models\Feedback;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\NotificationService;
+use Illuminate\Http\Request;
 
 class AdminController extends Controller
 {
@@ -93,6 +94,19 @@ class AdminController extends Controller
         $feedback->update(['status' => 'resolved']);
 
         return back()->with('success', 'Feedback marked as resolved.');
+    }
+
+    public function updatePaymentStatus(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'payment_status' => 'required|in:pending,pending_verification,paid',
+        ]);
+
+        $order->update([
+            'payment_status' => $validated['payment_status'],
+        ]);
+
+        return back()->with('success', 'Payment status updated successfully.');
     }
 
     public function approveUser(User $user, NotificationService $notifications)

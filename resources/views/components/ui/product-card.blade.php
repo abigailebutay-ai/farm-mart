@@ -34,17 +34,17 @@
         <a href="{{ route('products.show', $product) }}" class="block">
             <h3 class="text-lg font-bold text-slate-900 transition group-hover:text-emerald-800">{{ $product->name }}</h3>
         </a>
-        <p class="mt-1 text-sm text-slate-500">Farmer: {{ optional($product->farmer)->name ?? 'Local Farmer' }}</p>
+        <p class="mt-1 text-base text-slate-500"><span class="font-semibold">Seller:</span> {{ optional($product->farmer)->name ?? 'Local Farmer' }}</p>
         @unless($compact)
             <p class="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-500">{{ $product->description }}</p>
         @endunless
 
         <div class="mt-4 flex items-center justify-between gap-3">
             <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">Price</p>
+                <p class="text-sm font-semibold text-slate-400">Price</p>
                 <p class="text-lg font-black text-emerald-800">PHP {{ number_format($product->price ?? 0, 2) }} / {{ $unit }}</p>
             </div>
-            <p class="rounded-full bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-500">{{ $product->quantity ?? 0 }} {{ $unit }} available</p>
+            <p class="rounded-full bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-500">Available Stock: {{ $product->quantity ?? 0 }} {{ $unit }}</p>
         </div>
 
         <div class="mt-4 grid grid-cols-2 gap-2">
@@ -56,13 +56,13 @@
                         <x-ui.primary-button class="w-full">Add to Cart</x-ui.primary-button>
                     </form>
                 @else
-                    <x-ui.primary-button href="{{ route('products.show', $product) }}" class="w-full">View</x-ui.primary-button>
+                    <x-ui.primary-button href="{{ route('products.show', $product) }}" class="w-full">View Details</x-ui.primary-button>
                 @endif
             @else
-                <x-ui.primary-button href="{{ route('products.show', $product) }}" class="w-full">View</x-ui.primary-button>
+                <x-ui.primary-button href="{{ route('products.show', $product) }}" class="w-full">View Details</x-ui.primary-button>
             @endauth
 
-            <x-ui.secondary-button href="{{ route('products.show', $product) }}" class="w-full">Details</x-ui.secondary-button>
+            <x-ui.secondary-button href="{{ route('products.show', $product) }}" class="w-full">Product Details</x-ui.secondary-button>
         </div>
     </div>
 </article>

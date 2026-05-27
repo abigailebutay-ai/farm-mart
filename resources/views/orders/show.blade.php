@@ -54,6 +54,64 @@
 
             <div class="{{ $isBuyerOrder ? 'buyer-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
                 <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Payment Information</h3>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div class="grid gap-4 text-sm md:grid-cols-2">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1">Payment Method</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->paymentMethodLabel() }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1">Payment Status</p>
+                            <x-ui.status-badge :status="$order->paymentStatusLabel()" />
+                        </div>
+                        @if($order->payment_reference)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">GCash Reference Number</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->payment_reference }}</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    @if($order->payment_proof)
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-2 text-sm">Proof of Payment</p>
+                            @if($order->paymentProofIsImage())
+                                <a href="{{ $order->paymentProofUrl() }}" target="_blank" rel="noopener" class="block max-w-sm overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <img src="{{ $order->paymentProofUrl() }}" alt="Proof of payment for Order #{{ $order->id }}" class="h-auto w-full object-cover">
+                                </a>
+                            @else
+                                <a href="{{ $order->paymentProofUrl() }}" target="_blank" rel="noopener" class="inline-flex rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                    View Proof
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if(auth()->user()->isAdmin() && $order->payment_method === 'gcash')
+                        <form method="POST" action="{{ route('admin.orders.payment-status', $order) }}" class="flex flex-wrap items-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
+                            @csrf
+                            @method('PATCH')
+                            <div>
+                                <label for="payment_status" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Update Payment Status</label>
+                                <select id="payment_status" name="payment_status" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <option value="pending" @selected($order->payment_status === 'pending')>Pending</option>
+                                    <option value="pending_verification" @selected($order->payment_status === 'pending_verification')>Pending Verification</option>
+                                    <option value="paid" @selected($order->payment_status === 'paid')>Paid</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                Save Payment Status
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
+            <div class="{{ $isBuyerOrder ? 'buyer-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 class="text-xl font-bold text-gray-900 dark:text-white">Order Tracking</h3>
                 </div>
 

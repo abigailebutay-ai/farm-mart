@@ -5,13 +5,13 @@
 @section('content')
     <x-ui.page-header
         title="Decision Support"
-        subtitle="Insights, analytics, and recommendations to help you decide what to restock, promote, or review."
+        subtitle="See helpful suggestions based on your products and sales."
     />
 
     <div class="grid gap-4 md:grid-cols-3">
         <x-ui.stat-card label="Monthly Sales" value="PHP {{ number_format($monthlySales ?? 0, 2) }}" icon="money" tone="green" trend="Completed order income for {{ now()->format('F Y') }}." />
-        <x-ui.stat-card label="Suggested Restock" value="{{ $suggestedRestockQuantity ?? 0 }} units" icon="inventory" tone="amber" trend="Based on low-stock products targeting 20 units." />
-        <x-ui.stat-card label="Products To Review" :value="($slowMovingProducts ?? collect())->count()" icon="chart" tone="blue" trend="Slow-moving or no-order listings needing attention." />
+        <x-ui.stat-card label="Suggested Restock" value="{{ $suggestedRestockQuantity ?? 0 }} units" icon="inventory" tone="amber" trend="Products that may need more stock." />
+        <x-ui.stat-card label="Products To Review" :value="($slowMovingProducts ?? collect())->count()" icon="chart" tone="blue" trend="Products with low sales movement." />
     </div>
 
     <div class="mt-5 grid gap-4 lg:grid-cols-3">

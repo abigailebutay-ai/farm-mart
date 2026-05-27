@@ -45,7 +45,17 @@
                 <p class="receipt-meta text-xs font-bold uppercase tracking-wide">Reference Number</p>
                 <p class="text-lg font-black">{{ $reference }}</p>
                 <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Payment Method</p>
-                <p class="font-semibold">Cash on Delivery</p>
+                <p class="font-semibold">{{ $order->paymentMethodLabel() }}</p>
+                <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Payment Status</p>
+                <p class="font-semibold">{{ $order->paymentStatusLabel() }}</p>
+                @if($order->payment_reference)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">GCash Reference Number</p>
+                    <p class="font-semibold">{{ $order->payment_reference }}</p>
+                @endif
+                @if($order->payment_proof)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Proof of Payment</p>
+                    <a href="{{ $order->paymentProofUrl() }}" target="_blank" rel="noopener" class="font-semibold text-emerald-700">View Proof</a>
+                @endif
             </div>
         </div>
 

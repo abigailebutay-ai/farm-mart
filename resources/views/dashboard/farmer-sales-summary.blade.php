@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Sales Summary"
-        subtitle="Revenue-focused summary of completed farmer orders and recent product sales."
+        subtitle="Review your completed sales and earnings."
     />
 
     <div class="mb-5 flex justify-end">

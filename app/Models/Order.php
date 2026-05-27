@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -16,6 +18,10 @@ class Order extends Model
         'subtotal',
         'total',
         'status',
+        'payment_method',
+        'payment_status',
+        'payment_reference',
+        'payment_proof',
         'notes',
     ];
 
@@ -66,6 +72,42 @@ class Order extends Model
         }
 
         return 'This order can no longer be cancelled';
+    }
+
+    public function paymentMethodLabel(): string
+    {
+        return match ($this->payment_method) {
+            'gcash' => 'GCash',
+            'cod', null => 'Cash on Delivery',
+            default => Str::title(str_replace('_', ' ', $this->payment_method)),
+        };
+    }
+
+    public function paymentStatusLabel(): string
+    {
+        return match ($this->payment_status) {
+            'pending_verification' => 'Pending Verification',
+            'paid' => 'Paid',
+            default => 'Pending',
+        };
+    }
+
+    public function paymentProofUrl(): ?string
+    {
+        if (! $this->payment_proof) {
+            return null;
+        }
+
+        return Storage::disk(config('filesystems.default'))->url($this->payment_proof);
+    }
+
+    public function paymentProofIsImage(): bool
+    {
+        if (! $this->payment_proof) {
+            return false;
+        }
+
+        return in_array(Str::lower(pathinfo($this->payment_proof, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp'], true);
     }
 
     /**

@@ -157,6 +157,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/announcements/{announcement}', [AdminAnnouncementController::class, 'update'])->name('announcements.update');
     Route::delete('/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy'])->name('announcements.destroy');
     Route::get('/activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs');
+    Route::patch('/orders/{order}/payment-status', [AdminController::class, 'updatePaymentStatus'])->name('orders.payment-status');
     Route::patch('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
     Route::patch('/feedback/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('feedback.read');

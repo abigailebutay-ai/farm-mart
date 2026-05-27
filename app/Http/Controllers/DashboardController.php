@@ -120,6 +120,13 @@ class DashboardController extends Controller
     {
         $farmerOrderQuery = Order::whereHas('items', function ($query) use ($user) {
             $query->where('farmer_id', $user->id);
+        })->where(function ($query) {
+            $query->whereNull('payment_method')
+                ->orWhere('payment_method', 'cod')
+                ->orWhere(function ($query) {
+                    $query->where('payment_method', 'gcash')
+                        ->whereNotNull('payment_proof');
+                });
         });
 
         $totalSales = OrderItem::where('farmer_id', $user->id)

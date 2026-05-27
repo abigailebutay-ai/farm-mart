@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -39,6 +40,14 @@ class OrderController extends Controller
                 $query->where('farmer_id', $user->id);
 
             })
+                ->where(function ($query) {
+                    $query->whereNull('payment_method')
+                        ->orWhere('payment_method', 'cod')
+                        ->orWhere(function ($query) {
+                            $query->where('payment_method', 'gcash')
+                                ->whereNotNull('payment_proof');
+                        });
+                })
                 ->with(['consumer', 'items.product'])
                 ->withCount('items')
                 ->latest()
@@ -151,27 +160,66 @@ class OrderController extends Controller
                 ->with('error', 'Your cart is empty!');
         }
 
-        // Create order
-        $order = Order::create([
-            'user_id' => $user->id,
-            'subtotal' => $cart->subtotal,
-            'total' => $cart->total,
-            'status' => 'pending',
-            'notes' => $request->input('notes'),
+        $validated = $request->validate([
+            'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'required|in:cod,gcash',
+            'payment_reference' => 'nullable|string|max:255',
+            'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ]);
 
-        // Create order items
-        foreach ($cart->items as $cartItem) {
-
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $cartItem->product_id,
-                'farmer_id' => $cartItem->product->user_id,
-                'quantity' => $cartItem->quantity,
-                'price' => $cartItem->price,
-                'subtotal' => $cartItem->subtotal,
-            ]);
+        if ($validated['payment_method'] === 'gcash' && empty($validated['payment_reference'])) {
+            return back()
+                ->withErrors(['payment_reference' => 'GCash reference number is required.'])
+                ->withInput();
         }
+
+        if ($validated['payment_method'] === 'gcash' && ! $request->hasFile('payment_proof')) {
+            return back()
+                ->withErrors(['payment_proof' => 'Proof of payment is required for GCash orders.'])
+                ->withInput();
+        }
+
+        $paymentData = [
+            'payment_method' => 'cod',
+            'payment_status' => 'pending',
+            'payment_reference' => null,
+            'payment_proof' => null,
+        ];
+
+        if ($validated['payment_method'] === 'gcash') {
+            $paymentData = [
+                'payment_method' => 'gcash',
+                'payment_status' => 'pending_verification',
+                'payment_reference' => $validated['payment_reference'],
+                'payment_proof' => $request->file('payment_proof')->storePublicly('payment_proofs', config('filesystems.default')),
+            ];
+        }
+
+        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated) {
+            $order = Order::create([
+                'user_id' => $user->id,
+                'subtotal' => $cart->subtotal,
+                'total' => $cart->total,
+                'status' => 'pending',
+                'notes' => $validated['notes'] ?? null,
+            ] + $paymentData);
+
+            foreach ($cart->items as $cartItem) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $cartItem->product_id,
+                    'farmer_id' => $cartItem->product->user_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->price,
+                    'subtotal' => $cartItem->subtotal,
+                ]);
+            }
+
+            $cart->items()->delete();
+            $cart->calculateTotals();
+
+            return $order;
+        });
 
         $order->loadMissing(['consumer', 'items.farmer']);
 
@@ -200,14 +248,13 @@ class OrderController extends Controller
             ['order_id' => $order->id]
         );
 
-        // Clear cart
-        $cart->items()->delete();
-
-        $cart->calculateTotals();
+        $successMessage = $order->payment_method === 'gcash'
+            ? 'Order placed successfully. Your payment is pending verification.'
+            : 'Order placed successfully. Please prepare cash upon delivery.';
 
         return redirect()
             ->route('orders.show', $order)
-            ->with('success', 'Order placed successfully!');
+            ->with('success', $successMessage);
     }
 
     /**

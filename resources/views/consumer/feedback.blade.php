@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Feedback"
-        subtitle="Share your experience with SariwaLink."
+        subtitle="Share your experience about the system or your order."
     />
 
     <div class="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
@@ -87,7 +87,7 @@
                         <p class="buyer-text mt-3 text-sm leading-relaxed">{{ $item->message }}</p>
                     </article>
                 @empty
-                    <x-ui.empty-state title="No feedback submitted yet" message="Your submitted feedback will appear here." icon="star" />
+                    <x-ui.empty-state title="No feedback yet" message="You have not submitted feedback yet." icon="star" />
                 @endforelse
             </div>
         </x-ui.dashboard-card>

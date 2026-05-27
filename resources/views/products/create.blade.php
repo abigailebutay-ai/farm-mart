@@ -7,7 +7,7 @@
 
     <x-ui.page-header
         title="Add Product"
-        subtitle="Create a marketplace listing with clear inventory, pricing, and product details for buyers."
+        subtitle="Create a product listing with a clear name, price, stock, unit, and photo."
     />
 
     <x-ui.dashboard-card class="max-w-3xl" title="Product Information">
@@ -23,6 +23,7 @@
             <div>
                 <label for="description" class="mb-2 block text-sm font-semibold text-gray-700">Description</label>
                 <textarea id="description" name="description" rows="4" required placeholder="Describe quality, harvest details, packaging, or pickup notes." class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-gray-800 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-100">{{ old('description') }}</textarea>
+                <p class="mt-2 text-sm text-gray-500">Tell buyers what makes the product fresh or useful.</p>
                 @error('description')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 
@@ -42,6 +43,7 @@
                 <div>
                     <label for="quantity" class="mb-2 block text-sm font-semibold text-gray-700">Available Quantity</label>
                     <input id="quantity" name="quantity" type="number" min="1" value="{{ old('quantity') }}" required placeholder="10" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-gray-800 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-100">
+                    <p class="mt-2 text-sm text-gray-500">Enter the number of items available.</p>
                     @error('quantity')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -53,13 +55,14 @@
                         @endforeach
                     </select>
                     @error('unit')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    <p class="mt-2 text-sm text-gray-500">Choose the correct unit, such as kg, piece, bundle, or sack.</p>
                 </div>
             </div>
 
             <div>
                 <label for="image" class="mb-2 block text-sm font-semibold text-gray-700">Product Image</label>
                 <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/jpg,image/gif,image/webp" class="block w-full rounded-lg border border-gray-200 text-sm text-gray-500 file:mr-4 file:border-0 file:bg-green-800 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-white hover:file:bg-green-900">
-                <p class="mt-2 text-xs text-gray-500">JPG, PNG, GIF, or WEBP up to 5MB. Use a clear product photo when available.</p>
+                <p class="mt-2 text-sm text-gray-500">Use a clear product photo. JPG, PNG, GIF, or WEBP up to 5MB.</p>
                 @error('image')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
             </div>
 

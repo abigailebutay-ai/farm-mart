@@ -5,10 +5,10 @@
 @section('content')
     <x-ui.page-header
         title="Marketplace"
-        subtitle="Browse available farmer products, filter local listings, and add fresh items to your cart."
+        subtitle="Browse available products from local farmers."
     />
 
-    <x-ui.dashboard-card class="mb-6" title="Find Products" subtitle="Filter available products by keyword, category, and stock level.">
+    <x-ui.dashboard-card class="mb-6" title="Find Products" subtitle="Search by product name, category, or stock status.">
         <form method="GET" action="{{ route('consumer.marketplace') }}" class="grid gap-4 lg:grid-cols-[1fr_220px_220px_auto] lg:items-end">
             <div>
                 <label for="search" class="mb-2 block text-sm font-bold text-slate-700">Search</label>

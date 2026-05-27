@@ -5,9 +5,9 @@
 @section('content')
     <x-ui.page-header
         title="My Products"
-        subtitle="Manage product listing information such as names, categories, prices, descriptions, images, and listing status."
+        subtitle="Add, edit, and manage the products you sell."
         action-url="{{ route('farmer.products.create') }}"
-        action-label="Add New Product"
+        action-label="Add Product"
     />
 
     @if($products->count() > 0)
@@ -16,12 +16,12 @@
                 <table class="product-table w-full">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Product</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Category</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Price</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Listing Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Created</th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Product</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Category</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Price</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Stock Status</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Created</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wide text-gray-500">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">
@@ -38,23 +38,23 @@
                                         />
                                         <div>
                                             <p class="product-name font-semibold">{{ $product->name }}</p>
-                                            <p class="product-description text-xs">{{ \Illuminate\Support\Str::limit($product->description, 40) }}</p>
+                                            <p class="product-description text-sm">{{ \Illuminate\Support\Str::limit($product->description, 50) }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="product-category px-6 py-4 text-sm">{{ $product->category }}</td>
-                                <td class="px-6 py-4 text-sm font-semibold text-green-800">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <x-ui.status-badge :status="$product->quantity > 0 ? 'Active' : 'Inactive'" />
-                                    <span class="product-stock ml-2 text-xs">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</span>
+                                <td class="product-category px-6 py-4">{{ $product->category }}</td>
+                                <td class="px-6 py-4 font-semibold text-green-800">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
+                                <td class="px-6 py-4">
+                                    <x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" />
+                                    <span class="product-stock ml-2 text-sm">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</span>
                                 </td>
-                                <td class="product-date px-6 py-4 text-sm">{{ $product->created_at->format('M d, Y') }}</td>
-                                <td class="px-6 py-4 text-sm">
-                                    <a href="{{ route('farmer.products.edit', $product) }}" class="mr-3 font-semibold text-green-800 hover:text-green-900">Edit</a>
+                                <td class="product-date px-6 py-4">{{ $product->created_at->format('M d, Y') }}</td>
+                                <td class="px-6 py-4">
+                                    <a href="{{ route('farmer.products.edit', $product) }}" class="mr-3 font-semibold text-green-800 hover:text-green-900">Edit Product</a>
                                     <form method="POST" action="{{ route('farmer.products.destroy', $product) }}" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('Are you sure?')">Delete</button>
+                                        <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('Are you sure you want to delete this product?')">Delete Product</button>
                                     </form>
                                 </td>
                             </tr>
@@ -68,6 +68,6 @@
             {{ $products->links() }}
         </div>
     @else
-        <x-ui.empty-state title="No products yet" message="Add your first product to start selling in the marketplace." action-url="{{ route('farmer.products.create') }}" action-label="Add Your First Product" />
+        <x-ui.empty-state title="No products yet" message="You have not added any products yet." action-url="{{ route('farmer.products.create') }}" action-label="Add Product" />
     @endif
 @endsection
