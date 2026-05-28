@@ -63,8 +63,8 @@
         </x-ui.dashboard-card>
     </div>
 
-    <div class="mt-5 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-        <x-ui.table-card title="Product Performance Insights" subtitle="Sales amount, sold quantity, stock, and demand level per product.">
+    <div class="mt-5">
+        <x-ui.table-card title="Product Performance Insights" subtitle="Review product sales, stock, and suggested actions." table-class="min-w-[900px] w-full">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs font-bold uppercase tracking-wide text-slate-500">
                     <th class="px-5 py-3">Product</th>
@@ -97,22 +97,5 @@
                 @endforelse
             </tbody>
         </x-ui.table-card>
-
-        <x-ui.dashboard-card title="Recommendation Messages" subtitle="Simple signals for business decisions.">
-            <div class="space-y-3">
-                @if(($lowStockProducts ?? collect())->count() > 0)
-                    <x-ui.alert-card title="Restock this product soon" message="{{ $lowStockProducts->first()->name }} is close to running out." tone="amber" />
-                @endif
-                @if($bestSellingProduct ?? null)
-                    <x-ui.alert-card title="This product sells well this month" message="{{ $bestSellingProduct->name }} is your strongest sales signal." tone="green" />
-                @endif
-                @if(($slowMovingProducts ?? collect())->count() > 0)
-                    <x-ui.alert-card title="Consider lowering stock" message="Review slow-moving products before increasing inventory." tone="gray" />
-                @endif
-                @if(($lowStockProducts ?? collect())->isEmpty() && empty($bestSellingProduct) && ($slowMovingProducts ?? collect())->isEmpty())
-                    <x-ui.empty-state title="No recommendations yet" message="Recommendations will appear after product and order activity grows." icon="chart" />
-                @endif
-            </div>
-        </x-ui.dashboard-card>
     </div>
 @endsection
