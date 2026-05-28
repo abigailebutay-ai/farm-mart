@@ -6,7 +6,7 @@
     @php
         $stockStatus = $product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock');
         $listingStatus = $product->status ?? ($product->quantity > 0 ? 'Active' : 'Out of Stock');
-        $unit = $product->unit ?? 'piece';
+        $unit = 'kg';
     @endphp
 
     <x-ui.page-header

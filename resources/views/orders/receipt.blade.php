@@ -130,18 +130,17 @@
                         <th class="border-b px-3 py-3 font-bold">Product</th>
                         <th class="border-b px-3 py-3 font-bold">Farmer</th>
                         <th class="border-b px-3 py-3 font-bold">Quantity</th>
-                        <th class="border-b px-3 py-3 font-bold">Price / Unit</th>
+                        <th class="border-b px-3 py-3 font-bold">Price / kg</th>
                         <th class="border-b px-3 py-3 text-right font-bold">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->items as $item)
-                        @php($unit = optional($item->product)->unit ?? 'piece')
                         <tr>
                             <td class="border-b px-3 py-3 font-semibold">{{ optional($item->product)->name ?? 'Product unavailable' }}</td>
                             <td class="border-b px-3 py-3">{{ $item->farmer->name ?? 'Local Farmer' }}</td>
-                            <td class="border-b px-3 py-3">{{ $item->quantity }} {{ $unit }}</td>
-                            <td class="border-b px-3 py-3">PHP {{ number_format($item->price, 2) }} / {{ $unit }}</td>
+                            <td class="border-b px-3 py-3">{{ $item->quantity }} kg</td>
+                            <td class="border-b px-3 py-3">PHP {{ number_format($item->price, 2) }} / kg</td>
                             <td class="border-b px-3 py-3 text-right font-semibold">PHP {{ number_format($item->subtotal, 2) }}</td>
                         </tr>
                     @endforeach

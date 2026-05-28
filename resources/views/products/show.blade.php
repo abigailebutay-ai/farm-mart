@@ -5,7 +5,7 @@
 @section('content')
     @php
         $stockStatus = $product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock');
-        $unit = $product->unit ?? 'piece';
+        $unit = 'kg';
     @endphp
 
     <div class="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">

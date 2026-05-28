@@ -394,7 +394,7 @@
                                     From: <strong>{{ $item->farmer->name ?? 'Farmer' }}</strong>
                                 </p>
                                 <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    <p>Qty: {{ $item->quantity }} {{ optional($item->product)->unit ?? 'piece' }} x PHP {{ number_format($item->price, 2) }} / {{ optional($item->product)->unit ?? 'piece' }}</p>
+                                    <p>Qty: {{ $item->quantity }} kg x PHP {{ number_format($item->price, 2) }} / kg</p>
                                 </div>
                             </div>
 

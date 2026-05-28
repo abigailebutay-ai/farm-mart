@@ -3,11 +3,9 @@
 @section('page-title', 'Edit Product')
 
 @section('content')
-    @php($units = \App\Models\Product::UNITS)
-
     <x-ui.page-header
         title="Edit Product"
-        subtitle="Update product details, price, stock, unit, and photo."
+        subtitle="Update product details, price, stock in kg, and photo."
     />
 
     <x-ui.dashboard-card class="max-w-3xl" title="Product Information">
@@ -36,27 +34,24 @@
                 </div>
 
                 <div>
-                    <label for="price" class="mb-2 block text-sm font-semibold text-gray-700">Price per Unit (PHP)</label>
+                    <label for="price" class="mb-2 block text-sm font-semibold text-gray-700">Price per kg (PHP)</label>
                     <input id="price" name="price" type="number" step="0.01" min="0" value="{{ old('price', $product->price) }}" required placeholder="0.00" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-gray-800 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-100">
                     @error('price')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="quantity" class="mb-2 block text-sm font-semibold text-gray-700">Available Quantity</label>
+                    <label for="quantity" class="mb-2 block text-sm font-semibold text-gray-700">Available Quantity (kg)</label>
                     <input id="quantity" name="quantity" type="number" min="0" value="{{ old('quantity', $product->quantity) }}" required placeholder="10" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-gray-800 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-100">
-                    <p class="mt-2 text-sm text-gray-500">Enter the number of items available.</p>
+                    <p class="mt-2 text-sm text-gray-500">Enter the kilograms available.</p>
                     @error('quantity')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
-                    <label for="unit" class="mb-2 block text-sm font-semibold text-gray-700">Unit</label>
-                    <select id="unit" name="unit" required class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-gray-800 focus:border-green-700 focus:outline-none focus:ring-2 focus:ring-green-100">
-                        @foreach(\App\Models\Product::UNITS as $unit)
-                            <option value="{{ $unit }}" @selected(old('unit', $product->unit ?? 'piece') === $unit)>{{ $unit }}</option>
-                        @endforeach
-                    </select>
+                    <label class="mb-2 block text-sm font-semibold text-gray-700">Sold As</label>
+                    <input type="hidden" name="unit" value="kg">
+                    <div class="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-gray-800">kg</div>
                     @error('unit')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
-                    <p class="mt-2 text-sm text-gray-500">Choose the correct unit, such as kg, piece, bundle, or sack.</p>
+                    <p class="mt-2 text-sm text-gray-500">Products are sold by kilogram.</p>
                 </div>
             </div>
 

@@ -49,8 +49,8 @@
                     </td>
                     <td class="px-5 py-4 text-sm text-slate-600">{{ $product->farmer->name ?? 'Unknown farmer' }}</td>
                     <td class="px-5 py-4 text-sm text-slate-600">{{ $product->category }}</td>
-                    <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
-                    <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
+                    <td class="px-5 py-4 text-sm font-bold text-slate-900">PHP {{ number_format($product->price, 2) }} / kg</td>
+                    <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} kg</td>
                     <td class="px-5 py-4"><x-ui.status-badge :status="$stockStatus" /></td>
                     <td class="px-5 py-4">
                         <x-ui.secondary-button href="{{ route('admin.products.show', $product) }}" class="px-3 py-1.5 text-xs">View Details</x-ui.secondary-button>

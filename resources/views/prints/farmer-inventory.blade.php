@@ -13,7 +13,7 @@
             <tr>
                 <th>Product name</th>
                 <th>Category</th>
-                <th>Current stock quantity and unit</th>
+                <th>Current Stock (kg)</th>
                 <th>Stock status</th>
                 <th>Listing status</th>
             </tr>
@@ -27,7 +27,7 @@
                 <tr>
                     <td>{{ $product->name }}</td>
                     <td>{{ $product->category }}</td>
-                    <td>{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
+                    <td>{{ $product->quantity }} kg</td>
                     <td>{{ $stockStatus }}</td>
                     <td>{{ $listingStatus }}</td>
                 </tr>

@@ -43,10 +43,10 @@
                                     </div>
                                 </td>
                                 <td class="product-category px-6 py-4">{{ $product->category }}</td>
-                                <td class="px-6 py-4 font-semibold text-green-800">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
+                                <td class="px-6 py-4 font-semibold text-green-800">PHP {{ number_format($product->price, 2) }} / kg</td>
                                 <td class="px-6 py-4">
                                     <x-ui.status-badge :status="$product->status === 'inactive' ? 'Archived' : ($product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock'))" />
-                                    <span class="product-stock ml-2 text-sm">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</span>
+                                    <span class="product-stock ml-2 text-sm">{{ $product->quantity }} kg</span>
                                 </td>
                                 <td class="product-date px-6 py-4">{{ $product->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4">

@@ -138,7 +138,7 @@
     <div class="mt-5 grid gap-4 lg:grid-cols-3">
         <x-ui.dashboard-card title="Out of Stock Products" subtitle="Products that currently have no available stock.">
             @forelse($pendingProductsList ?? [] as $product)
-                <x-ui.alert-card class="mb-3" title="{{ $product->name }}" message="Current stock: {{ $product->quantity }} {{ $product->unit ?? 'piece' }}. Farmer: {{ $product->farmer->name ?? 'Unknown' }}." tone="red" />
+                <x-ui.alert-card class="mb-3" title="{{ $product->name }}" message="Current stock: {{ $product->quantity }} kg. Farmer: {{ $product->farmer->name ?? 'Unknown' }}." tone="red" />
             @empty
                 <x-ui.empty-state title="No pending products" message="No out-of-stock product listings are pending attention." icon="products" />
             @endforelse
@@ -146,7 +146,7 @@
 
         <x-ui.dashboard-card title="Low Stock Products" subtitle="Products that may need restocking soon.">
             @forelse($lowStockProducts ?? [] as $product)
-                <x-ui.alert-card class="mb-3" title="Low Stock" message="{{ $product->name }} has {{ $product->quantity }} {{ $product->unit ?? 'piece' }} remaining. Farmer: {{ $product->farmer->name ?? 'Unknown' }}." tone="{{ $product->quantity <= 0 ? 'red' : 'amber' }}" />
+                <x-ui.alert-card class="mb-3" title="Low Stock" message="{{ $product->name }} has {{ $product->quantity }} kg remaining. Farmer: {{ $product->farmer->name ?? 'Unknown' }}." tone="{{ $product->quantity <= 0 ? 'red' : 'amber' }}" />
             @empty
                 <x-ui.empty-state title="Inventory healthy" message="No low-stock products were found." icon="check" />
             @endforelse
@@ -157,7 +157,7 @@
                 @forelse($recentProducts ?? [] as $product)
                     <div class="rounded-xl border border-slate-100 p-3">
                         <p class="font-bold text-slate-900">{{ $product->name }}</p>
-                        <p class="text-sm text-slate-500">{{ $product->farmer->name ?? 'Local Farmer' }} - PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</p>
+                        <p class="text-sm text-slate-500">{{ $product->farmer->name ?? 'Local Farmer' }} - PHP {{ number_format($product->price, 2) }} / kg</p>
                         <div class="mt-2"><x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" /></div>
                     </div>
                 @empty

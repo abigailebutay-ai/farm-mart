@@ -19,7 +19,7 @@
         <thead>
             <tr>
                 <th>Product name</th>
-                <th>Quantity sold and unit</th>
+                <th>Quantity Sold (kg)</th>
                 <th class="text-right">Revenue per product</th>
             </tr>
         </thead>
@@ -27,7 +27,7 @@
             @forelse($productRows as $row)
                 <tr>
                     <td>{{ $row['name'] }}</td>
-                    <td>{{ $row['quantity'] }} {{ $row['unit'] }}</td>
+                    <td>{{ $row['quantity'] }} kg</td>
                     <td class="text-right">PHP {{ number_format($row['revenue'], 2) }}</td>
                 </tr>
             @empty

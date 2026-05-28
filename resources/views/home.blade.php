@@ -74,8 +74,8 @@
                                                 </div>
                                                 <x-ui.status-badge :status="$previewStockStatus" />
                                             </div>
-                                            <p class="mt-2 text-sm font-black text-emerald-800 dark:text-emerald-200">PHP {{ number_format($previewProduct->price, 2) }} / {{ $previewProduct->unit ?? 'piece' }}</p>
-                                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $previewProduct->quantity }} {{ $previewProduct->unit ?? 'piece' }} available</p>
+                                            <p class="mt-2 text-sm font-black text-emerald-800 dark:text-emerald-200">PHP {{ number_format($previewProduct->price, 2) }} / kg</p>
+                                            <p class="mt-1 text-xs text-slate-500 dark:text-slate-300">{{ $previewProduct->quantity }} kg available</p>
                                         </div>
                                     </div>
                                 </div>

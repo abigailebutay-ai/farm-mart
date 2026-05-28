@@ -27,11 +27,11 @@ class LowStockNotification extends Notification
             'title' => $isOut ? 'Product Out of Stock' : 'Low Stock Alert',
             'message' => $isOut
                 ? "{$this->product->name} is out of stock."
-                : "{$this->product->name} is low in stock: {$this->product->quantity} {$this->product->unit} remaining.",
+                : "{$this->product->name} is low in stock: {$this->product->quantity} kg remaining.",
             'icon' => $isOut ? 'alert' : 'inventory',
             'product_id' => $this->product->id,
             'quantity' => $this->product->quantity,
-            'unit' => $this->product->unit,
+            'unit' => 'kg',
             'url' => route('farmer.inventory.index'),
         ];
     }

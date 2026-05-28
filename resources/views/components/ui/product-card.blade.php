@@ -7,7 +7,7 @@
     $stockStatus = ($product->quantity ?? 0) > 10
         ? 'In Stock'
         : (($product->quantity ?? 0) > 0 ? 'Low Stock' : 'Out of Stock');
-    $unit = $product->unit ?? 'piece';
+    $unit = 'kg';
 @endphp
 
 <article {{ $attributes->merge(['class' => 'group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg']) }}>

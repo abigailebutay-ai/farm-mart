@@ -33,7 +33,7 @@
 
                                     <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                                         <div>
-                                            <p class="text-base text-gray-600 dark:text-gray-400 mb-2">Price: PHP {{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
+                                            <p class="text-base text-gray-600 dark:text-gray-400 mb-2">Price: PHP {{ number_format($item->price, 2) }} / kg</p>
                                             <p class="text-lg font-bold text-green-600 dark:text-green-400">Subtotal: PHP {{ number_format($item->subtotal, 2) }}</p>
                                         </div>
 
@@ -42,7 +42,7 @@
                                                 @csrf
                                                 @method('PUT')
                                                 <div>
-                                                    <label for="quantity-{{ $item->id }}" class="text-sm text-gray-600 dark:text-gray-400">Quantity ({{ $item->product->unit ?? 'piece' }})</label>
+                                                    <label for="quantity-{{ $item->id }}" class="text-sm text-gray-600 dark:text-gray-400">Quantity (kg)</label>
                                                     <input
                                                         id="quantity-{{ $item->id }}"
                                                         type="number"

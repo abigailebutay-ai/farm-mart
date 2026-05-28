@@ -11,7 +11,7 @@
                 <th>Product</th>
                 <th>Farmer</th>
                 <th>Category</th>
-                <th>Price per unit</th>
+                <th>Price per kg</th>
                 <th>Stock</th>
                 <th>Stock status</th>
                 <th>Created date</th>
@@ -26,8 +26,8 @@
                     <td>{{ $product->name }}</td>
                     <td>{{ $product->farmer->name ?? 'Unknown farmer' }}</td>
                     <td>{{ $product->category }}</td>
-                    <td>PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
-                    <td>{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
+                    <td>PHP {{ number_format($product->price, 2) }} / kg</td>
+                    <td>{{ $product->quantity }} kg</td>
                     <td>{{ $stockStatus }}</td>
                     <td>{{ optional($product->created_at)->timezone(config('app.timezone'))->format('M d, Y') }}</td>
                 </tr>

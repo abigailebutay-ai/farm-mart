@@ -216,7 +216,7 @@ class ProductController extends Controller
                 auth()->user(),
                 'product.restocked',
                 'Product restocked',
-                "{$product->name} has been restocked to {$product->quantity} {$product->unit}.",
+                "{$product->name} has been restocked to {$product->quantity} kg.",
                 'inventory',
                 route('farmer.inventory.index'),
                 ['product_id' => $product->id]
@@ -398,7 +398,7 @@ class ProductController extends Controller
                 $farmer,
                 'product.low_stock',
                 'Low stock alert',
-                "{$product->name} is down to {$product->quantity} {$product->unit}.",
+                "{$product->name} is down to {$product->quantity} kg.",
                 'inventory',
                 route('farmer.inventory.index'),
                 ['product_id' => $product->id]

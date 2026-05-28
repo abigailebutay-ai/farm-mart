@@ -15,8 +15,8 @@
     </div>
 
     <div class="grid gap-4 md:grid-cols-3">
-        <x-ui.stat-card label="Total Stock Quantity" :value="$totalInventoryQuantity ?? 0" icon="inventory" tone="blue" trend="Combined stock across all listings." />
-        <x-ui.stat-card label="Low-Stock Products" :value="$lowStockCount ?? 0" icon="alert" tone="amber" trend="Products with 1 to 10 units remaining." />
+        <x-ui.stat-card label="Total Stock Quantity" value="{{ ($totalInventoryQuantity ?? 0) . ' kg' }}" icon="inventory" tone="blue" trend="Combined stock across all listings." />
+        <x-ui.stat-card label="Low-Stock Products" :value="$lowStockCount ?? 0" icon="alert" tone="amber" trend="Products with 1 to 10 kg remaining." />
         <x-ui.stat-card label="Out-of-Stock Products" :value="$outOfStockCount ?? 0" icon="x" tone="red" trend="Products currently unavailable for buyers." />
     </div>
 
@@ -37,7 +37,7 @@
                             <p class="font-bold text-slate-900">{{ $product->name }}</p>
                             <p class="text-sm text-slate-500">{{ $product->category }}</p>
                         </td>
-                        <td class="px-5 py-4 font-black text-slate-900">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
+                        <td class="px-5 py-4 font-black text-slate-900">{{ $product->quantity }} kg</td>
                         <td class="px-5 py-4">
                             <x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" />
                         </td>
@@ -46,7 +46,7 @@
                                 <form method="POST" action="{{ route('farmer.products.restock', $product) }}" class="flex min-w-[280px] flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 dark:border-emerald-900 dark:bg-emerald-950/30">
                                     @csrf
                                     @method('PATCH')
-                                    <span class="text-sm font-bold text-emerald-900 dark:text-emerald-200">Current: {{ $product->quantity }} {{ $product->unit ?? 'piece' }}</span>
+                                    <span class="text-sm font-bold text-emerald-900 dark:text-emerald-200">Current: {{ $product->quantity }} kg</span>
                                     <input
                                         name="quantity"
                                         type="number"
@@ -55,7 +55,7 @@
                                         aria-label="Quantity to add for {{ $product->name }}"
                                         class="w-32 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-base text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100 dark:border-emerald-800 dark:bg-gray-900 dark:text-white"
                                     >
-                                    <span class="text-xs font-semibold text-slate-500 dark:text-gray-300">{{ $product->unit ?? 'piece' }}</span>
+                                    <span class="text-xs font-semibold text-slate-500 dark:text-gray-300">kg</span>
                                     <button type="submit" class="rounded-xl bg-emerald-700 px-4 py-2 text-base font-bold text-white hover:bg-emerald-800">Add Stock</button>
                                 </form>
                             </div>
@@ -71,7 +71,7 @@
             <div class="space-y-3">
                 <x-ui.alert-card title="Add stock" message="Increase the quantity when new harvest or supply is available." tone="green" />
                 <x-ui.alert-card title="Reduce stock" message="Lower the quantity when stock is damaged, reserved, or no longer available." tone="gray" />
-                <x-ui.alert-card title="Low-stock threshold" message="Products with 10 units or fewer are marked Low Stock." tone="amber" />
+                <x-ui.alert-card title="Low-stock threshold" message="Products with 10 kg or fewer are marked Low Stock." tone="amber" />
                 <x-ui.alert-card title="Out of stock" message="Products with 0 quantity are unavailable until stock is updated." tone="red" />
             </div>
         </x-ui.dashboard-card>
@@ -90,7 +90,7 @@
             @forelse($recentStockActivity ?? [] as $product)
                 <tr class="hover:bg-slate-50">
                     <td class="px-5 py-4 font-bold text-slate-900">{{ $product->name }}</td>
-                    <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</td>
+                    <td class="px-5 py-4 text-sm text-slate-600">{{ $product->quantity }} kg</td>
                     <td class="px-5 py-4"><x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" /></td>
                     <td class="px-5 py-4 text-sm text-slate-500">{{ $product->updated_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</td>
                 </tr>

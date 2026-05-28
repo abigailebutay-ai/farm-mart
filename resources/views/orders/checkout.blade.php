@@ -33,8 +33,8 @@
                                         />
                                         <div>
                                             <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $item->product->name }}</p>
-                                            <p class="text-base text-gray-600 dark:text-gray-400">Quantity: {{ $item->quantity }} {{ $item->product->unit ?? 'piece' }}</p>
-                                            <p class="text-base text-gray-600 dark:text-gray-400">Price: PHP {{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
+                                            <p class="text-base text-gray-600 dark:text-gray-400">Quantity: {{ $item->quantity }} kg</p>
+                                            <p class="text-base text-gray-600 dark:text-gray-400">Price: PHP {{ number_format($item->price, 2) }} / kg</p>
                                         </div>
                                     </div>
                                     <p class="text-lg font-bold text-green-600 dark:text-green-400">PHP {{ number_format($item->subtotal, 2) }}</p>

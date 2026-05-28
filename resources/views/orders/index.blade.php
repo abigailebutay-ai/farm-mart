@@ -126,7 +126,7 @@
                                         @if(auth()->user()->isFarmer())
                                             <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                                 @foreach($farmerItems as $item)
-                                                    <div>{{ optional($item->product)->name ?? 'Product unavailable' }} x {{ $item->quantity }} {{ optional($item->product)->unit ?? 'piece' }}</div>
+                                                    <div>{{ optional($item->product)->name ?? 'Product unavailable' }} x {{ $item->quantity }} kg</div>
                                                 @endforeach
                                             </div>
                                         @endif
