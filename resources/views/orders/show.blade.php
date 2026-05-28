@@ -372,9 +372,30 @@
                         <span>PHP {{ number_format(auth()->user()->isFarmer() ? $visibleSubtotal : $order->subtotal, 2) }}</span>
                     </div>
 
+                    @if(! auth()->user()->isFarmer())
+                        <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                            <span>Total Kilograms:</span>
+                            <span>{{ number_format($order->total_kg ?? 0, 2) }} kg</span>
+                        </div>
+
+                        @if($order->coupon_code)
+                            <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Coupon Code:</span>
+                                <span>{{ $order->coupon_code }}</span>
+                            </div>
+                        @endif
+
+                        @if(($order->discount_amount ?? 0) > 0)
+                            <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                                <span>Discount:</span>
+                                <span>- PHP {{ number_format($order->discount_amount, 2) }}</span>
+                            </div>
+                        @endif
+                    @endif
+
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div class="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
-                            <span>Total:</span>
+                            <span>Final Total:</span>
                             <span class="text-green-600 dark:text-green-400">PHP {{ number_format(auth()->user()->isFarmer() ? $visibleSubtotal : $order->total, 2) }}</span>
                         </div>
                     </div>

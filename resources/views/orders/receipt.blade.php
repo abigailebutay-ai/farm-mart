@@ -74,6 +74,10 @@
                 <p class="text-sm"><span class="font-semibold">Ordered At:</span> {{ $orderedAt }}</p>
                 <p class="text-sm"><span class="font-semibold">Status:</span> {{ \Illuminate\Support\Str::title($order->status) }}</p>
                 <p class="text-sm"><span class="font-semibold">Seller:</span> {{ $farmerNames->isNotEmpty() ? $farmerNames->join(', ') : 'Local Farmer' }}</p>
+                <p class="text-sm"><span class="font-semibold">Total Kilograms:</span> {{ number_format($order->total_kg ?? 0, 2) }} kg</p>
+                @if($order->coupon_code)
+                    <p class="text-sm"><span class="font-semibold">Coupon Code:</span> {{ $order->coupon_code }}</p>
+                @endif
             </div>
         </div>
 
@@ -108,8 +112,14 @@
                 <span>Subtotal</span>
                 <span>PHP {{ number_format($order->subtotal, 2) }}</span>
             </div>
+            @if(($order->discount_amount ?? 0) > 0)
+                <div class="flex justify-between receipt-meta">
+                    <span>Discount</span>
+                    <span>- PHP {{ number_format($order->discount_amount, 2) }}</span>
+                </div>
+            @endif
             <div class="print-total-row flex justify-between text-xl font-black">
-                <span>Total Amount</span>
+                <span>Final Total</span>
                 <span>PHP {{ number_format($order->total, 2) }}</span>
             </div>
         </div>

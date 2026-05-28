@@ -14,6 +14,10 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'coupon_id',
+        'coupon_code',
+        'discount_amount',
+        'total_kg',
         'subtotal',
         'total',
         'status',
@@ -30,6 +34,11 @@ class Order extends Model
     public function consumer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     /**

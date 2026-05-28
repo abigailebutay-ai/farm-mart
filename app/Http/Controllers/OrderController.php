@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\NotificationService;
@@ -147,7 +148,7 @@ class OrderController extends Controller
                 ->with('error', 'Farmers cannot place orders.');
         }
 
-        $cart = $user->cart;
+        $cart = $user->cart?->loadMissing('items.product');
 
         // Empty cart check
         if (
@@ -181,6 +182,21 @@ class OrderController extends Controller
             }
         }
 
+        $couponResult = $this->activeCouponResult($cart);
+
+        if (! $couponResult['ok']) {
+            session()->forget('checkout_coupon_id');
+
+            return back()
+                ->with('error', $couponResult['message'])
+                ->withInput();
+        }
+
+        $coupon = $couponResult['coupon'];
+        $discountAmount = $couponResult['discount'];
+        $totalKg = $couponResult['totalKg'];
+        $orderTotal = max((float) $cart->subtotal - $discountAmount, 0);
+
         $paymentData = [
             'payment_method' => 'cod',
             'payment_status' => 'pending',
@@ -197,11 +213,15 @@ class OrderController extends Controller
             ];
         }
 
-        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated) {
+        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated, $coupon, $discountAmount, $totalKg, $orderTotal) {
             $order = Order::create([
                 'user_id' => $user->id,
+                'coupon_id' => $coupon?->id,
+                'coupon_code' => $coupon?->code,
+                'discount_amount' => $discountAmount,
+                'total_kg' => $totalKg,
                 'subtotal' => $cart->subtotal,
-                'total' => $cart->total,
+                'total' => $orderTotal,
                 'status' => 'pending',
                 'notes' => $validated['notes'] ?? null,
             ] + $paymentData);
@@ -217,8 +237,13 @@ class OrderController extends Controller
                 ]);
             }
 
+            if ($coupon) {
+                $coupon->increment('used_count');
+            }
+
             $cart->items()->delete();
             $cart->calculateTotals();
+            session()->forget('checkout_coupon_id');
 
             return $order;
         });
@@ -268,6 +293,51 @@ class OrderController extends Controller
         return redirect()
             ->route('orders.show', $order)
             ->with('success', $successMessage);
+    }
+
+    /**
+     * Apply a coupon to the current checkout session.
+     */
+    public function applyCoupon(Request $request)
+    {
+        $user = auth()->user();
+
+        if ($user->isFarmer()) {
+            return redirect()->route('dashboard')->with('error', 'Farmers cannot place orders.');
+        }
+
+        $cart = $user->cart?->loadMissing('items.product');
+
+        if (! $cart || $cart->items->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
+        }
+
+        $validated = $request->validate([
+            'coupon_code' => 'required|string|max:50',
+        ]);
+
+        $coupon = Coupon::where('code', strtoupper(trim($validated['coupon_code'])))->first();
+
+        if (! $coupon || ! $coupon->isAvailable()) {
+            return back()->with('error', 'Coupon is expired or inactive.');
+        }
+
+        $result = $this->couponResult($cart, $coupon);
+
+        if (! $result['ok']) {
+            return back()->with('error', $result['message']);
+        }
+
+        session(['checkout_coupon_id' => $coupon->id]);
+
+        return back()->with('success', 'Coupon applied successfully.');
+    }
+
+    public function removeCoupon()
+    {
+        session()->forget('checkout_coupon_id');
+
+        return back()->with('success', 'Coupon removed.');
     }
 
     /**
@@ -517,6 +587,97 @@ class OrderController extends Controller
             ->with('success', $successMessage);
     }
 
+    private function activeCouponResult(Cart $cart): array
+    {
+        $couponId = session('checkout_coupon_id');
+
+        if (! $couponId) {
+            return [
+                'ok' => true,
+                'coupon' => null,
+                'discount' => 0,
+                'totalKg' => $this->cartTotalKg($cart),
+                'message' => null,
+            ];
+        }
+
+        $coupon = Coupon::find($couponId);
+
+        if (! $coupon || ! $coupon->isAvailable()) {
+            return [
+                'ok' => false,
+                'coupon' => null,
+                'discount' => 0,
+                'totalKg' => $this->cartTotalKg($cart),
+                'message' => 'Coupon is expired or inactive.',
+            ];
+        }
+
+        return $this->couponResult($cart, $coupon);
+    }
+
+    private function couponResult(Cart $cart, Coupon $coupon): array
+    {
+        $cart->loadMissing('items.product');
+        $subtotal = (float) $cart->subtotal;
+        $totalKg = $this->cartTotalKg($cart);
+
+        if ($coupon->rule_type === 'kilogram') {
+            if ($totalKg <= 0) {
+                return [
+                    'ok' => false,
+                    'coupon' => $coupon,
+                    'discount' => 0,
+                    'totalKg' => $totalKg,
+                    'message' => 'This coupon only applies to products sold per kilogram.',
+                ];
+            }
+
+            $minimumKg = (float) $coupon->minimum_kg;
+
+            if ($totalKg < $minimumKg) {
+                return [
+                    'ok' => false,
+                    'coupon' => $coupon,
+                    'discount' => 0,
+                    'totalKg' => $totalKg,
+                    'message' => 'This coupon requires at least ' . rtrim(rtrim(number_format($minimumKg, 2), '0'), '.') . ' kg of products.',
+                ];
+            }
+        } else {
+            $minimumAmount = (float) ($coupon->minimum_order_amount ?? 0);
+
+            if ($subtotal < $minimumAmount) {
+                return [
+                    'ok' => false,
+                    'coupon' => $coupon,
+                    'discount' => 0,
+                    'totalKg' => $totalKg,
+                    'message' => 'This coupon requires a minimum order amount of PHP ' . number_format($minimumAmount, 2) . '.',
+                ];
+            }
+        }
+
+        return [
+            'ok' => true,
+            'coupon' => $coupon,
+            'discount' => $coupon->discountFor($subtotal),
+            'totalKg' => $totalKg,
+            'message' => null,
+        ];
+    }
+
+    private function cartTotalKg(Cart $cart): float
+    {
+        $cart->loadMissing('items.product');
+
+        return (float) $cart->items->sum(function ($item) {
+            return strtolower(trim((string) optional($item->product)->unit)) === 'kg'
+                ? (float) $item->quantity
+                : 0;
+        });
+    }
+
     private function reduceOrderStock(Order $order, NotificationService $notifications): void
     {
         foreach ($order->items as $item) {
@@ -584,7 +745,7 @@ class OrderController extends Controller
                 ->with('error', 'Farmers cannot place orders.');
         }
 
-        $cart = $user->cart;
+        $cart = $user->cart?->loadMissing('items.product');
 
         // Empty cart check
         if (
@@ -597,8 +758,25 @@ class OrderController extends Controller
                 ->with('error', 'Your cart is empty!');
         }
 
+        $couponResult = $this->activeCouponResult($cart);
+
+        if (! $couponResult['ok']) {
+            session()->forget('checkout_coupon_id');
+            $couponResult = [
+                'ok' => true,
+                'coupon' => null,
+                'discount' => 0,
+                'totalKg' => $this->cartTotalKg($cart),
+                'message' => null,
+            ];
+        }
+
         return view('orders.checkout', [
-            'cart' => $cart
+            'cart' => $cart,
+            'coupon' => $couponResult['coupon'],
+            'discountAmount' => $couponResult['discount'],
+            'totalKg' => $couponResult['totalKg'],
+            'checkoutTotal' => max((float) $cart->subtotal - (float) $couponResult['discount'], 0),
         ]);
     }
 }

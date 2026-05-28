@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AdminAnnouncementController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminCouponController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
@@ -88,6 +89,8 @@ Route::middleware('auth')->group(function () {
     // Checkout routes (consumers only)
     Route::middleware('role:consumer,buyer')->group(function () {
         Route::get('/checkout', [OrderController::class, 'showCheckout'])->name('checkout.show');
+        Route::post('/checkout/coupon', [OrderController::class, 'applyCoupon'])->name('checkout.coupon.apply');
+        Route::delete('/checkout/coupon', [OrderController::class, 'removeCoupon'])->name('checkout.coupon.remove');
         Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout.store');
     });
 
@@ -161,6 +164,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/announcements/{announcement}/edit', [AdminAnnouncementController::class, 'edit'])->name('announcements.edit');
     Route::put('/announcements/{announcement}', [AdminAnnouncementController::class, 'update'])->name('announcements.update');
     Route::delete('/announcements/{announcement}', [AdminAnnouncementController::class, 'destroy'])->name('announcements.destroy');
+    Route::get('/coupons', [AdminCouponController::class, 'index'])->name('coupons.index');
+    Route::get('/coupons/create', [AdminCouponController::class, 'create'])->name('coupons.create');
+    Route::post('/coupons', [AdminCouponController::class, 'store'])->name('coupons.store');
+    Route::get('/coupons/{coupon}/edit', [AdminCouponController::class, 'edit'])->name('coupons.edit');
+    Route::put('/coupons/{coupon}', [AdminCouponController::class, 'update'])->name('coupons.update');
+    Route::delete('/coupons/{coupon}', [AdminCouponController::class, 'destroy'])->name('coupons.destroy');
     Route::get('/activity-logs', [AdminController::class, 'activityLogs'])->name('activity-logs');
     Route::patch('/orders/{order}/payment-status', [AdminController::class, 'updatePaymentStatus'])->name('orders.payment-status');
     Route::patch('/orders/{order}/payment/paid', [AdminController::class, 'markPaymentPaid'])->name('orders.payment.paid');

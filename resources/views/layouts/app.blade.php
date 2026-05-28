@@ -29,6 +29,7 @@
                 ['label' => 'Products', 'href' => route('admin.products'), 'active' => 'admin.products', 'icon' => 'products'],
                 ['label' => 'Orders', 'href' => route('orders.index'), 'active' => 'orders.*', 'icon' => 'orders'],
                 ['label' => 'Announcements', 'href' => route('admin.announcements.index'), 'active' => 'admin.announcements.*', 'icon' => 'megaphone'],
+                ['label' => 'Coupons', 'href' => route('admin.coupons.index'), 'active' => 'admin.coupons.*', 'icon' => 'money'],
                 ['label' => 'Activity Logs', 'href' => route('admin.activity-logs'), 'active' => 'admin.activity-logs', 'icon' => 'activity'],
             ];
         } elseif ($user->isFarmer()) {
