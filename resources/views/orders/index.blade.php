@@ -172,11 +172,17 @@
                                             @endif
                                         @elseif(auth()->user()->isFarmer())
                                             @if($order->status === 'pending')
-                                                <form method="POST" action="{{ route('farmer.orders.accept', $order) }}">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Accept Order</button>
-                                                </form>
+                                                @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
+                                                    <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
+                                                        {{ $order->payment_status === 'rejected' ? 'Payment proof rejected' : 'Waiting for admin payment verification' }}
+                                                    </span>
+                                                @else
+                                                    <form method="POST" action="{{ route('farmer.orders.accept', $order) }}">
+                                                        @csrf
+                                                        @method('PATCH')
+                                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Accept Order</button>
+                                                    </form>
+                                                @endif
                                                 <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
                                                     @csrf
                                                     @method('PATCH')

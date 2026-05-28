@@ -142,7 +142,7 @@ class AdminController extends Controller
             'payment_status' => 'paid',
         ]);
 
-        $order->loadMissing('consumer');
+        $order->loadMissing(['consumer', 'items.farmer']);
 
         if ($order->consumer) {
             $notifications->send(
@@ -156,6 +156,22 @@ class AdminController extends Controller
             );
         }
 
+        $order->items
+            ->pluck('farmer')
+            ->filter()
+            ->unique('id')
+            ->each(function ($farmer) use ($order, $notifications) {
+                $notifications->send(
+                    $farmer,
+                    'payment.verified',
+                    'GCash payment verified',
+                    "GCash payment verified. You can now accept Order #{$order->id}.",
+                    'check',
+                    route('orders.show', $order),
+                    ['order_id' => $order->id, 'payment_status' => 'paid']
+                );
+            });
+
         return back()->with('success', 'GCash payment marked as paid.');
     }
 
@@ -167,25 +183,46 @@ class AdminController extends Controller
             return back()->with('error', 'Only GCash payments can be rejected.');
         }
 
+        if ($order->status === 'completed') {
+            return back()->with('error', 'Completed orders cannot have payment rejected.');
+        }
+
         $order->update([
             'payment_status' => 'rejected',
+            'status' => 'cancelled',
         ]);
 
-        $order->loadMissing('consumer');
+        $order->loadMissing(['consumer', 'items.farmer']);
 
         if ($order->consumer) {
             $notifications->send(
                 $order->consumer,
                 'payment.rejected',
-                'GCash payment rejected',
-                "Your GCash proof for Order #{$order->id} was rejected. Please contact admin for assistance.",
+                'Order cancelled',
+                "Your GCash payment proof for Order #{$order->id} was rejected and your order was cancelled.",
                 'alert',
                 route('orders.show', $order),
-                ['order_id' => $order->id, 'payment_status' => 'rejected']
+                ['order_id' => $order->id, 'payment_status' => 'rejected', 'status' => 'cancelled']
             );
         }
 
-        return back()->with('success', 'GCash payment rejected.');
+        $order->items
+            ->pluck('farmer')
+            ->filter()
+            ->unique('id')
+            ->each(function ($farmer) use ($order, $notifications) {
+                $notifications->send(
+                    $farmer,
+                    'order.cancelled',
+                    'Order cancelled',
+                    "Order #{$order->id} was cancelled due to rejected GCash payment.",
+                    'alert',
+                    route('orders.show', $order),
+                    ['order_id' => $order->id, 'payment_status' => 'rejected', 'status' => 'cancelled']
+                );
+            });
+
+        return back()->with('success', 'GCash payment rejected and order cancelled.');
     }
 
     public function approveUser(User $user, NotificationService $notifications)

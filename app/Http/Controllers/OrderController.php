@@ -461,6 +461,13 @@ class OrderController extends Controller
             return ['ok' => false, 'message' => $failureMessage];
         }
 
+        if ($nextStatus === 'accepted' && $order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
+            return [
+                'ok' => false,
+                'message' => 'This GCash order cannot be accepted until admin verifies the payment.',
+            ];
+        }
+
         if ($nextStatus === 'completed' && $order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
             return [
                 'ok' => false,
