@@ -10,6 +10,20 @@
             ->filter()
             ->unique()
             ->values();
+        $pickupLocations = $order->items
+            ->filter(fn ($item) => $item->farmer)
+            ->groupBy('farmer_id')
+            ->map(function ($items) {
+                return [
+                    'farmer' => $items->first()->farmer,
+                    'products' => $items
+                        ->map(fn ($item) => optional($item->product)->name)
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                ];
+            })
+            ->values();
         $orderedAt = $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A');
         $completedAt = $order->completed_at?->timezone(config('app.timezone'))->format('M d, Y h:i A');
     @endphp
@@ -78,6 +92,17 @@
                 @endif
                 <p class="text-sm"><span class="font-semibold">Status:</span> {{ \Illuminate\Support\Str::title(str_replace('_', ' ', $order->status)) }}</p>
                 <p class="text-sm"><span class="font-semibold">Fulfillment Method:</span> {{ $order->fulfillmentMethodLabel() }}</p>
+                @if($order->fulfillment_method === 'pickup')
+                    @forelse($pickupLocations as $location)
+                        @php($farmer = $location['farmer'])
+                        <p class="text-sm">
+                            <span class="font-semibold">Pickup Address{{ $pickupLocations->count() > 1 ? ' ' . $loop->iteration : '' }}:</span>
+                            {{ $farmer->address ?: 'Pickup address not provided. Please contact the farmer before pickup.' }}
+                        </p>
+                    @empty
+                        <p class="text-sm"><span class="font-semibold">Pickup Address:</span> Pickup address not provided. Please contact the farmer before pickup.</p>
+                    @endforelse
+                @endif
                 <p class="text-sm"><span class="font-semibold">Seller:</span> {{ $farmerNames->isNotEmpty() ? $farmerNames->join(', ') : 'Local Farmer' }}</p>
                 <p class="text-sm"><span class="font-semibold">Total Kilograms:</span> {{ number_format($order->total_kg ?? 0, 2) }} kg</p>
                 @if($order->coupon_code)

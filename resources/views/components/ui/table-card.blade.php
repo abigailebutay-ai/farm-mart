@@ -1,6 +1,7 @@
 @props([
     'title' => null,
     'subtitle' => null,
+    'tableClass' => 'min-w-full',
 ])
 
 <section {{ $attributes->merge(['class' => 'overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-950']) }}>
@@ -16,7 +17,7 @@
     @endif
 
     <div class="overflow-x-auto">
-        <table class="data-table min-w-full divide-y divide-slate-100 text-base">
+        <table class="data-table {{ $tableClass }} divide-y divide-slate-100 text-base">
             {{ $slot }}
         </table>
     </div>

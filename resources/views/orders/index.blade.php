@@ -179,7 +179,7 @@
                                             @if($order->status === 'completed')
                                                 <a href="{{ route('consumer.orders.receipt', $order) }}" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Receipt</a>
                                             @else
-                                                <span class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500">Receipt after completion</span>
+                                                <span class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500">Receipt available after completion</span>
                                             @endif
                                         @elseif(auth()->user()->isFarmer())
                                             @if($order->status === 'pending')

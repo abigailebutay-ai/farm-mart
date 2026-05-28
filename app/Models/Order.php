@@ -75,7 +75,7 @@ class Order extends Model
     public function consumerCancellationMessage(): string
     {
         if ($this->status === 'cancelled') {
-            return 'Order is already cancelled';
+            return 'Order cancelled';
         }
 
         if ($this->status === 'preparing') {
@@ -83,15 +83,15 @@ class Order extends Model
         }
 
         if ($this->status === 'out_for_delivery') {
-            return 'Order is already out for delivery';
+            return 'Order is on the way';
         }
 
         if ($this->status === 'ready_for_pickup') {
-            return 'Order is already ready for pickup';
+            return 'Waiting for buyer pickup';
         }
 
         if ($this->status === 'completed') {
-            return 'Completed orders cannot be cancelled';
+            return 'Order completed';
         }
 
         if ($this->created_at?->lt(now()->subDay())) {

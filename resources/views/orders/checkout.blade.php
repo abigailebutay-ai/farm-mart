@@ -15,19 +15,29 @@
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Checkout Details</h2>
                 </div>
 
-                <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')) }">
+                <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')) }">
                     @csrf
 
                     <div>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
                         <div class="space-y-4">
                             @foreach($cart->items as $item)
-                                <div class="flex items-center justify-between gap-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-700">
-                                    <div>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $item->product->name }}</p>
-                                        <p class="text-base text-gray-600 dark:text-gray-400">Qty: {{ $item->quantity }} {{ $item->product->unit ?? 'piece' }} x PHP {{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
+                                <div class="flex flex-col gap-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="flex gap-4">
+                                        <x-ui.product-image
+                                            :product="$item->product"
+                                            :alt="$item->product->name"
+                                            image-class="h-16 w-16 rounded-lg object-cover"
+                                            placeholder-class="flex h-16 w-16 items-center justify-center rounded-lg bg-gray-200 text-gray-400 dark:bg-gray-800"
+                                            icon-class="h-6 w-6"
+                                        />
+                                        <div>
+                                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $item->product->name }}</p>
+                                            <p class="text-base text-gray-600 dark:text-gray-400">Quantity: {{ $item->quantity }} {{ $item->product->unit ?? 'piece' }}</p>
+                                            <p class="text-base text-gray-600 dark:text-gray-400">Price: PHP {{ number_format($item->price, 2) }} / {{ $item->product->unit ?? 'piece' }}</p>
+                                        </div>
                                     </div>
-                                    <p class="font-semibold text-gray-900 dark:text-white">PHP {{ number_format($item->subtotal, 2) }}</p>
+                                    <p class="text-lg font-bold text-green-600 dark:text-green-400">PHP {{ number_format($item->subtotal, 2) }}</p>
                                 </div>
                             @endforeach
                         </div>
@@ -77,8 +87,28 @@
                             </p>
                         </div>
 
-                        <div x-show="fulfillmentMethod === 'pickup'" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
-                            Coordinate with the farmer for pickup schedule and location.
+                        <div x-show="fulfillmentMethod === 'pickup'" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                            <h4 class="text-base font-bold">Pickup Information</h4>
+                            <p class="mt-1 font-semibold">You selected Pick up. Please pick up your order at the farmer's address.</p>
+
+                            <div class="mt-4 space-y-3">
+                                @forelse($pickupLocations as $location)
+                                    @php($farmer = $location['farmer'])
+                                    <div class="rounded-lg border border-amber-200/80 bg-white/70 p-3 dark:border-amber-800/80 dark:bg-gray-900/60">
+                                        <p class="font-bold text-gray-900 dark:text-white">{{ $loop->iteration }}. {{ $farmer->name }}</p>
+                                        <p class="mt-1"><span class="font-semibold">Products:</span> {{ $location['products']->join(', ') }}</p>
+                                        <p class="mt-1">
+                                            <span class="font-semibold">Pickup Address:</span>
+                                            {{ $farmer->address ?: 'Pickup address not provided. Please contact the farmer before pickup.' }}
+                                        </p>
+                                        <p class="mt-1"><span class="font-semibold">Seller Contact:</span> {{ $farmer->phone ?: 'Not provided' }}</p>
+                                    </div>
+                                @empty
+                                    <div class="rounded-lg border border-amber-200 bg-white/70 p-3 font-semibold dark:border-amber-800 dark:bg-gray-900/60">
+                                        Pickup address not provided. Please contact the farmer before pickup.
+                                    </div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
 
@@ -136,14 +166,6 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-4">
-                        <button type="submit" class="flex-1 rounded-lg bg-green-600 px-6 py-3 font-semibold text-white transition hover:bg-green-700">
-                            Place Order
-                        </button>
-                        <a href="{{ route('cart.index') }}" class="flex-1 rounded-lg bg-gray-300 px-6 py-3 text-center font-semibold text-gray-900 transition hover:bg-gray-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
-                            Back to Cart
-                        </a>
-                    </div>
                 </form>
             </div>
         </div>
@@ -208,6 +230,14 @@
                             <span class="text-green-600 dark:text-green-400">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
                         </div>
                     </div>
+
+                    <button type="submit" form="checkout-form" class="block w-full rounded-lg bg-green-600 py-3 text-center font-semibold text-white transition hover:bg-green-700">
+                        Place Order
+                    </button>
+
+                    <a href="{{ route('cart.index') }}" class="block w-full rounded-lg bg-gray-200 py-2 text-center font-semibold text-gray-900 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">
+                        Back to Cart
+                    </a>
                 </div>
             </div>
         </div>

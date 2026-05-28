@@ -17,7 +17,7 @@
     <style>[x-cloak] { display: none !important; }</style>
 </head>
 <body class="bg-stone-50 text-slate-800 antialiased dark:bg-gray-900">
-@if(auth()->check() && request()->routeIs('dashboard', 'orders.*', 'cart.*', 'profile.*', 'settings.*', 'consumer.*', 'farmer.*', 'admin.*'))
+@if(auth()->check() && request()->routeIs('dashboard', 'orders.*', 'checkout.*', 'cart.*', 'profile.*', 'settings.*', 'consumer.*', 'farmer.*', 'admin.*'))
     @include('layouts.toast')
 
     @php
@@ -46,7 +46,7 @@
             $navItems = [
                 ['label' => 'Dashboard', 'href' => route('dashboard'), 'active' => 'dashboard', 'icon' => 'dashboard'],
                 ['label' => 'Marketplace', 'href' => route('consumer.marketplace'), 'active' => 'consumer.marketplace', 'icon' => 'products'],
-                ['label' => 'Cart', 'href' => route('cart.index'), 'active' => 'cart.*', 'icon' => 'cart'],
+                ['label' => 'Cart', 'href' => route('cart.index'), 'active' => ['cart.*', 'checkout.*'], 'icon' => 'cart'],
                 ['label' => 'My Orders', 'href' => route('orders.index'), 'active' => ['orders.*', 'consumer.orders.*'], 'icon' => 'orders'],
                 ['label' => 'Feedback', 'href' => route('consumer.feedback'), 'active' => 'consumer.feedback', 'icon' => 'star'],
             ];

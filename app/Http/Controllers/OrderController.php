@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
+use Illuminate\Support\Collection;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -148,7 +150,7 @@ class OrderController extends Controller
                 ->with('error', 'Farmers cannot place orders.');
         }
 
-        $cart = $user->cart?->loadMissing('items.product');
+        $cart = $user->cart?->loadMissing('items.product.farmer');
 
         // Empty cart check
         if (
@@ -901,6 +903,29 @@ class OrderController extends Controller
             'discountAmount' => $couponResult['discount'],
             'totalKg' => $couponResult['totalKg'],
             'checkoutTotal' => max((float) $cart->subtotal - (float) $couponResult['discount'], 0),
+            'pickupLocations' => $this->pickupLocationsFromCart($cart),
         ]);
+    }
+
+    private function pickupLocationsFromCart(Cart $cart): Collection
+    {
+        $cart->loadMissing('items.product.farmer');
+
+        return $cart->items
+            ->filter(fn (CartItem $item) => $item->product?->farmer)
+            ->groupBy(fn (CartItem $item) => $item->product->farmer->id)
+            ->map(function (Collection $items) {
+                $farmer = $items->first()->product->farmer;
+
+                return [
+                    'farmer' => $farmer,
+                    'products' => $items
+                        ->map(fn (CartItem $item) => $item->product?->name)
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                ];
+            })
+            ->values();
     }
 }

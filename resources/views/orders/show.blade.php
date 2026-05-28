@@ -12,6 +12,20 @@
             ? $order->items->where('farmer_id', auth()->id())
             : $order->items;
         $visibleSubtotal = $visibleItems->sum('subtotal');
+        $pickupLocations = $visibleItems
+            ->filter(fn ($item) => $item->farmer)
+            ->groupBy('farmer_id')
+            ->map(function ($items) {
+                return [
+                    'farmer' => $items->first()->farmer,
+                    'products' => $items
+                        ->map(fn ($item) => optional($item->product)->name)
+                        ->filter()
+                        ->unique()
+                        ->values(),
+                ];
+            })
+            ->values();
         $trackingSteps = $order->status === 'cancelled'
             ? ['pending' => 'Order Placed', 'cancelled' => 'Cancelled']
             : ($fulfillmentMethod === 'pickup'
@@ -40,6 +54,16 @@
 
                     @if($isBuyerOrder)
                         <x-ui.order-progress :order="$order" class="mb-6" />
+                        @if($fulfillmentMethod === 'pickup')
+                            <div class="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                                <p class="font-bold">Pickup Location</p>
+                                <p class="mt-1">
+                                    {{ $order->status === 'ready_for_pickup'
+                                        ? 'Your order is ready for pickup. Please proceed to the pickup address.'
+                                        : 'Your order is ready for pickup when the status becomes "Ready for Pickup."' }}
+                                </p>
+                            </div>
+                        @endif
                     @endif
 
                     <div class="grid grid-cols-2 gap-4 text-sm">
@@ -196,6 +220,37 @@
                             </div>
                         @endif
                     </div>
+
+                    @if($fulfillmentMethod === 'pickup')
+                        <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                            <h4 class="font-bold">Pickup Locations</h4>
+                            <div class="mt-3 space-y-3">
+                                @forelse($pickupLocations as $location)
+                                    @php($farmer = $location['farmer'])
+                                    <div class="rounded-lg border border-amber-200/80 bg-white/70 p-3 dark:border-amber-800/80 dark:bg-gray-900/60">
+                                        <p class="font-bold text-gray-900 dark:text-white">{{ $loop->iteration }}. {{ $farmer->name }}</p>
+                                        <p class="mt-1"><span class="font-semibold">Products:</span> {{ $location['products']->join(', ') }}</p>
+                                        <p class="mt-1">
+                                            <span class="font-semibold">Pickup Address:</span>
+                                            {{ $farmer->address ?: 'Pickup address not provided. Please contact the farmer before pickup.' }}
+                                        </p>
+                                        <p class="mt-1"><span class="font-semibold">Seller Contact:</span> {{ $farmer->phone ?: 'Not provided' }}</p>
+                                    </div>
+                                @empty
+                                    <p class="font-semibold">Pickup address not provided. Please contact the farmer before pickup.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    @else
+                        <div class="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            <h4 class="font-bold">Delivery Details</h4>
+                            <p class="mt-1"><span class="font-semibold">Address:</span> {{ $order->consumer->address ?? 'Not provided' }}</p>
+                            <p class="mt-1"><span class="font-semibold">Contact Number:</span> {{ $order->consumer->phone ?? 'Not provided' }}</p>
+                            @if($order->notes)
+                                <p class="mt-1"><span class="font-semibold">Delivery Instructions:</span> {{ $order->notes }}</p>
+                            @endif
+                        </div>
+                    @endif
 
                     @if($order->completion_proof)
                         <div>
