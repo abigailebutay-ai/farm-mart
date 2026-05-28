@@ -15,7 +15,7 @@
     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <x-ui.stat-card label="Total Products" :value="$totalProducts ?? 0" icon="products" trend="Products you are selling." />
         <x-ui.stat-card label="Pending Orders" :value="$pendingOrders ?? 0" icon="clock" tone="amber" trend="Buyer orders waiting for action." />
-        <x-ui.stat-card label="Low Stock Products" :value="$lowStockProductsCount ?? 0" icon="alert" tone="amber" trend="Products that may need restocking." />
+        <x-ui.stat-card label="Products to Restock" :value="$productsToRestockCount ?? $lowStockProductsCount ?? 0" icon="alert" tone="amber" trend="Products with 10 kg or less remaining." />
         <x-ui.stat-card label="Total Sales" value="PHP {{ number_format($totalSales ?? 0, 2) }}" icon="money" tone="green" trend="Earnings from completed orders." />
     </div>
 

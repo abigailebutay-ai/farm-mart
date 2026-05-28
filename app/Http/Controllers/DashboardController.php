@@ -141,10 +141,19 @@ class DashboardController extends Controller
             ->whereHas('order', fn ($query) => $query->where('status', 'completed')->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year))
             ->sum('subtotal');
 
+        $productsToRestockCount = $user->products()
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'active');
+            })
+            ->where('quantity', '<=', 10)
+            ->count();
+
         return view('dashboard.farmer', [
             'totalProducts' => $user->products()->count(),
             'totalInventoryQuantity' => $user->products()->sum('quantity'),
-            'lowStockProductsCount' => $user->products()->whereBetween('quantity', [1, 10])->count(),
+            'lowStockProductsCount' => $productsToRestockCount,
+            'productsToRestockCount' => $productsToRestockCount,
             'pendingOrders' => (clone $farmerOrderQuery)->where('status', 'pending')->count(),
             'completedOrders' => (clone $farmerOrderQuery)->where('status', 'completed')->count(),
             'totalSales' => $totalSales,
@@ -249,10 +258,16 @@ class DashboardController extends Controller
             ->whereHas('order', fn ($query) => $query->where('status', 'completed')->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year))
             ->sum('subtotal');
 
-        $lowStockProducts = $user->products()->whereBetween('quantity', [1, 10])->orderBy('quantity')->get();
-        $outOfStockProducts = $user->products()->where('quantity', '<=', 0)->orderBy('name')->get();
-        $productsWithNoOrders = $user->products()->doesntHave('orderItems')->limit(5)->get();
+        $activeProducts = fn ($query) => $query->where(function ($query) {
+            $query->whereNull('status')
+                ->orWhere('status', 'active');
+        });
+
+        $lowStockProducts = $user->products()->where($activeProducts)->whereBetween('quantity', [1, 10])->orderBy('quantity')->get();
+        $outOfStockProducts = $user->products()->where($activeProducts)->where('quantity', '<=', 0)->orderBy('name')->get();
+        $productsWithNoOrders = $user->products()->where($activeProducts)->doesntHave('orderItems')->limit(5)->get();
         $slowMovingProducts = $bestSellingProducts->where('sold_quantity', '<=', 2)->take(5);
+        $productsToRestockCount = $user->products()->where($activeProducts)->where('quantity', '<=', 10)->count();
 
         return [
             'bestSellingProducts' => $bestSellingProducts->where('sold_quantity', '>', 0)->take(5),
@@ -262,7 +277,7 @@ class DashboardController extends Controller
             'productsWithNoOrders' => $productsWithNoOrders,
             'slowMovingProducts' => $slowMovingProducts,
             'monthlySales' => $monthlySales,
-            'suggestedRestockQuantity' => $lowStockProducts->sum(fn ($product) => max(20 - (int) $product->quantity, 0)),
+            'productsToRestockCount' => $productsToRestockCount,
             'productPerformance' => $bestSellingProducts->take(10),
         ];
     }
