@@ -25,8 +25,19 @@ class Order extends Model
         'payment_status',
         'payment_reference',
         'payment_proof',
+        'fulfillment_method',
+        'completion_proof',
+        'completion_note',
+        'completed_at',
         'notes',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'completed_at' => 'datetime',
+        ];
+    }
 
     /**
      * Get the consumer who placed this order.
@@ -69,6 +80,14 @@ class Order extends Model
 
         if ($this->status === 'preparing') {
             return 'Order is already being prepared';
+        }
+
+        if ($this->status === 'out_for_delivery') {
+            return 'Order is already out for delivery';
+        }
+
+        if ($this->status === 'ready_for_pickup') {
+            return 'Order is already ready for pickup';
         }
 
         if ($this->status === 'completed') {
@@ -127,6 +146,42 @@ class Order extends Model
         return in_array(Str::lower(pathinfo($this->payment_proof, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
     }
 
+    public function fulfillmentMethod(): string
+    {
+        return $this->fulfillment_method === 'pickup' ? 'pickup' : 'delivery';
+    }
+
+    public function fulfillmentMethodLabel(): string
+    {
+        return $this->fulfillmentMethod() === 'pickup' ? 'Pick up' : 'Delivery';
+    }
+
+    public function completionProofLabel(): string
+    {
+        return $this->fulfillmentMethod() === 'pickup' ? 'Proof of Pickup' : 'Proof of Delivery';
+    }
+
+    public function completionProofUrl(): ?string
+    {
+        if (! $this->completion_proof) {
+            return null;
+        }
+
+        $path = str_replace('\\', '/', $this->completion_proof);
+        $path = ltrim($path, '/');
+
+        return route('completion.proof', ['path' => $path]);
+    }
+
+    public function completionProofIsImage(): bool
+    {
+        if (! $this->completion_proof) {
+            return false;
+        }
+
+        return in_array(Str::lower(pathinfo($this->completion_proof, PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'webp', 'gif'], true);
+    }
+
     /**
      * Mark order as accepted.
      */
@@ -147,6 +202,19 @@ class Order extends Model
             $this->payment_status = 'paid';
         }
 
+        $this->completed_at = now();
+        $this->save();
+    }
+
+    public function markOutForDelivery(): void
+    {
+        $this->status = 'out_for_delivery';
+        $this->save();
+    }
+
+    public function markReadyForPickup(): void
+    {
+        $this->status = 'ready_for_pickup';
         $this->save();
     }
 

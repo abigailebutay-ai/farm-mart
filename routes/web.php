@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminAnnouncementController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminCouponController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CompletionProofController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\HomeController;
@@ -52,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/payment-proof/{path}', [PaymentProofController::class, 'show'])
         ->where('path', '.*')
         ->name('payment.proof');
+    Route::get('/completion-proof/{path}', [CompletionProofController::class, 'show'])
+        ->where('path', '.*')
+        ->name('completion.proof');
 
     Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])
         ->name('notifications.read');
@@ -143,7 +147,10 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::patch('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
     Route::patch('/orders/{order}/preparing', [OrderController::class, 'markPreparing'])->name('orders.preparing');
+    Route::patch('/orders/{order}/out-for-delivery', [OrderController::class, 'markOutForDelivery'])->name('orders.out-for-delivery');
+    Route::patch('/orders/{order}/ready-for-pickup', [OrderController::class, 'markReadyForPickup'])->name('orders.ready-for-pickup');
     Route::patch('/orders/{order}/complete', [OrderController::class, 'markCompleted'])->name('orders.complete');
+    Route::patch('/orders/{order}/complete-with-proof', [OrderController::class, 'completeWithProof'])->name('orders.complete-with-proof');
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelByFarmer'])->name('orders.cancel');
     Route::get('/{path}', fn () => redirect()->route('dashboard'))->where('path', '.*')->name('fallback');
 });

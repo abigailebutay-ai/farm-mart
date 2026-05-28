@@ -12,6 +12,8 @@
             'pending' => 'Pending',
             'accepted' => 'Accepted',
             'preparing' => 'Preparing',
+            'ready_for_pickup' => 'Ready for Pickup',
+            'out_for_delivery' => 'Out for Delivery',
             'completed' => 'Completed',
             'cancelled' => 'Cancelled',
         ];
@@ -24,11 +26,13 @@
 
     @if(auth()->user()->isFarmer())
         <x-ui.dashboard-card class="mb-5" title="Status Guide" subtitle="Use this guide to understand what each order status means.">
-            <div class="grid gap-3 md:grid-cols-5">
+            <div class="grid gap-3 md:grid-cols-7">
                 @foreach([
                     ['Pending', 'Waiting for farmer response'],
                     ['Accepted', 'Order accepted'],
                     ['Preparing', 'Products are being prepared'],
+                    ['Ready for Pickup', 'Ready for buyer pickup'],
+                    ['Out for Delivery', 'Ready and on the way to the buyer'],
                     ['Completed', 'Order finished'],
                     ['Cancelled', 'Order cancelled'],
                 ] as [$label, $copy])
@@ -41,11 +45,13 @@
         </x-ui.dashboard-card>
     @elseif($isBuyerOrders)
         <x-ui.dashboard-card class="mb-5" title="Order Status Guide" subtitle="Simple meanings for your order status.">
-            <div class="grid gap-3 md:grid-cols-5">
+            <div class="grid gap-3 md:grid-cols-7">
                 @foreach([
                     ['Pending', 'Your order has been placed.'],
                     ['Accepted', 'Farmer accepted your order.'],
                     ['Preparing', 'Farmer is preparing your order.'],
+                    ['Ready for Pickup', 'Your order is ready for pickup.'],
+                    ['Out for Delivery', 'Your order is on the way.'],
                     ['Completed', 'Order completed.'],
                     ['Cancelled', 'Order cancelled.'],
                 ] as [$label, $copy])
@@ -146,6 +152,11 @@
                                             @endif
                                         </div>
                                     @endunless
+                                    @unless($isAdminOrders)
+                                        <div class="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                                            {{ $order->fulfillmentMethodLabel() }}
+                                        </div>
+                                    @endunless
                                 @unless($isAdminOrders)
                                     </td>
                                 @endunless
@@ -202,14 +213,32 @@
                                             @elseif($order->status === 'preparing')
                                                 @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
                                                     <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
+                                                        Payment must be verified before continuing
+                                                    </span>
+                                                @else
+                                                    @if($order->fulfillment_method === 'pickup')
+                                                        <form method="POST" action="{{ route('farmer.orders.ready-for-pickup', $order) }}" onsubmit="return confirm('Mark this order as ready for pickup?')">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700">Mark as Ready for Pickup</button>
+                                                        </form>
+                                                    @else
+                                                        <form method="POST" action="{{ route('farmer.orders.out-for-delivery', $order) }}" onsubmit="return confirm('Mark this order as out for delivery?')">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-bold text-white hover:bg-sky-700">Mark as Out for Delivery</button>
+                                                        </form>
+                                                    @endif
+                                                @endif
+                                            @elseif(in_array($order->status, ['ready_for_pickup', 'out_for_delivery'], true))
+                                                @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
+                                                    <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
                                                         Payment must be verified before completion
                                                     </span>
                                                 @else
-                                                    <form method="POST" action="{{ route('farmer.orders.complete', $order) }}">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Mark as Completed</button>
-                                                    </form>
+                                                    <span class="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-800 dark:text-emerald-200">
+                                                        Open details to upload proof and complete
+                                                    </span>
                                                 @endif
                                             @elseif($order->status === 'completed')
                                                 <span class="rounded-lg bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">Completed</span>

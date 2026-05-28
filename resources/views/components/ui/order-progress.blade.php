@@ -4,28 +4,45 @@
 
 @php
     $status = strtolower($order->status ?? 'pending');
+    $fulfillmentMethod = $order->fulfillment_method === 'pickup' ? 'pickup' : 'delivery';
 
     if ($status === 'cancelled') {
         $steps = ['Order Placed', 'Cancelled'];
         $currentIndex = 1;
     } else {
-        $steps = ['Order Placed', 'Accepted', 'Preparing', 'Completed'];
+        $steps = $fulfillmentMethod === 'pickup'
+            ? ['Order Placed', 'Accepted', 'Preparing', 'Ready for Pickup', 'Completed']
+            : ['Order Placed', 'Accepted', 'Preparing', 'Out for Delivery', 'Completed'];
         $statusMap = [
             'pending' => 0,
             'accepted' => 1,
             'preparing' => 2,
-            'completed' => 3,
+            'ready_for_pickup' => 3,
+            'out_for_delivery' => 3,
+            'completed' => 4,
         ];
         $currentIndex = $statusMap[$status] ?? 0;
     }
 
-    $statusMessages = [
+    $deliveryMessages = [
         'pending' => 'Your order has been placed and is waiting for farmer approval.',
         'accepted' => 'The farmer accepted your order.',
         'preparing' => 'The farmer is preparing your products.',
-        'completed' => 'Your order has been completed.',
+        'out_for_delivery' => 'Your order is on the way to your location.',
+        'completed' => 'Your order has been delivered and completed.',
         'cancelled' => 'Your order was cancelled.',
     ];
+
+    $pickupMessages = [
+        'pending' => 'Your order has been placed and is waiting for farmer approval.',
+        'accepted' => 'The farmer accepted your order.',
+        'preparing' => 'The farmer is preparing your products.',
+        'ready_for_pickup' => 'Your order is ready for pickup.',
+        'completed' => 'Your order has been picked up and completed.',
+        'cancelled' => 'Your order was cancelled.',
+    ];
+
+    $statusMessages = $fulfillmentMethod === 'pickup' ? $pickupMessages : $deliveryMessages;
 @endphp
 
 <div {{ $attributes->merge(['class' => 'rounded-xl border border-slate-200 bg-white/70 p-4 dark:border-gray-700 dark:bg-gray-900/70']) }}>

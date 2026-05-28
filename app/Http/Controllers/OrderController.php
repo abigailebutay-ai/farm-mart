@@ -19,7 +19,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
         $status = $request->query('status', 'all');
-        $allowedStatuses = ['all', 'pending', 'accepted', 'preparing', 'completed', 'cancelled'];
+        $allowedStatuses = ['all', 'pending', 'accepted', 'preparing', 'ready_for_pickup', 'out_for_delivery', 'completed', 'cancelled'];
 
         if (! in_array($status, $allowedStatuses, true)) {
             $status = 'all';
@@ -163,6 +163,7 @@ class OrderController extends Controller
 
         $validated = $request->validate([
             'notes' => 'nullable|string|max:1000',
+            'fulfillment_method' => 'required|in:pickup,delivery',
             'payment_method' => 'required|in:cod,gcash',
             'payment_reference' => 'nullable|string',
             'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
@@ -223,6 +224,7 @@ class OrderController extends Controller
                 'subtotal' => $cart->subtotal,
                 'total' => $orderTotal,
                 'status' => 'pending',
+                'fulfillment_method' => $validated['fulfillment_method'],
                 'notes' => $validated['notes'] ?? null,
             ] + $paymentData);
 
@@ -288,7 +290,9 @@ class OrderController extends Controller
 
         $successMessage = $order->payment_method === 'gcash'
             ? 'Order placed successfully. Your payment is pending verification.'
-            : 'Order placed successfully. Please prepare cash upon delivery.';
+            : ($order->fulfillment_method === 'pickup'
+                ? 'Order placed successfully. Please prepare cash upon pickup.'
+                : 'Order placed successfully. Please prepare cash upon delivery.');
 
         return redirect()
             ->route('orders.show', $order)
@@ -348,7 +352,7 @@ class OrderController extends Controller
         $this->ensureFarmerOwnsOrder($order);
 
         $validated = $request->validate([
-            'status' => 'required|in:pending,accepted,preparing,completed,cancelled',
+            'status' => 'required|in:pending,accepted,preparing,ready_for_pickup,out_for_delivery,completed,cancelled',
         ]);
 
         if ($validated['status'] === $order->status) {
@@ -377,9 +381,25 @@ class OrderController extends Controller
             'completed' => $this->transitionOrder(
                 $order,
                 'completed',
-                ['preparing'],
-                'This order must be preparing before completion.',
+                ['out_for_delivery'],
+                'Completion proof is required before marking this order as completed.',
                 'Your order has been completed.',
+                $notifications
+            ),
+            'ready_for_pickup' => $this->transitionOrder(
+                $order,
+                'ready_for_pickup',
+                ['preparing'],
+                'Order must be preparing before it can be marked as ready for pickup.',
+                'Your order is ready for pickup.',
+                $notifications
+            ),
+            'out_for_delivery' => $this->transitionOrder(
+                $order,
+                'out_for_delivery',
+                ['preparing'],
+                'Order must be preparing before it can be marked as out for delivery.',
+                "Your order #{$order->id} is now out for delivery.",
                 $notifications
             ),
             'cancelled' => $this->transitionOrder(
@@ -477,16 +497,100 @@ class OrderController extends Controller
     {
         $this->ensureFarmerOwnsOrder($order);
 
+        return back()->with('error', 'Proof of delivery or pickup is required before marking this order as completed.');
+    }
+
+    public function markOutForDelivery(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
         $result = $this->transitionOrder(
             $order,
-            'completed',
+            'out_for_delivery',
             ['preparing'],
-            'This order must be preparing before completion.',
-            'Your order has been completed.',
+            'Order must be preparing before it can be marked as out for delivery.',
+            "Your order #{$order->id} is now out for delivery.",
             $notifications
         );
 
-        return $this->redirectAfterFarmerTransition($order, $result, 'Order marked as completed.');
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order marked as out for delivery.');
+    }
+
+    public function markReadyForPickup(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $result = $this->transitionOrder(
+            $order,
+            'ready_for_pickup',
+            ['preparing'],
+            'Order must be preparing before it can be marked as ready for pickup.',
+            'Your order is ready for pickup.',
+            $notifications
+        );
+
+        return $this->redirectAfterFarmerTransition($order, $result, 'Order marked as ready for pickup.');
+    }
+
+    public function completeWithProof(Request $request, Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        $fulfillmentMethod = $order->fulfillment_method === 'pickup' ? 'pickup' : 'delivery';
+        $requiredStatus = $fulfillmentMethod === 'pickup' ? 'ready_for_pickup' : 'out_for_delivery';
+
+        if ($order->status !== $requiredStatus) {
+            return back()->with('error', $fulfillmentMethod === 'pickup'
+                ? 'Order must be ready for pickup before completion.'
+                : 'Order must be out for delivery before completion.');
+        }
+
+        if ($order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
+            return back()->with('error', $order->payment_status === 'rejected'
+                ? 'Payment proof was rejected. This order cannot be completed.'
+                : 'GCash payment must be verified before completing this order.');
+        }
+
+        $validated = $request->validate([
+            'completion_proof' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
+            'completion_note' => 'nullable|string|max:1000',
+        ]);
+
+        $oldStatus = $order->status;
+
+        $updates = [
+            'completion_proof' => $request->file('completion_proof')->storePublicly('completion_proofs', config('filesystems.default')),
+            'completion_note' => $validated['completion_note'] ?? null,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ];
+
+        if (in_array($order->payment_method, ['cod', null], true)) {
+            $updates['payment_status'] = 'paid';
+        }
+
+        $order->update($updates);
+        $order->loadMissing(['consumer', 'items.product']);
+
+        if ($oldStatus !== $order->status && $order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'order.status_updated',
+                'Order completed',
+                $fulfillmentMethod === 'pickup'
+                    ? 'Your order has been picked up and completed.'
+                    : 'Your order has been delivered and completed.',
+                'orders',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'status' => $order->status]
+            );
+        }
+
+        $this->reduceOrderStock($order, $notifications);
+
+        return redirect()
+            ->route('orders.show', $order)
+            ->with('success', 'Order completed with proof.');
     }
 
     public function cancelByFarmer(Order $order, NotificationService $notifications)
@@ -538,13 +642,29 @@ class OrderController extends Controller
             ];
         }
 
-        if ($nextStatus === 'completed' && $order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
+        if (
+            in_array($nextStatus, ['preparing', 'ready_for_pickup', 'out_for_delivery', 'completed'], true)
+            && $order->payment_method === 'gcash'
+            && $order->payment_status !== 'paid'
+        ) {
             return [
                 'ok' => false,
                 'message' => $order->payment_status === 'rejected'
-                    ? 'Payment proof was rejected. Please wait for valid payment before completing this order.'
-                    : 'GCash payment must be verified by admin before completing this order.',
+                    ? 'Payment proof was rejected. This order cannot continue.'
+                    : 'GCash payment must be verified by admin before this order can continue.',
             ];
+        }
+
+        if ($nextStatus === 'out_for_delivery' && $order->fulfillment_method === 'pickup') {
+            return ['ok' => false, 'message' => 'Pickup orders should be marked as ready for pickup.'];
+        }
+
+        if ($nextStatus === 'ready_for_pickup' && $order->fulfillmentMethod() !== 'pickup') {
+            return ['ok' => false, 'message' => 'Delivery orders should be marked as out for delivery.'];
+        }
+
+        if ($nextStatus === 'completed') {
+            return ['ok' => false, 'message' => 'Proof of delivery or pickup is required before marking this order as completed.'];
         }
 
         $oldStatus = $order->status;
@@ -561,7 +681,11 @@ class OrderController extends Controller
             $notifications->send(
                 $order->consumer,
                 'order.status_updated',
-                'Order status updated',
+                match ($order->status) {
+                    'out_for_delivery' => 'Order Out for Delivery',
+                    'ready_for_pickup' => 'Order Ready for Pickup',
+                    default => 'Order status updated',
+                },
                 $buyerMessage,
                 $order->status === 'cancelled' ? 'alert' : 'orders',
                 route('orders.show', $order),

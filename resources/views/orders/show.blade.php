@@ -6,13 +6,17 @@
     @php
         $isBuyerOrder = auth()->user()->isConsumer();
         $isGcashPayment = $order->payment_method === 'gcash';
+        $fulfillmentMethod = $order->fulfillment_method === 'pickup' ? 'pickup' : 'delivery';
+        $completionProofLabel = $fulfillmentMethod === 'pickup' ? 'Proof of Pickup' : 'Proof of Delivery';
         $visibleItems = auth()->user()->isFarmer()
             ? $order->items->where('farmer_id', auth()->id())
             : $order->items;
         $visibleSubtotal = $visibleItems->sum('subtotal');
         $trackingSteps = $order->status === 'cancelled'
             ? ['pending' => 'Order Placed', 'cancelled' => 'Cancelled']
-            : ['pending' => 'Order Placed', 'accepted' => 'Accepted', 'preparing' => 'Preparing', 'completed' => 'Completed'];
+            : ($fulfillmentMethod === 'pickup'
+                ? ['pending' => 'Order Placed', 'accepted' => 'Accepted', 'preparing' => 'Preparing', 'ready_for_pickup' => 'Ready for Pickup', 'completed' => 'Completed']
+                : ['pending' => 'Order Placed', 'accepted' => 'Accepted', 'preparing' => 'Preparing', 'out_for_delivery' => 'Out for Delivery', 'completed' => 'Completed']);
         $statusOrder = array_keys($trackingSteps);
         $currentStepIndex = array_search($order->status, $statusOrder, true);
 
@@ -174,6 +178,49 @@
                 </div>
             </div>
 
+            <div class="{{ $isBuyerOrder ? 'buyer-card' : 'bg-white dark:bg-gray-800' }} rounded-lg shadow overflow-hidden">
+                <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Pickup or Delivery</h3>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div class="grid gap-4 text-sm md:grid-cols-2">
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1">Fulfillment Method</p>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->fulfillmentMethodLabel() }}</p>
+                        </div>
+                        @if($order->completed_at)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Completed At</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->completed_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    @if($order->completion_proof)
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-2 text-sm">{{ $completionProofLabel }}</p>
+                            @if($order->completionProofIsImage())
+                                <a href="{{ $order->completionProofUrl() }}" target="_blank" rel="noopener" class="block max-w-sm overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <img src="{{ $order->completionProofUrl() }}" alt="{{ $completionProofLabel }} for Order #{{ $order->id }}" class="h-auto w-full object-cover">
+                                </a>
+                            @else
+                                <a href="{{ $order->completionProofUrl() }}" target="_blank" rel="noopener" class="inline-flex rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                    View {{ $completionProofLabel }}
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if($order->completion_note)
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1 text-sm">Completion Note</p>
+                            <p class="rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 dark:bg-gray-900 dark:text-gray-200">{{ $order->completion_note }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             @if(! $isBuyerOrder)
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                     <div class="buyer-divider px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -330,12 +377,47 @@
                             @elseif($order->status === 'preparing')
                                 @if($isGcashPayment && $order->payment_status !== 'paid')
                                     <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
-                                        {{ $order->payment_status === 'rejected' ? 'Payment proof was rejected. Please wait for valid payment before completing this order.' : 'GCash payment is pending admin verification. You can complete this order after payment is marked paid.' }}
+                                        {{ $order->payment_status === 'rejected' ? 'Payment proof was rejected. This order cannot continue.' : 'GCash payment is pending admin verification. You can continue this order after payment is marked paid.' }}
                                     </div>
                                 @else
-                                    <form method="POST" action="{{ route('farmer.orders.complete', $order) }}" onsubmit="return confirm('Mark this order as completed?')">
+                                    @if($fulfillmentMethod === 'pickup')
+                                        <form method="POST" action="{{ route('farmer.orders.ready-for-pickup', $order) }}" onsubmit="return confirm('Mark this order as ready for pickup?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700">Mark as Ready for Pickup</button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="{{ route('farmer.orders.out-for-delivery', $order) }}" onsubmit="return confirm('Mark this order as out for delivery?')">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700">Mark as Out for Delivery</button>
+                                        </form>
+                                    @endif
+                                @endif
+                            @elseif(in_array($order->status, ['out_for_delivery', 'ready_for_pickup'], true))
+                                @if($isGcashPayment && $order->payment_status !== 'paid')
+                                    <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                                        {{ $order->payment_status === 'rejected' ? 'Payment proof was rejected. This order cannot be completed.' : 'GCash payment must be verified before completing this order.' }}
+                                    </div>
+                                @else
+                                    <form method="POST" action="{{ route('farmer.orders.complete-with-proof', $order) }}" enctype="multipart/form-data" class="w-full space-y-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700" onsubmit="return confirm('Mark this order as completed?')">
                                         @csrf
                                         @method('PATCH')
+                                        <div>
+                                            <label for="completion_proof" class="mb-2 block text-sm font-bold text-gray-900 dark:text-white">Upload {{ $completionProofLabel }}</label>
+                                            <input type="file" id="completion_proof" name="completion_proof" required accept="image/jpeg,image/png,image/jpg,image/webp,application/pdf" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-bold file:text-white dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Accepted files: JPG, PNG, WebP, or PDF up to 5 MB.</p>
+                                            @error('completion_proof')
+                                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <label for="completion_note" class="mb-2 block text-sm font-bold text-gray-900 dark:text-white">Completion Note</label>
+                                            <textarea id="completion_note" name="completion_note" rows="3" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Example: Buyer received the order.">{{ old('completion_note') }}</textarea>
+                                            @error('completion_note')
+                                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                                            @enderror
+                                        </div>
                                         <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Mark as Completed</button>
                                     </form>
                                 @endif
@@ -370,6 +452,11 @@
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Subtotal:</span>
                         <span>PHP {{ number_format(auth()->user()->isFarmer() ? $visibleSubtotal : $order->subtotal, 2) }}</span>
+                    </div>
+
+                    <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Fulfillment:</span>
+                        <span>{{ $order->fulfillmentMethodLabel() }}</span>
                     </div>
 
                     @if(! auth()->user()->isFarmer())

@@ -11,6 +11,7 @@
             ->unique()
             ->values();
         $orderedAt = $order->created_at->timezone(config('app.timezone'))->format('M d, Y h:i A');
+        $completedAt = $order->completed_at?->timezone(config('app.timezone'))->format('M d, Y h:i A');
     @endphp
 
     <div class="no-print mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -72,7 +73,11 @@
                 <p class="receipt-meta text-xs font-bold uppercase tracking-wide">Order Details</p>
                 <p class="mt-1 text-sm"><span class="font-semibold">Order ID:</span> #{{ $order->id }}</p>
                 <p class="text-sm"><span class="font-semibold">Ordered At:</span> {{ $orderedAt }}</p>
-                <p class="text-sm"><span class="font-semibold">Status:</span> {{ \Illuminate\Support\Str::title($order->status) }}</p>
+                @if($completedAt)
+                    <p class="text-sm"><span class="font-semibold">Completion Date:</span> {{ $completedAt }}</p>
+                @endif
+                <p class="text-sm"><span class="font-semibold">Status:</span> {{ \Illuminate\Support\Str::title(str_replace('_', ' ', $order->status)) }}</p>
+                <p class="text-sm"><span class="font-semibold">Fulfillment Method:</span> {{ $order->fulfillmentMethodLabel() }}</p>
                 <p class="text-sm"><span class="font-semibold">Seller:</span> {{ $farmerNames->isNotEmpty() ? $farmerNames->join(', ') : 'Local Farmer' }}</p>
                 <p class="text-sm"><span class="font-semibold">Total Kilograms:</span> {{ number_format($order->total_kg ?? 0, 2) }} kg</p>
                 @if($order->coupon_code)

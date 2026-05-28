@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Checkout"
-        subtitle="Confirm delivery details, choose a payment method, and place your order."
+        subtitle="Choose pickup or delivery, confirm payment, and place your order."
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -15,7 +15,7 @@
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Checkout Details</h2>
                 </div>
 
-                <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')) }">
+                <form method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')) }">
                     @csrf
 
                     <div>
@@ -35,7 +35,51 @@
 
                     <div>
                         <label for="notes" class="block text-base font-semibold text-gray-900 dark:text-white mb-2">Special Instructions (Optional)</label>
-                        <textarea id="notes" name="notes" rows="3" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Any delivery instructions?">{{ old('notes') }}</textarea>
+                        <textarea id="notes" name="notes" rows="3" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Any pickup or delivery instructions?">{{ old('notes') }}</textarea>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Fulfillment Option</h3>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="fulfillmentMethod === 'pickup' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="fulfillment_method" value="pickup" x-model="fulfillmentMethod" class="mt-1 text-emerald-600 focus:ring-emerald-500">
+                                    <div>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">Pick up</p>
+                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">I will pick up the order from the farmer or agreed pickup location.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="fulfillmentMethod === 'delivery' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="fulfillment_method" value="delivery" x-model="fulfillmentMethod" class="mt-1 text-emerald-600 focus:ring-emerald-500">
+                                    <div>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">Delivery</p>
+                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">I want the order delivered to my address.</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        @error('fulfillment_method')
+                            <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                        @enderror
+
+                        <div x-show="fulfillmentMethod === 'delivery'" class="mt-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900">
+                            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Delivery Details</h3>
+                            <p class="text-base text-blue-800 dark:text-blue-300">
+                                <strong>Name:</strong> {{ auth()->user()->name }}<br>
+                                <strong>Address:</strong> {{ auth()->user()->address ?? 'Not provided' }}<br>
+                                <strong>Phone:</strong> {{ auth()->user()->phone ?? 'Not provided' }}
+                            </p>
+                            <p class="mt-2 text-sm text-blue-700 dark:text-blue-400">
+                                <span class="font-semibold">Use the account details saved during registration.</span>
+                            </p>
+                        </div>
+
+                        <div x-show="fulfillmentMethod === 'pickup'" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                            Coordinate with the farmer for pickup schedule and location.
+                        </div>
                     </div>
 
                     <div>
@@ -90,18 +134,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900">
-                        <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Delivery Details</h3>
-                        <p class="text-base text-blue-800 dark:text-blue-300">
-                            <strong>Name:</strong> {{ auth()->user()->name }}<br>
-                            <strong>Address:</strong> {{ auth()->user()->address ?? 'Not provided' }}<br>
-                            <strong>Phone:</strong> {{ auth()->user()->phone ?? 'Not provided' }}
-                        </p>
-                        <p class="mt-2 text-sm text-blue-700 dark:text-blue-400">
-                            <span class="font-semibold">Use the account details saved during registration.</span>
-                        </p>
                     </div>
 
                     <div class="flex gap-4">
