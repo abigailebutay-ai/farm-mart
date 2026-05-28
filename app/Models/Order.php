@@ -23,6 +23,10 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_status',
+        'refund_status',
+        'refund_reference',
+        'refund_note',
+        'refunded_at',
         'payment_reference',
         'payment_proof',
         'fulfillment_method',
@@ -36,6 +40,7 @@ class Order extends Model
     {
         return [
             'completed_at' => 'datetime',
+            'refunded_at' => 'datetime',
         ];
     }
 
@@ -118,10 +123,21 @@ class Order extends Model
 
         return match ($this->payment_status) {
             'pending_verification' => 'Pending Verification',
+            'refund_pending' => 'Refund Pending',
+            'refunded' => 'Refunded',
             'paid' => 'Paid',
             'rejected' => 'Rejected',
             'cancelled' => 'Cancelled',
             default => 'Pending',
+        };
+    }
+
+    public function refundStatusLabel(): string
+    {
+        return match ($this->refund_status) {
+            'pending' => 'Refund Pending',
+            'refunded' => 'Refunded',
+            default => 'No Refund',
         };
     }
 

@@ -100,6 +100,24 @@
                             <p class="text-gray-600 dark:text-gray-400 mb-1">Payment Status</p>
                             <x-ui.status-badge :status="$order->paymentStatusLabel()" />
                         </div>
+                        @if($order->refund_status)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Refund Status</p>
+                                <x-ui.status-badge :status="$order->refundStatusLabel()" />
+                            </div>
+                        @endif
+                        @if($order->refund_reference)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Refund Reference</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->refund_reference }}</p>
+                            </div>
+                        @endif
+                        @if($order->refunded_at)
+                            <div>
+                                <p class="text-gray-600 dark:text-gray-400 mb-1">Refunded At</p>
+                                <p class="font-semibold text-gray-900 dark:text-white">{{ $order->refunded_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
+                            </div>
+                        @endif
                         @if($order->payment_reference)
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 mb-1">GCash Reference Number</p>
@@ -124,13 +142,24 @@
 
                     @if($isBuyerOrder && $isGcashPayment)
                         <div class="rounded-lg border px-4 py-3 text-sm font-semibold {{ $order->payment_status === 'paid' ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100' : ($order->payment_status === 'rejected' ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/30 dark:text-red-100' : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100') }}">
-                            @if($order->payment_status === 'paid')
+                            @if($order->refund_status === 'pending')
+                                Your paid GCash order was cancelled. Refund is pending.
+                            @elseif($order->refund_status === 'refunded')
+                                Your GCash payment has been refunded.
+                            @elseif($order->payment_status === 'paid')
                                 Your GCash payment has been verified. The farmer can now accept your order.
                             @elseif($order->payment_status === 'rejected')
                                 Your GCash payment proof was rejected. The order has been cancelled. Please place a new order with a valid proof of payment.
                             @else
                                 Your GCash proof of payment is waiting for admin verification.
                             @endif
+                        </div>
+                    @endif
+
+                    @if($order->refund_note)
+                        <div>
+                            <p class="text-gray-600 dark:text-gray-400 mb-1 text-sm">Refund Note</p>
+                            <p class="rounded-lg bg-gray-100 px-4 py-3 text-sm font-semibold text-gray-800 dark:bg-gray-900 dark:text-gray-200">{{ $order->refund_note }}</p>
                         </div>
                     @endif
 
@@ -155,7 +184,36 @@
                             <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Check the GCash proof, reference number, buyer name, and order total before marking payment as paid.</p>
 
                             <div class="mt-4 flex flex-wrap gap-3">
-                                @if($order->payment_status === 'pending_verification')
+                                @if($order->refund_status === 'pending')
+                                    <p class="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
+                                        This paid GCash order was cancelled and needs refund processing.
+                                    </p>
+                                    <form method="POST" action="{{ route('admin.orders.refund', $order) }}" class="w-full space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-700" onsubmit="return confirm('Mark this refund as completed?')">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div>
+                                            <label for="refund_reference" class="mb-2 block text-sm font-bold text-gray-900 dark:text-white">Refund Reference Number</label>
+                                            <input id="refund_reference" name="refund_reference" type="text" required class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                            @error('refund_reference')
+                                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <label for="refund_note" class="mb-2 block text-sm font-bold text-gray-900 dark:text-white">Refund Note</label>
+                                            <textarea id="refund_note" name="refund_note" rows="3" class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 dark:border-gray-600 dark:bg-gray-700 dark:text-white"></textarea>
+                                            @error('refund_note')
+                                                <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                                            Mark as Refunded
+                                        </button>
+                                    </form>
+                                @elseif($order->refund_status === 'refunded')
+                                    <p class="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100">
+                                        Refund completed.
+                                    </p>
+                                @elseif($order->payment_status === 'pending_verification')
                                     <form method="POST" action="{{ route('admin.orders.payment.paid', $order) }}" onsubmit="return confirm('Mark this GCash payment as paid?')">
                                         @csrf
                                         @method('PATCH')
@@ -413,7 +471,7 @@
                                         <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Accept Order</button>
                                     </form>
                                 @endif
-                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?')">
+                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Cancel this order?' }}')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Cancel Order</button>
@@ -424,7 +482,7 @@
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">Mark as Preparing</button>
                                 </form>
-                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order?')">
+                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Cancel this order?' }}')">
                                     @csrf
                                     @method('PATCH')
                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700">Cancel Order</button>
@@ -544,7 +602,7 @@
 
                     <div class="pt-2">
                         @if($isBuyerOrder && $order->canBeCancelledByConsumer())
-                            <form method="POST" action="{{ route('consumer.orders.cancel', $order) }}" class="mb-3" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                            <form method="POST" action="{{ route('consumer.orders.cancel', $order) }}" class="mb-3" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Are you sure you want to cancel this order?' }}')">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="block w-full rounded-lg bg-red-600 py-2 text-center text-sm font-semibold text-white transition hover:bg-red-700">

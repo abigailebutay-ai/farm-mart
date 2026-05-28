@@ -63,7 +63,19 @@
                 <p class="font-semibold">{{ $order->paymentMethodLabel() }}</p>
                 <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Payment Status</p>
                 <p class="font-semibold">{{ $order->paymentStatusLabel() }}</p>
-                @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
+                @if($order->refund_status)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Refund Status</p>
+                    <p class="font-semibold">{{ $order->refundStatusLabel() }}</p>
+                @endif
+                @if($order->refund_reference)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Refund Reference</p>
+                    <p class="font-semibold">{{ $order->refund_reference }}</p>
+                @endif
+                @if($order->refunded_at)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Refunded At</p>
+                    <p class="font-semibold">{{ $order->refunded_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
+                @endif
+                @if($order->payment_method === 'gcash' && in_array($order->payment_status, ['pending_verification', 'rejected'], true))
                     <p class="mt-1 text-sm font-semibold text-amber-700">Payment not yet verified.</p>
                 @endif
                 @if($order->payment_reference)

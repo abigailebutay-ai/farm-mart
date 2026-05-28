@@ -166,7 +166,7 @@
                                         <a href="{{ route('orders.show', $order) }}" class="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-bold text-emerald-800 hover:bg-emerald-50 dark:hover:bg-emerald-900/40">{{ $isBuyerOrders ? 'View Tracking' : 'View Details' }}</a>
                                         @if($isBuyerOrders)
                                             @if($order->canBeCancelledByConsumer())
-                                                <form method="POST" action="{{ route('consumer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                                <form method="POST" action="{{ route('consumer.orders.cancel', $order) }}" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Are you sure you want to cancel this order?' }}')">
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700">
@@ -194,7 +194,7 @@
                                                         <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Accept Order</button>
                                                     </form>
                                                 @endif
-                                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Are you sure you want to cancel this order?' }}')">
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700">Cancel Order</button>
@@ -205,7 +205,7 @@
                                                     @method('PATCH')
                                                     <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700">Mark as Preparing</button>
                                                 </form>
-                                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('Are you sure you want to cancel this order?')">
+                                                <form method="POST" action="{{ route('farmer.orders.cancel', $order) }}" onsubmit="return confirm('{{ $order->payment_method === 'gcash' && $order->payment_status === 'paid' ? 'This order has already been paid through GCash. Cancelling it will require a refund. Continue?' : 'Are you sure you want to cancel this order?' }}')">
                                                     @csrf
                                                     @method('PATCH')
                                                     <button type="submit" class="rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700">Cancel Order</button>

@@ -225,6 +225,48 @@ class AdminController extends Controller
         return back()->with('success', 'GCash payment rejected and order cancelled.');
     }
 
+    public function markRefunded(Request $request, Order $order, NotificationService $notifications)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments can be refunded.');
+        }
+
+        if ($order->refund_status !== 'pending') {
+            return back()->with('error', 'This order is not pending refund.');
+        }
+
+        $validated = $request->validate([
+            'refund_reference' => 'required|string|max:255',
+            'refund_note' => 'nullable|string|max:1000',
+        ]);
+
+        $order->update([
+            'payment_status' => 'refunded',
+            'refund_status' => 'refunded',
+            'refund_reference' => $validated['refund_reference'],
+            'refund_note' => $validated['refund_note'] ?? null,
+            'refunded_at' => now(),
+        ]);
+
+        $order->loadMissing('consumer');
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'refund.completed',
+                'Refund completed',
+                'Your GCash payment has been marked as refunded.',
+                'money',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => 'refunded', 'refund_status' => 'refunded']
+            );
+        }
+
+        return back()->with('success', 'Refund marked as completed.');
+    }
+
     public function approveUser(User $user, NotificationService $notifications)
     {
         if ($user->role === 'admin') {

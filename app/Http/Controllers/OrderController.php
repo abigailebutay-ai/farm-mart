@@ -438,9 +438,20 @@ class OrderController extends Controller
             return back()->with('error', 'Cancellation is only allowed within 24 hours after ordering.');
         }
 
-        $order->update([
+        $refundPending = $order->payment_method === 'gcash' && $order->payment_status === 'paid';
+        $updates = [
             'status' => 'cancelled',
-        ]);
+            'refund_status' => null,
+        ];
+
+        if ($refundPending) {
+            $updates['payment_status'] = 'refund_pending';
+            $updates['refund_status'] = 'pending';
+        } elseif ($order->payment_method === 'gcash' && $order->payment_status === 'pending_verification') {
+            $updates['payment_status'] = 'cancelled';
+        }
+
+        $order->update($updates);
 
         $order->loadMissing('items.farmer');
 
@@ -448,19 +459,32 @@ class OrderController extends Controller
             ->pluck('farmer')
             ->filter()
             ->unique('id')
-            ->each(function ($farmer) use ($order, $notifications) {
+            ->each(function ($farmer) use ($order, $notifications, $refundPending) {
                 $notifications->send(
                     $farmer,
                     'order.cancelled',
                     'Order cancelled',
-                    "Order #{$order->id} was cancelled by the buyer.",
+                    $refundPending
+                        ? "A paid GCash order #{$order->id} was cancelled by the buyer. Refund is pending."
+                        : "Order #{$order->id} was cancelled by the buyer.",
                     'alert',
                     route('orders.show', $order),
-                    ['order_id' => $order->id, 'status' => 'cancelled']
+                    ['order_id' => $order->id, 'status' => 'cancelled', 'refund_status' => $order->refund_status]
                 );
             });
 
-        return back()->with('success', 'Order cancelled successfully.');
+        if ($refundPending) {
+            $notifications->sendToAdmins(
+                'refund.pending',
+                'Refund pending',
+                "A paid GCash order #{$order->id} was cancelled by the buyer and needs refund processing.",
+                'money',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'refund_status' => 'pending']
+            );
+        }
+
+        return back()->with('success', $refundPending ? 'Order cancelled. Refund is now pending.' : 'Order cancelled successfully.');
     }
 
     public function acceptOrder(Order $order, NotificationService $notifications)
@@ -599,16 +623,52 @@ class OrderController extends Controller
     {
         $this->ensureFarmerOwnsOrder($order);
 
-        $result = $this->transitionOrder(
-            $order,
-            'cancelled',
-            ['pending', 'accepted'],
-            'This order can no longer be cancelled.',
-            'Your order was cancelled.',
-            $notifications
-        );
+        if (! in_array($order->status, ['pending', 'accepted'], true)) {
+            return back()->with('error', $order->status === 'completed' ? 'Completed orders cannot be cancelled.' : 'This order can no longer be cancelled.');
+        }
 
-        return $this->redirectAfterFarmerTransition($order, $result, 'Order cancelled successfully.');
+        $refundPending = $order->payment_method === 'gcash' && $order->payment_status === 'paid';
+        $updates = [
+            'status' => 'cancelled',
+            'refund_status' => null,
+        ];
+
+        if ($refundPending) {
+            $updates['payment_status'] = 'refund_pending';
+            $updates['refund_status'] = 'pending';
+        } elseif ($order->payment_method === 'gcash' && $order->payment_status === 'pending_verification') {
+            $updates['payment_status'] = 'cancelled';
+        }
+
+        $order->update($updates);
+        $order->loadMissing(['consumer', 'items.farmer']);
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'order.cancelled',
+                'Order cancelled',
+                $refundPending
+                    ? 'Your paid GCash order was cancelled. Refund is pending.'
+                    : "Your order #{$order->id} was cancelled by the farmer.",
+                'alert',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'status' => 'cancelled', 'refund_status' => $order->refund_status]
+            );
+        }
+
+        if ($refundPending) {
+            $notifications->sendToAdmins(
+                'refund.pending',
+                'Refund pending',
+                "A paid GCash order #{$order->id} was cancelled by the farmer and needs refund processing.",
+                'money',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'refund_status' => 'pending']
+            );
+        }
+
+        return back()->with('success', $refundPending ? 'Order cancelled. Refund is now pending.' : 'Order cancelled successfully.');
     }
 
     private function ensureFarmerOwnsOrder(Order $order): void

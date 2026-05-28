@@ -181,6 +181,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/orders/{order}/payment-status', [AdminController::class, 'updatePaymentStatus'])->name('orders.payment-status');
     Route::patch('/orders/{order}/payment/paid', [AdminController::class, 'markPaymentPaid'])->name('orders.payment.paid');
     Route::patch('/orders/{order}/payment/reject', [AdminController::class, 'rejectPayment'])->name('orders.payment.reject');
+    Route::patch('/orders/{order}/refund', [AdminController::class, 'markRefunded'])->name('orders.refund');
     Route::patch('/users/{user}/approve', [AdminController::class, 'approveUser'])->name('users.approve');
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
     Route::patch('/feedback/{feedback}/read', [AdminController::class, 'markFeedbackRead'])->name('feedback.read');
