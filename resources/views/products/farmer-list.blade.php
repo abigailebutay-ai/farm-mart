@@ -45,7 +45,7 @@
                                 <td class="product-category px-6 py-4">{{ $product->category }}</td>
                                 <td class="px-6 py-4 font-semibold text-green-800">PHP {{ number_format($product->price, 2) }} / {{ $product->unit ?? 'piece' }}</td>
                                 <td class="px-6 py-4">
-                                    <x-ui.status-badge :status="$product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock')" />
+                                    <x-ui.status-badge :status="$product->status === 'inactive' ? 'Archived' : ($product->quantity > 10 ? 'In Stock' : ($product->quantity > 0 ? 'Low Stock' : 'Out of Stock'))" />
                                     <span class="product-stock ml-2 text-sm">{{ $product->quantity }} {{ $product->unit ?? 'piece' }}</span>
                                 </td>
                                 <td class="product-date px-6 py-4">{{ $product->created_at->format('M d, Y') }}</td>
@@ -54,7 +54,7 @@
                                     <form method="POST" action="{{ route('farmer.products.destroy', $product) }}" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('Are you sure you want to delete this product?')">Delete Product</button>
+                                        <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('Products with order history will be archived instead of permanently deleted. Continue?')">{{ ($product->order_items_count ?? 0) > 0 ? 'Archive' : 'Delete' }} Product</button>
                                     </form>
                                 </td>
                             </tr>

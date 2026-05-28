@@ -18,7 +18,10 @@ class ProductController extends Controller
         $query = $this->marketplaceQuery($request);
 
         $products = $query->latest()->paginate(12)->withQueryString();
-        $categories = Product::select('category')->distinct()->get();
+        $categories = Product::where(function ($query) {
+            $query->whereNull('status')
+                ->orWhere('status', 'active');
+        })->select('category')->distinct()->get();
 
         return view('products.index', [
             'products' => $products,
@@ -37,7 +40,14 @@ class ProductController extends Controller
         $query = $this->marketplaceQuery($request)->where('quantity', '>', 0);
 
         $products = $query->latest()->paginate(12)->withQueryString();
-        $categories = Product::where('quantity', '>', 0)->select('category')->distinct()->get();
+        $categories = Product::where('quantity', '>', 0)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'active');
+            })
+            ->select('category')
+            ->distinct()
+            ->get();
 
         return view('consumer.marketplace', [
             'products' => $products,
@@ -223,13 +233,38 @@ class ProductController extends Controller
     {
         $this->authorize('delete', $product);
 
-        if ($product->image_storage_path) {
-            Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
+        try {
+            if ($product->orderItems()->exists()) {
+                $product->cartItems()->delete();
+
+                $product->update([
+                    'status' => 'inactive',
+                    'quantity' => 0,
+                ]);
+
+                return redirect()
+                    ->route('farmer.products.index')
+                    ->with('success', 'Product archived because it already has order history.');
+            }
+
+            $product->cartItems()->delete();
+
+            if ($product->image_storage_path) {
+                try {
+                    Storage::disk(config('filesystems.default'))->delete($product->image_storage_path);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+
+            $product->delete();
+
+            return redirect()->route('farmer.products.index')->with('success', 'Product deleted successfully!');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Product could not be deleted because it is connected to existing records.');
         }
-
-        $product->delete();
-
-        return redirect()->route('farmer.products.index')->with('success', 'Product deleted successfully!');
     }
 
     /**
@@ -237,7 +272,7 @@ class ProductController extends Controller
      */
     public function farmerProducts()
     {
-        $products = auth()->user()->products()->paginate(10);
+        $products = auth()->user()->products()->withCount('orderItems')->paginate(10);
         return view('products.farmer-list', ['products' => $products]);
     }
 
@@ -273,7 +308,11 @@ class ProductController extends Controller
 
     private function marketplaceQuery(Request $request)
     {
-        $query = Product::with('farmer');
+        $query = Product::with('farmer')
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'active');
+            });
 
         if ($request->filled('search')) {
             $query->where(function ($query) use ($request) {
