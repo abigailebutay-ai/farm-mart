@@ -172,9 +172,9 @@ class OrderController extends Controller
         ]);
 
         if ($validated['payment_method'] === 'gcash') {
-            if (empty($validated['payment_reference']) || ! preg_match('/^\d{11}$/', $validated['payment_reference'])) {
+            if (empty($validated['payment_reference']) || ! preg_match('/^\d{8,20}$/', $validated['payment_reference'])) {
                 return back()
-                    ->withErrors(['payment_reference' => 'GCash reference number must be exactly 11 digits.'])
+                    ->withErrors(['payment_reference' => 'GCash reference number must contain numbers only.'])
                     ->withInput();
             }
 
