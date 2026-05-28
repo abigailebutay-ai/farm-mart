@@ -226,6 +226,17 @@ class ProductController extends Controller
         return back()->with('success', 'Product restocked successfully.');
     }
 
+    public function restore(Product $product)
+    {
+        $this->authorize('update', $product);
+
+        $product->update([
+            'status' => 'active',
+        ]);
+
+        return back()->with('success', 'Product restored successfully.');
+    }
+
     /**
      * Remove the specified product (farmer).
      */
@@ -309,6 +320,7 @@ class ProductController extends Controller
     private function marketplaceQuery(Request $request)
     {
         $query = Product::with('farmer')
+            ->where('quantity', '>', 0)
             ->where(function ($query) {
                 $query->whereNull('status')
                     ->orWhere('status', 'active');

@@ -50,12 +50,20 @@
                                 </td>
                                 <td class="product-date px-6 py-4">{{ $product->created_at->format('M d, Y') }}</td>
                                 <td class="px-6 py-4">
-                                    <a href="{{ route('farmer.products.edit', $product) }}" class="mr-3 font-semibold text-green-800 hover:text-green-900">Edit Product</a>
-                                    <form method="POST" action="{{ route('farmer.products.destroy', $product) }}" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('Products with order history will be archived instead of permanently deleted. Continue?')">{{ ($product->order_items_count ?? 0) > 0 ? 'Archive' : 'Delete' }} Product</button>
-                                    </form>
+                                    @if($product->status === 'inactive')
+                                        <form method="POST" action="{{ route('farmer.products.restore', $product) }}" class="inline">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="font-semibold text-emerald-700 hover:text-emerald-800" onclick="return confirm('Restore this product? It will appear in the marketplace again if stock is available.')">Restore Product</button>
+                                        </form>
+                                    @else
+                                        <a href="{{ route('farmer.products.edit', $product) }}" class="mr-3 font-semibold text-green-800 hover:text-green-900">Edit Product</a>
+                                        <form method="POST" action="{{ route('farmer.products.destroy', $product) }}" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="font-semibold text-red-600 hover:text-red-700" onclick="return confirm('{{ ($product->order_items_count ?? 0) > 0 ? 'This product has order history and will be archived instead of permanently deleted. You can restore it later.' : 'Are you sure you want to delete this product?' }}')">{{ ($product->order_items_count ?? 0) > 0 ? 'Archive' : 'Delete' }} Product</button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
