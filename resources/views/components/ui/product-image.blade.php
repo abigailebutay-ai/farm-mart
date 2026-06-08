@@ -6,6 +6,7 @@
     'imageClass' => 'h-20 w-20 rounded-xl object-cover',
     'placeholderClass' => 'flex h-20 w-20 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800',
     'iconClass' => 'h-8 w-8',
+    'placeholderLabel' => null,
 ])
 
 @php
@@ -55,4 +56,7 @@
 
 <div class="{{ $imageUrl ? 'hidden ' : '' }}{{ $placeholderClass }}">
     <x-ui.icon name="products" class="{{ $iconClass }}" />
+    @if($placeholderLabel)
+        <span class="mt-3 text-sm font-bold">{{ $placeholderLabel }}</span>
+    @endif
 </div>
