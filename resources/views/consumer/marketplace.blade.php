@@ -4,9 +4,11 @@
 
 @section('content')
     @if(isset($selectedFarmer))
+        @php($selectedFarmerName = html_entity_decode($selectedFarmer->name, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+
         <x-ui.page-header
-            title="Products from {{ $selectedFarmer->name }}"
-            subtitle="You are viewing products from {{ $selectedFarmer->name }}."
+            :title="'Products from ' . $selectedFarmerName"
+            :subtitle="'You are viewing products from ' . $selectedFarmerName . '.'"
             action-url="{{ route('consumer.marketplace') }}"
             action-label="Change Farmer"
         />

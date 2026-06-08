@@ -3,9 +3,11 @@
 @section('page-title', 'Checkout')
 
 @section('content')
+    @php($selectedFarmerName = html_entity_decode($selectedFarmer->name, ENT_QUOTES | ENT_HTML5, 'UTF-8'))
+
     <x-ui.page-header
         title="Checkout"
-        subtitle="You are ordering from {{ $selectedFarmer->name }}."
+        :subtitle="'You are ordering from ' . $selectedFarmerName . '.'"
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
