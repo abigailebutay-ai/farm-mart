@@ -15,12 +15,40 @@
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Checkout Details</h2>
                 </div>
 
-                <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')) }">
+                <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')), purchaseType: @js(old('purchase_type', $purchaseType ?? 'home')), checkoutSubtotal: @js((float) ($checkoutSubtotal ?? $checkoutItems->sum('subtotal'))), checkoutTotal: @js((float) ($checkoutTotal ?? $checkoutItems->sum('subtotal'))), money(value) { return 'PHP ' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) } }">
                     @csrf
                     <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
 
                     <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100">
                         You are ordering from {{ $selectedFarmer->name }}. Discounts, GCash details, and pickup location are based on this farmer only.
+                    </div>
+
+                    <div>
+                        <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Purchase Type</h3>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="purchaseType === 'home' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="purchase_type" value="home" x-model="purchaseType" class="mt-1 text-emerald-600 focus:ring-emerald-500">
+                                    <div>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">For Home Use</p>
+                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">For regular household consumption.</p>
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="purchaseType === 'bulk' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
+                                <div class="flex items-start gap-3">
+                                    <input type="radio" name="purchase_type" value="bulk" x-model="purchaseType" class="mt-1 text-emerald-600 focus:ring-emerald-500">
+                                    <div>
+                                        <p class="text-lg font-bold text-gray-900 dark:text-white">Bulk Order</p>
+                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">For larger purchases that may qualify for discount.</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        @error('purchase_type')
+                            <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div>
@@ -147,7 +175,10 @@
                         <div x-cloak x-show="paymentMethod === 'gcash'" x-transition class="mt-4 rounded-xl border border-emerald-900/50 bg-gray-900 p-4">
                             <h4 class="font-bold text-white">GCash Payment Instructions</h4>
                             <p class="mt-2 text-base leading-relaxed text-gray-300">Send your payment to the farmer's GCash number, then upload proof of payment.</p>
-                            <p class="mt-2 text-base font-bold text-emerald-300">Amount to pay: PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</p>
+                            <p class="mt-2 text-base font-bold text-emerald-300">
+                                Amount to pay:
+                                <span x-text="money(purchaseType === 'bulk' ? checkoutTotal : checkoutSubtotal)">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
+                            </p>
 
                             @if(($cartFarmerCount ?? 0) > 1)
                                 <div class="mt-4 rounded-lg border border-amber-800 bg-amber-900/30 px-4 py-3 text-sm font-semibold text-amber-100">
@@ -221,7 +252,10 @@
                     <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                         <h3 class="font-bold text-gray-900 dark:text-white">Bulk Discount</h3>
                         @if($appliedDiscount ?? null)
-                            <div class="mt-3 flex items-start justify-between gap-3">
+                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                                No bulk discount applied for home-use orders.
+                            </p>
+                            <div x-show="purchaseType === 'bulk'" class="mt-3 flex items-start justify-between gap-3">
                                 <div>
                                     <p class="font-bold text-emerald-700 dark:text-emerald-300">Bulk discount applied</p>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ $appliedDiscount['label'] ?? 'Bulk order discount' }}</p>
@@ -237,30 +271,36 @@
                                 </form>
                             </div>
                         @elseif($eligibleDiscount['eligible'] ?? false)
-                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                                No bulk discount applied for home-use orders.
+                            </p>
+                            <p x-show="purchaseType === 'bulk'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
                                 You are eligible for a {{ $eligibleDiscount['discount_rate'] }}% bulk discount.
                             </p>
-                            <form method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
+                            <form x-show="purchaseType === 'bulk'" method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
                                 @csrf
                                 <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
+                                <input type="hidden" name="purchase_type" value="bulk">
                                 <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Apply Discount</button>
                             </form>
                         @else
-                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">No bulk discount available yet. Add more kg to qualify for a discount.</p>
+                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">No bulk discount applied for home-use orders.</p>
+                            <p x-show="purchaseType === 'bulk'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount starts at 10 kg.</p>
                         @endif
                     </div>
 
                     @if(($discountAmount ?? 0) > 0)
-                        <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                        <div x-show="purchaseType === 'bulk'" class="flex justify-between text-emerald-600 dark:text-emerald-400">
                             <span>Discount:</span>
                             <span>- PHP {{ number_format($discountAmount, 2) }}</span>
                         </div>
+                        <p x-show="purchaseType === 'home'" class="text-sm text-gray-500 dark:text-gray-400">No bulk discount applied for home-use orders.</p>
                     @endif
 
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div class="flex justify-between text-xl font-bold text-gray-900 dark:text-white">
                             <span>Total to Pay:</span>
-                            <span class="text-green-600 dark:text-green-400">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
+                            <span class="text-green-600 dark:text-green-400" x-text="money(purchaseType === 'bulk' ? checkoutTotal : checkoutSubtotal)">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
                         </div>
                     </div>
 

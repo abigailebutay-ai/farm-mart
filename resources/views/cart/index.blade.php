@@ -113,11 +113,12 @@
                                 </form>
                             @elseif($group['eligibleDiscount']['eligible'] ?? false)
                                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                    Bulk Discount Available: {{ $group['eligibleDiscount']['discount_rate'] }}%
+                                    Bulk discount available: {{ $group['eligibleDiscount']['discount_rate'] }}% off if you choose Bulk Order.
                                 </p>
                                 <form method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
                                     @csrf
                                     <input type="hidden" name="farmer_id" value="{{ $farmer->id }}">
+                                    <input type="hidden" name="purchase_type" value="bulk">
                                     <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Apply Discount for this farmer</button>
                                 </form>
                             @else

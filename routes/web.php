@@ -111,6 +111,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:consumer,buyer'])->prefix('consumer')->name('consumer.')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
     Route::get('/marketplace', [ProductController::class, 'consumerMarketplace'])->name('marketplace');
+    Route::get('/marketplace/farmer/{farmer}', [ProductController::class, 'consumerFarmerProducts'])->name('marketplace.farmer');
     Route::get('/cart', fn () => redirect()->route('cart.index'))->name('cart');
     Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback');
     Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store');
@@ -125,6 +126,7 @@ Route::middleware(['auth', 'role:consumer,buyer'])->prefix('consumer')->name('co
 Route::middleware(['auth', 'role:consumer,buyer'])->prefix('buyer')->name('buyer.')->group(function () {
     Route::get('/dashboard', fn () => redirect()->route('dashboard'))->name('dashboard');
     Route::get('/marketplace', fn () => redirect()->route('consumer.marketplace'))->name('marketplace');
+    Route::get('/marketplace/farmer/{farmer}', fn (App\Models\User $farmer) => redirect()->route('consumer.marketplace.farmer', $farmer))->name('marketplace.farmer');
     Route::get('/cart', fn () => redirect()->route('cart.index'))->name('cart');
     Route::get('/orders', fn () => redirect()->route('orders.index'))->name('orders');
     Route::patch('/orders/{order}/cancel', [OrderController::class, 'cancelByConsumer'])->name('orders.cancel');

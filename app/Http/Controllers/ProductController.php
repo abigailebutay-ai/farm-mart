@@ -44,10 +44,32 @@ class ProductController extends Controller
      */
     public function consumerMarketplace(Request $request)
     {
-        $query = $this->marketplaceQuery($request)->where('quantity', '>', 0);
+        $farmers = $this->availableMarketplaceFarmers()
+            ->withCount(['products as available_products_count' => function ($query) {
+                $query->where('quantity', '>', 0)
+                    ->where(function ($query) {
+                        $query->whereNull('status')
+                            ->orWhere('status', 'active');
+                    });
+            }])
+            ->get();
+
+        return view('consumer.marketplace', [
+            'farmers' => $farmers,
+        ]);
+    }
+
+    public function consumerFarmerProducts(Request $request, User $farmer)
+    {
+        abort_unless($farmer->isFarmer(), 404);
+
+        $query = $this->marketplaceQuery($request)
+            ->where('user_id', $farmer->id)
+            ->where('quantity', '>', 0);
 
         $products = $query->latest()->paginate(12)->withQueryString();
         $categories = Product::where('quantity', '>', 0)
+            ->where('user_id', $farmer->id)
             ->where(function ($query) {
                 $query->whereNull('status')
                     ->orWhere('status', 'active');
@@ -55,16 +77,11 @@ class ProductController extends Controller
             ->select('category')
             ->distinct()
             ->get();
-        $farmers = User::where('role', 'farmer')
-            ->whereHas('products', fn ($query) => $query->where('quantity', '>', 0))
-            ->orderBy('name')
-            ->get(['id', 'name']);
 
         return view('consumer.marketplace', [
             'products' => $products,
             'categories' => $categories,
-            'farmers' => $farmers,
-            'selectedFarmerId' => $request->farmer_id,
+            'selectedFarmer' => $farmer,
             'search' => $request->search ?? '',
             'availability' => $request->availability ?? '',
         ]);
@@ -363,6 +380,23 @@ class ProductController extends Controller
         }
 
         return $query;
+    }
+
+    private function availableMarketplaceFarmers()
+    {
+        return User::where('role', 'farmer')
+            ->where(function ($query) {
+                $query->whereNull('verification_status')
+                    ->orWhere('verification_status', 'approved');
+            })
+            ->whereHas('products', function ($query) {
+                $query->where('quantity', '>', 0)
+                    ->where(function ($query) {
+                        $query->whereNull('status')
+                            ->orWhere('status', 'active');
+                    });
+            })
+            ->orderBy('name');
     }
 
     private function logProductImageUpload(string $path): void

@@ -36,6 +36,7 @@ class Order extends Model
         'gcash_payee_name',
         'gcash_payee_number',
         'fulfillment_method',
+        'purchase_type',
         'completion_proof',
         'completion_note',
         'completed_at',
@@ -181,6 +182,11 @@ class Order extends Model
     public function fulfillmentMethodLabel(): string
     {
         return $this->fulfillmentMethod() === 'pickup' ? 'Pick up' : 'Delivery';
+    }
+
+    public function purchaseTypeLabel(): string
+    {
+        return $this->purchase_type === 'bulk' ? 'Bulk Order' : 'For Home Use';
     }
 
     public function completionProofLabel(): string

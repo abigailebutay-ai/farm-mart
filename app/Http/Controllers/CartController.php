@@ -74,8 +74,11 @@ class CartController extends Controller
         $cart->calculateTotals();
         session()->forget(['cart_discount', 'cart_discounts', 'checkout_coupon_id']);
 
-        return redirect()
-            ->route('cart.index')
+        $redirectRoute = auth()->user()->isConsumer()
+            ? route('consumer.marketplace.farmer', $product->farmer)
+            : route('cart.index');
+
+        return redirect($redirectRoute)
             ->with('success', 'Product added to cart!');
     }
 
@@ -155,6 +158,10 @@ class CartController extends Controller
 
         $validated = request()->validate([
             'farmer_id' => 'required|integer',
+            'purchase_type' => 'required|in:bulk',
+        ], [
+            'purchase_type.required' => 'Bulk discount is only available for Bulk Order.',
+            'purchase_type.in' => 'Bulk discount is only available for Bulk Order.',
         ]);
 
         $farmerId = (int) $validated['farmer_id'];
@@ -186,7 +193,9 @@ class CartController extends Controller
         session(['cart_discounts' => $discounts]);
         session()->forget('checkout_coupon_id');
 
-        return back()->with('success', 'Bulk discount applied successfully.');
+        return back()
+            ->withInput(['purchase_type' => 'bulk'])
+            ->with('success', 'Bulk discount applied successfully.');
     }
 
     public function removeDiscount()
