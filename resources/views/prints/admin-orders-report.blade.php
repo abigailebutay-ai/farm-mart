@@ -13,7 +13,6 @@
                 <th>Farmer</th>
                 <th>Items</th>
                 <th>Total Amount</th>
-                <th>Purchase Type</th>
                 <th>Payment</th>
                 <th>Order Status</th>
                 <th>Order Date</th>
@@ -34,7 +33,6 @@
                     <td>{{ $farmers->isNotEmpty() ? $farmers->join(', ') : 'Not available' }}</td>
                     <td>{{ $order->items_count ?? $order->items->count() }}</td>
                     <td>PHP {{ number_format($order->total, 2) }}</td>
-                    <td>{{ $order->purchaseTypeLabel() }}</td>
                     <td>{{ $order->paymentMethodLabel() }} - {{ $order->paymentStatusLabel() }}</td>
                     <td>{{ ucfirst($order->status) }}</td>
                     <td>
@@ -45,7 +43,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="9" class="empty-row">No orders found.</td></tr>
+                <tr><td colspan="8" class="empty-row">No orders found.</td></tr>
             @endforelse
         </tbody>
     </table>

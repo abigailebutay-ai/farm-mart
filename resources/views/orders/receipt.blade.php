@@ -110,7 +110,6 @@
                 @endif
                 <p class="text-sm"><span class="font-semibold">Status:</span> {{ \Illuminate\Support\Str::title(str_replace('_', ' ', $order->status)) }}</p>
                 <p class="text-sm"><span class="font-semibold">Fulfillment Method:</span> {{ $order->fulfillmentMethodLabel() }}</p>
-                <p class="text-sm"><span class="font-semibold">Purchase Type:</span> {{ $order->purchaseTypeLabel() }}</p>
                 @if($order->fulfillment_method === 'pickup')
                     @forelse($pickupLocations as $location)
                         @php($farmer = $location['farmer'])

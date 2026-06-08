@@ -280,10 +280,6 @@
                             <p class="text-gray-600 dark:text-gray-400 mb-1">Fulfillment Method</p>
                             <p class="font-semibold text-gray-900 dark:text-white">{{ $order->fulfillmentMethodLabel() }}</p>
                         </div>
-                        <div>
-                            <p class="text-gray-600 dark:text-gray-400 mb-1">Purchase Type</p>
-                            <p class="font-semibold text-gray-900 dark:text-white">{{ $order->purchaseTypeLabel() }}</p>
-                        </div>
                         @if($order->completed_at)
                             <div>
                                 <p class="text-gray-600 dark:text-gray-400 mb-1">Completed At</p>

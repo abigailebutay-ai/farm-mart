@@ -10,7 +10,7 @@
         :subtitle="'You are ordering from ' . $selectedFarmerName . '.'"
     />
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')), purchaseType: @js(old('purchase_type', $purchaseType ?? 'home')), checkoutSubtotal: @js((float) ($checkoutSubtotal ?? $checkoutItems->sum('subtotal'))), bulkDiscountRate: @js((float) ($eligibleDiscount['discount_rate'] ?? 0)), bulkDiscountAmount: @js((float) ($eligibleDiscount['discount_amount'] ?? 0)), money(value) { return 'PHP ' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }, finalTotal() { return Math.max(this.checkoutSubtotal - (this.purchaseType === 'bulk' ? this.bulkDiscountAmount : 0), 0) } }">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')), checkoutSubtotal: @js((float) ($checkoutSubtotal ?? $checkoutItems->sum('subtotal'))), discountAmount: @js((float) ($discountAmount ?? 0)), money(value) { return 'PHP ' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }, finalTotal() { return Math.max(this.checkoutSubtotal - this.discountAmount, 0) } }">
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -23,34 +23,6 @@
 
                     <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100">
                         You are ordering from {{ $selectedFarmer->name }}. Discounts, GCash details, and pickup location are based on this farmer only.
-                    </div>
-
-                    <div>
-                        <h3 class="mb-4 text-xl font-semibold text-gray-900 dark:text-white">Purchase Type</h3>
-                        <div class="grid gap-3 md:grid-cols-2">
-                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="purchaseType === 'home' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
-                                <div class="flex items-start gap-3">
-                                    <input type="radio" name="purchase_type" value="home" x-model="purchaseType" class="mt-1 text-emerald-600 focus:ring-emerald-500">
-                                    <div>
-                                        <p class="text-lg font-bold text-gray-900 dark:text-white">For Home Use</p>
-                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">For regular household consumption.</p>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <label class="cursor-pointer rounded-xl border p-4 transition dark:border-gray-700 dark:bg-gray-900" :class="purchaseType === 'bulk' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-gray-300'">
-                                <div class="flex items-start gap-3">
-                                    <input type="radio" name="purchase_type" value="bulk" x-model="purchaseType" class="mt-1 text-emerald-600 focus:ring-emerald-500">
-                                    <div>
-                                        <p class="text-lg font-bold text-gray-900 dark:text-white">Bulk Order</p>
-                                        <p class="mt-1 text-base text-gray-600 dark:text-gray-400">For larger purchases that may qualify for discount.</p>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                        @error('purchase_type')
-                            <p class="mt-2 text-sm font-semibold text-red-500">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
@@ -253,32 +225,44 @@
 
                     <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                         <h3 class="font-bold text-gray-900 dark:text-white">Bulk Discount</h3>
-                        @if($eligibleDiscount['eligible'] ?? false)
-                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                                Bulk discount is only available for Bulk Order.
-                            </p>
-                            <div x-show="purchaseType === 'bulk'" class="mt-3 space-y-1">
-                                <p class="font-bold text-emerald-700 dark:text-emerald-300">
-                                    Bulk discount applied: {{ $eligibleDiscount['discount_rate'] }}%
-                                </p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
-                                    Discount: -PHP {{ number_format($eligibleDiscount['discount_amount'] ?? 0, 2) }}
-                                </p>
+                        @if($appliedDiscount ?? null)
+                            <div class="mt-3 flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-bold text-emerald-700 dark:text-emerald-300">Bulk discount applied: {{ $appliedDiscount['discount_rate'] ?? 0 }}%</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $appliedDiscount['label'] ?? 'Bulk order discount' }}</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Discount: -PHP {{ number_format($discountAmount ?? 0, 2) }}</p>
+                                </div>
+                                <form method="POST" action="{{ route('cart.remove-discount') }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
+                                    <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30">
+                                        Remove
+                                    </button>
+                                </form>
                             </div>
+                        @elseif($eligibleDiscount['eligible'] ?? false)
+                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                                Bulk discount available: {{ $eligibleDiscount['discount_rate'] }}% off.
+                            </p>
+                            <form method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
+                                @csrf
+                                <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
+                                <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Apply Discount</button>
+                            </form>
                         @else
-                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount is only available for Bulk Order.</p>
-                            <p x-show="purchaseType === 'bulk'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount starts at 10 kg.</p>
+                            <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount starts at 10 kg.</p>
                         @endif
                     </div>
 
-                    @if(($eligibleDiscount['eligible'] ?? false) && ($eligibleDiscount['discount_amount'] ?? 0) > 0)
-                        <div x-show="purchaseType === 'bulk'" class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    @if(($discountAmount ?? 0) > 0)
+                        <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
                             <span>Bulk Discount:</span>
-                            <span>{{ $eligibleDiscount['discount_rate'] }}%</span>
+                            <span>{{ $appliedDiscount['discount_rate'] ?? 0 }}%</span>
                         </div>
-                        <div x-show="purchaseType === 'bulk'" class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                        <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
                             <span>Discount:</span>
-                            <span>- PHP {{ number_format($eligibleDiscount['discount_amount'], 2) }}</span>
+                            <span>- PHP {{ number_format($discountAmount, 2) }}</span>
                         </div>
                     @endif
 

@@ -169,7 +169,6 @@ class OrderController extends Controller
         $validated = $request->validate([
             'farmer_id' => 'required|integer|exists:users,id',
             'notes' => 'nullable|string|max:1000',
-            'purchase_type' => 'required|in:home,bulk',
             'fulfillment_method' => 'required|in:pickup,delivery',
             'payment_method' => 'required|in:cod,gcash',
             'payment_reference' => 'nullable|string',
@@ -206,7 +205,7 @@ class OrderController extends Controller
             }
         }
 
-        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $selectedFarmerId, $discountService, $validated['purchase_type']);
+        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $selectedFarmerId, $discountService);
 
         if (! $discountResult['ok']) {
             $this->forgetFarmerDiscount($selectedFarmerId);
@@ -255,7 +254,7 @@ class OrderController extends Controller
                 'total' => $orderTotal,
                 'status' => 'pending',
                 'fulfillment_method' => $validated['fulfillment_method'],
-                'purchase_type' => $validated['purchase_type'],
+                'purchase_type' => $discountAmount > 0 ? 'bulk' : 'home',
                 'notes' => $validated['notes'] ?? null,
             ] + $paymentData);
 
@@ -1001,12 +1000,14 @@ class OrderController extends Controller
         ];
     }
 
-    private function automaticDiscountResultForItems(Collection $items, int $farmerId, DiscountService $discountService, string $purchaseType = 'bulk'): array
+    private function automaticDiscountResultForItems(Collection $items, int $farmerId, DiscountService $discountService): array
     {
         $totalKg = (float) $items->sum('quantity');
         $subtotal = (float) $items->sum('subtotal');
         $eligibleDiscount = $discountService->getEligibleDiscount($totalKg, $subtotal);
-        if ($purchaseType !== 'bulk') {
+        $appliedDiscounts = session('cart_discounts', []);
+
+        if (! isset($appliedDiscounts[$farmerId])) {
             return [
                 'ok' => true,
                 'eligibleDiscount' => $eligibleDiscount,
@@ -1018,7 +1019,7 @@ class OrderController extends Controller
 
         if (! ($eligibleDiscount['eligible'] ?? false)) {
             return [
-                'ok' => true,
+                'ok' => false,
                 'eligibleDiscount' => $eligibleDiscount,
                 'discount' => null,
                 'totalKg' => $totalKg,
@@ -1150,9 +1151,7 @@ class OrderController extends Controller
                 ->with('error', 'No cart items found for the selected farmer.');
         }
 
-        $appliedDiscounts = session('cart_discounts', []);
-        $purchaseType = request('purchase_type', old('purchase_type', isset($appliedDiscounts[$farmer->id]) ? 'bulk' : 'home'));
-        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $farmer->id, app(DiscountService::class), $purchaseType);
+        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $farmer->id, app(DiscountService::class));
 
         if (! $discountResult['ok']) {
             $this->forgetFarmerDiscount($farmer->id);
@@ -1169,7 +1168,6 @@ class OrderController extends Controller
             'cart' => $cart,
             'checkoutItems' => $checkoutItems,
             'selectedFarmer' => $farmer,
-            'purchaseType' => $purchaseType,
             'coupon' => null,
             'eligibleDiscount' => $discountResult['eligibleDiscount'],
             'appliedDiscount' => $discountResult['discount'],

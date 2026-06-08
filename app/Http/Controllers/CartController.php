@@ -158,10 +158,6 @@ class CartController extends Controller
 
         $validated = request()->validate([
             'farmer_id' => 'required|integer',
-            'purchase_type' => 'required|in:bulk',
-        ], [
-            'purchase_type.required' => 'Bulk discount is only available for Bulk Order.',
-            'purchase_type.in' => 'Bulk discount is only available for Bulk Order.',
         ]);
 
         $farmerId = (int) $validated['farmer_id'];
@@ -193,9 +189,7 @@ class CartController extends Controller
         session(['cart_discounts' => $discounts]);
         session()->forget('checkout_coupon_id');
 
-        return back()
-            ->withInput(['purchase_type' => 'bulk'])
-            ->with('success', 'Bulk discount applied successfully.');
+        return back()->with('success', 'Bulk discount applied successfully.');
     }
 
     public function removeDiscount()
