@@ -125,7 +125,10 @@
                 <p class="text-sm"><span class="font-semibold">Seller:</span> {{ $farmerNames->isNotEmpty() ? $farmerNames->join(', ') : 'Local Farmer' }}</p>
                 <p class="text-sm"><span class="font-semibold">Total Kilograms:</span> {{ number_format($order->total_kg ?? 0, 2) }} kg</p>
                 @if($order->discount_label || $order->coupon_code)
-                    <p class="text-sm"><span class="font-semibold">Discount:</span> {{ $order->discount_label ?? $order->coupon_code }}</p>
+                    <p class="text-sm"><span class="font-semibold">Bulk Discount:</span> {{ $order->discount_label ?? $order->coupon_code }}</p>
+                @endif
+                @if(($order->discount_rate ?? 0) > 0)
+                    <p class="text-sm"><span class="font-semibold">Bulk Discount Rate:</span> {{ number_format($order->discount_rate, 0) }}%</p>
                 @endif
             </div>
         </div>

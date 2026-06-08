@@ -1006,19 +1006,7 @@ class OrderController extends Controller
         $totalKg = (float) $items->sum('quantity');
         $subtotal = (float) $items->sum('subtotal');
         $eligibleDiscount = $discountService->getEligibleDiscount($totalKg, $subtotal);
-        $appliedDiscounts = session('cart_discounts', []);
-
         if ($purchaseType !== 'bulk') {
-            return [
-                'ok' => true,
-                'eligibleDiscount' => $eligibleDiscount,
-                'discount' => null,
-                'totalKg' => $totalKg,
-                'message' => null,
-            ];
-        }
-
-        if (! isset($appliedDiscounts[$farmerId])) {
             return [
                 'ok' => true,
                 'eligibleDiscount' => $eligibleDiscount,
@@ -1030,7 +1018,7 @@ class OrderController extends Controller
 
         if (! ($eligibleDiscount['eligible'] ?? false)) {
             return [
-                'ok' => false,
+                'ok' => true,
                 'eligibleDiscount' => $eligibleDiscount,
                 'discount' => null,
                 'totalKg' => $totalKg,

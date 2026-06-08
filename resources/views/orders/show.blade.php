@@ -593,8 +593,15 @@
 
                         @if($order->discount_label || $order->coupon_code)
                             <div class="flex justify-between text-gray-600 dark:text-gray-400">
-                                <span>Discount:</span>
+                                <span>Bulk Discount:</span>
                                 <span>{{ $order->discount_label ?? $order->coupon_code }}</span>
+                            </div>
+                        @endif
+
+                        @if(($order->discount_rate ?? 0) > 0)
+                            <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                                <span>Bulk Discount Rate:</span>
+                                <span>{{ number_format($order->discount_rate, 0) }}%</span>
                             </div>
                         @endif
 

@@ -10,14 +10,14 @@
         :subtitle="'You are ordering from ' . $selectedFarmerName . '.'"
     />
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')), purchaseType: @js(old('purchase_type', $purchaseType ?? 'home')), checkoutSubtotal: @js((float) ($checkoutSubtotal ?? $checkoutItems->sum('subtotal'))), bulkDiscountRate: @js((float) ($eligibleDiscount['discount_rate'] ?? 0)), bulkDiscountAmount: @js((float) ($eligibleDiscount['discount_amount'] ?? 0)), money(value) { return 'PHP ' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }, finalTotal() { return Math.max(this.checkoutSubtotal - (this.purchaseType === 'bulk' ? this.bulkDiscountAmount : 0), 0) } }">
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Checkout Details</h2>
                 </div>
 
-                <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')), purchaseType: @js(old('purchase_type', $purchaseType ?? 'home')), checkoutSubtotal: @js((float) ($checkoutSubtotal ?? $checkoutItems->sum('subtotal'))), checkoutTotal: @js((float) ($checkoutTotal ?? $checkoutItems->sum('subtotal'))), money(value) { return 'PHP ' + Number(value).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) } }">
+                <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6">
                     @csrf
                     <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
 
@@ -179,7 +179,7 @@
                             <p class="mt-2 text-base leading-relaxed text-gray-300">Send your payment to the farmer's GCash number, then upload proof of payment.</p>
                             <p class="mt-2 text-base font-bold text-emerald-300">
                                 Amount to pay:
-                                <span x-text="money(purchaseType === 'bulk' ? checkoutTotal : checkoutSubtotal)">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
+                                <span x-text="money(finalTotal())">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
                             </p>
 
                             @if(($cartFarmerCount ?? 0) > 1)
@@ -253,56 +253,39 @@
 
                     <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                         <h3 class="font-bold text-gray-900 dark:text-white">Bulk Discount</h3>
-                        @if($appliedDiscount ?? null)
+                        @if($eligibleDiscount['eligible'] ?? false)
                             <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                                No bulk discount applied for home-use orders.
+                                Bulk discount is only available for Bulk Order.
                             </p>
-                            <div x-show="purchaseType === 'bulk'" class="mt-3 flex items-start justify-between gap-3">
-                                <div>
-                                    <p class="font-bold text-emerald-700 dark:text-emerald-300">Bulk discount applied</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ $appliedDiscount['label'] ?? 'Bulk order discount' }}</p>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Discount: PHP {{ number_format($discountAmount ?? 0, 2) }}</p>
-                                </div>
-                                <form method="POST" action="{{ route('cart.remove-discount') }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
-                                    <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30">
-                                        Remove
-                                    </button>
-                                </form>
+                            <div x-show="purchaseType === 'bulk'" class="mt-3 space-y-1">
+                                <p class="font-bold text-emerald-700 dark:text-emerald-300">
+                                    Bulk discount applied: {{ $eligibleDiscount['discount_rate'] }}%
+                                </p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    Discount: -PHP {{ number_format($eligibleDiscount['discount_amount'] ?? 0, 2) }}
+                                </p>
                             </div>
-                        @elseif($eligibleDiscount['eligible'] ?? false)
-                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                                No bulk discount applied for home-use orders.
-                            </p>
-                            <p x-show="purchaseType === 'bulk'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                                You are eligible for a {{ $eligibleDiscount['discount_rate'] }}% bulk discount.
-                            </p>
-                            <form x-show="purchaseType === 'bulk'" method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
-                                @csrf
-                                <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
-                                <input type="hidden" name="purchase_type" value="bulk">
-                                <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Apply Discount</button>
-                            </form>
                         @else
-                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">No bulk discount applied for home-use orders.</p>
+                            <p x-show="purchaseType === 'home'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount is only available for Bulk Order.</p>
                             <p x-show="purchaseType === 'bulk'" class="mt-3 text-sm text-gray-500 dark:text-gray-400">Bulk discount starts at 10 kg.</p>
                         @endif
                     </div>
 
-                    @if(($discountAmount ?? 0) > 0)
+                    @if(($eligibleDiscount['eligible'] ?? false) && ($eligibleDiscount['discount_amount'] ?? 0) > 0)
+                        <div x-show="purchaseType === 'bulk'" class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                            <span>Bulk Discount:</span>
+                            <span>{{ $eligibleDiscount['discount_rate'] }}%</span>
+                        </div>
                         <div x-show="purchaseType === 'bulk'" class="flex justify-between text-emerald-600 dark:text-emerald-400">
                             <span>Discount:</span>
-                            <span>- PHP {{ number_format($discountAmount, 2) }}</span>
+                            <span>- PHP {{ number_format($eligibleDiscount['discount_amount'], 2) }}</span>
                         </div>
-                        <p x-show="purchaseType === 'home'" class="text-sm text-gray-500 dark:text-gray-400">No bulk discount applied for home-use orders.</p>
                     @endif
 
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div class="flex justify-between text-xl font-bold text-gray-900 dark:text-white">
                             <span>Total to Pay:</span>
-                            <span class="text-green-600 dark:text-green-400" x-text="money(purchaseType === 'bulk' ? checkoutTotal : checkoutSubtotal)">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
+                            <span class="text-green-600 dark:text-green-400" x-text="money(finalTotal())">PHP {{ number_format($checkoutTotal ?? $cart->total, 2) }}</span>
                         </div>
                     </div>
 
