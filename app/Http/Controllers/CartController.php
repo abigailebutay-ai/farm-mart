@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Services\DiscountService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -12,7 +13,7 @@ class CartController extends Controller
     /**
      * Show the cart.
      */
-    public function index()
+    public function index(DiscountService $discountService)
     {
         $user = auth()->user();
 
@@ -22,8 +23,17 @@ class CartController extends Controller
 
         $cart->calculateTotals();
 
+        $cart->loadMissing('items.product');
+        $totalKg = $this->cartTotalKg($cart);
+        $eligibleDiscount = $discountService->getEligibleDiscount($totalKg, (float) $cart->subtotal);
+        $appliedDiscount = session('cart_discount');
+
         return view('cart.index', [
-            'cart' => $cart
+            'cart' => $cart,
+            'totalKg' => $totalKg,
+            'eligibleDiscount' => $eligibleDiscount,
+            'appliedDiscount' => $appliedDiscount,
+            'discountAmount' => $appliedDiscount ? (float) ($eligibleDiscount['discount_amount'] ?? 0) : 0,
         ]);
     }
 
@@ -67,6 +77,7 @@ class CartController extends Controller
         }
 
         $cart->calculateTotals();
+        session()->forget(['cart_discount', 'checkout_coupon_id']);
 
         return redirect()
             ->route('cart.index')
@@ -92,6 +103,7 @@ class CartController extends Controller
         $cartItem->save();
 
         $cartItem->cart->calculateTotals();
+        session()->forget(['cart_discount', 'checkout_coupon_id']);
 
         return redirect()
             ->route('cart.index')
@@ -110,6 +122,7 @@ class CartController extends Controller
         $cartItem->delete();
 
         $cart->calculateTotals();
+        session()->forget(['cart_discount', 'checkout_coupon_id']);
 
         return redirect()
             ->route('cart.index')
@@ -130,8 +143,55 @@ class CartController extends Controller
             $cart->calculateTotals();
         }
 
+        session()->forget(['cart_discount', 'checkout_coupon_id']);
+
         return redirect()
             ->route('cart.index')
             ->with('success', 'Cart cleared!');
+    }
+
+    public function applyDiscount(DiscountService $discountService)
+    {
+        $cart = auth()->user()->cart?->loadMissing('items.product');
+
+        if (! $cart || $cart->items->isEmpty()) {
+            return redirect()->route('cart.index')->with('error', 'Your cart is empty!');
+        }
+
+        $cart->calculateTotals();
+        $eligibleDiscount = $discountService->getEligibleDiscount(
+            $this->cartTotalKg($cart),
+            (float) $cart->subtotal
+        );
+
+        if (! ($eligibleDiscount['eligible'] ?? false)) {
+            session()->forget(['cart_discount', 'checkout_coupon_id']);
+
+            return back()->with('error', 'No bulk discount available yet. Add more kg to qualify for a discount.');
+        }
+
+        session(['cart_discount' => [
+            'label' => $eligibleDiscount['label'],
+            'discount_type' => $eligibleDiscount['discount_type'],
+            'discount_rate' => $eligibleDiscount['discount_rate'],
+            'minimum_kg' => $eligibleDiscount['minimum_kg'],
+        ]]);
+        session()->forget('checkout_coupon_id');
+
+        return back()->with('success', 'Bulk discount applied successfully.');
+    }
+
+    public function removeDiscount()
+    {
+        session()->forget(['cart_discount', 'checkout_coupon_id']);
+
+        return back()->with('success', 'Bulk discount removed.');
+    }
+
+    private function cartTotalKg(Cart $cart): float
+    {
+        $cart->loadMissing('items.product');
+
+        return (float) $cart->items->sum(fn ($item) => (float) $item->quantity);
     }
 }

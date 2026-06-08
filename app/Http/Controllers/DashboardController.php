@@ -95,7 +95,7 @@ class DashboardController extends Controller
             'cancelledOrders' => Order::where('status', 'cancelled')->count(),
             'totalRevenue' => Order::where('status', 'completed')->sum('total'),
             'gcashPaymentsToReview' => Order::where('payment_method', 'gcash')
-                ->where('payment_status', 'pending_verification')
+                ->whereIn('payment_status', ['pending_farmer_confirmation', 'pending_verification'])
                 ->whereNotNull('payment_proof')
                 ->count(),
             'recentOrders' => $recentOrders,

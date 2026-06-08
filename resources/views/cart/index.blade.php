@@ -94,10 +94,55 @@
                         <span>PHP {{ number_format($cart->subtotal, 2) }}</span>
                     </div>
 
+                    <div class="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Total kg:</span>
+                        <span>{{ number_format($totalKg ?? 0, 2) }} kg</span>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                        <h3 class="font-bold text-gray-900 dark:text-white">Bulk Discount</h3>
+                        @if($appliedDiscount)
+                            <p class="mt-2 text-sm font-semibold text-emerald-600 dark:text-emerald-300">
+                                Discount Applied: {{ $appliedDiscount['discount_rate'] ?? 0 }}%
+                            </p>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                Discount: PHP {{ number_format($discountAmount ?? 0, 2) }}
+                            </p>
+                            <form method="POST" action="{{ route('cart.remove-discount') }}" class="mt-3">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="rounded-lg border border-red-200 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30">
+                                    Remove Discount
+                                </button>
+                            </form>
+                        @elseif($eligibleDiscount['eligible'] ?? false)
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                Your cart has {{ $eligibleDiscount['minimum_kg'] }} kg or more. You can apply a {{ $eligibleDiscount['discount_rate'] }}% discount.
+                            </p>
+                            <form method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
+                                @csrf
+                                <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">
+                                    Apply Discount
+                                </button>
+                            </form>
+                        @else
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                No bulk discount available yet. Add more kg to qualify for a discount.
+                            </p>
+                        @endif
+                    </div>
+
+                    @if(($discountAmount ?? 0) > 0)
+                        <div class="flex justify-between text-emerald-600 dark:text-emerald-400">
+                            <span>Discount:</span>
+                            <span>- PHP {{ number_format($discountAmount, 2) }}</span>
+                        </div>
+                    @endif
+
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div class="flex justify-between text-lg font-bold text-gray-900 dark:text-white">
                             <span>Total:</span>
-                            <span class="text-green-600 dark:text-green-400">PHP {{ number_format($cart->total, 2) }}</span>
+                            <span class="text-green-600 dark:text-green-400">PHP {{ number_format(max((float) $cart->total - (float) ($discountAmount ?? 0), 0), 2) }}</span>
                         </div>
                     </div>
 

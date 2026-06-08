@@ -25,7 +25,7 @@
         <x-ui.stat-card label="Completed Orders" :value="$completedOrders ?? 0" icon="check" tone="green" trend="Orders marked completed." />
         <x-ui.stat-card label="Cancelled Orders" :value="$cancelledOrders ?? 0" icon="x" tone="red" trend="Orders that did not continue." />
         <x-ui.stat-card label="Total Revenue" value="PHP {{ number_format($totalRevenue ?? 0, 2) }}" icon="money" tone="green" trend="Sales from completed orders." />
-        <x-ui.stat-card label="GCash Payments to Review" :value="$gcashPaymentsToReview ?? 0" icon="money" tone="amber" trend="Uploaded payment proofs waiting for verification." />
+        <x-ui.stat-card label="GCash Pending Farmer Confirmation" :value="$gcashPaymentsToReview ?? 0" icon="money" tone="amber" trend="Uploaded proofs waiting for farmer confirmation." />
     </div>
 
     <div class="mt-5 grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -128,7 +128,7 @@
                 <x-ui.quick-action-card href="{{ route('admin.user-reports') }}" title="User Approvals" description="Approve or reject new user accounts." icon="users" />
                 <x-ui.quick-action-card href="{{ route('admin.products') }}" title="Products" description="View products listed by farmers." icon="products" />
                 <x-ui.quick-action-card href="{{ route('orders.index') }}" title="Orders" description="Review order status and payment information." icon="orders" />
-                <x-ui.quick-action-card href="{{ route('orders.index') }}" title="Payment Verification" description="Check GCash proofs waiting for review." icon="money" />
+                <x-ui.quick-action-card href="{{ route('orders.index') }}" title="Payment Monitoring" description="Monitor GCash payments confirmed by farmers." icon="money" />
                 <x-ui.quick-action-card href="{{ route('admin.announcements.index') }}" title="Announcements" description="Create announcements for users." icon="megaphone" />
                 <x-ui.quick-action-card href="{{ route('admin.activity-logs') }}" title="Activity Logs" description="View recent system actions." icon="activity" />
             </div>

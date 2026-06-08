@@ -78,6 +78,8 @@ Route::middleware('auth')->group(function () {
     // Cart routes (consumers only)
     Route::middleware('role:consumer,buyer')->group(function () {
         Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+        Route::post('/cart/apply-discount', [CartController::class, 'applyDiscount'])->name('cart.apply-discount');
+        Route::delete('/cart/remove-discount', [CartController::class, 'removeDiscount'])->name('cart.remove-discount');
         Route::post('/cart/{product}', [CartController::class, 'add'])->name('cart.add');
         Route::put('/cart-item/{cartItem}', [CartController::class, 'updateQuantity'])->name('cart.update-quantity');
         Route::delete('/cart-item/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
@@ -147,6 +149,8 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::patch('/products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::patch('/orders/{order}/accept', [OrderController::class, 'acceptOrder'])->name('orders.accept');
+    Route::patch('/orders/{order}/confirm-payment', [OrderController::class, 'confirmPayment'])->name('orders.confirm-payment');
+    Route::patch('/orders/{order}/reject-payment', [OrderController::class, 'rejectPayment'])->name('orders.reject-payment');
     Route::patch('/orders/{order}/preparing', [OrderController::class, 'markPreparing'])->name('orders.preparing');
     Route::patch('/orders/{order}/out-for-delivery', [OrderController::class, 'markOutForDelivery'])->name('orders.out-for-delivery');
     Route::patch('/orders/{order}/ready-for-pickup', [OrderController::class, 'markReadyForPickup'])->name('orders.ready-for-pickup');

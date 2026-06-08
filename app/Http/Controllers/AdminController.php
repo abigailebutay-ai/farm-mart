@@ -107,6 +107,8 @@ class AdminController extends Controller
 
     public function updatePaymentStatus(Request $request, Order $order)
     {
+        return back()->with('error', 'GCash payments are confirmed by farmers. Admin can monitor payment records and handle refunds.');
+
         $validated = $request->validate([
             'payment_status' => 'required|in:pending_verification,paid,rejected',
         ]);
@@ -129,6 +131,8 @@ class AdminController extends Controller
     public function markPaymentPaid(Order $order, NotificationService $notifications)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
+
+        return back()->with('error', 'GCash payments are confirmed by farmers.');
 
         if ($order->payment_method !== 'gcash') {
             return back()->with('error', 'Only GCash payments require verification.');
@@ -178,6 +182,8 @@ class AdminController extends Controller
     public function rejectPayment(Order $order, NotificationService $notifications)
     {
         abort_unless(auth()->user()->isAdmin(), 403);
+
+        return back()->with('error', 'GCash payments are rejected by farmers.');
 
         if ($order->payment_method !== 'gcash') {
             return back()->with('error', 'Only GCash payments can be rejected.');

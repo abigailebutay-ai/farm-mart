@@ -75,12 +75,18 @@
                     <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Refunded At</p>
                     <p class="font-semibold">{{ $order->refunded_at->timezone(config('app.timezone'))->format('M d, Y h:i A') }}</p>
                 @endif
-                @if($order->payment_method === 'gcash' && in_array($order->payment_status, ['pending_verification', 'rejected'], true))
+                @if($order->payment_method === 'gcash' && in_array($order->payment_status, ['pending_farmer_confirmation', 'pending_verification', 'rejected'], true))
                     <p class="mt-1 text-sm font-semibold text-amber-700">Payment not yet verified.</p>
                 @endif
                 @if($order->payment_reference)
                     <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">GCash Reference Number</p>
                     <p class="font-semibold">{{ $order->payment_reference }}</p>
+                @endif
+                @if($order->gcash_payee_name || $order->gcash_payee_number)
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Farmer GCash Payee Name</p>
+                    <p class="font-semibold">{{ $order->gcash_payee_name ?? 'Not provided' }}</p>
+                    <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Farmer GCash Number</p>
+                    <p class="font-semibold">{{ $order->gcash_payee_number ?? 'Not provided' }}</p>
                 @endif
                 @if($order->payment_proof)
                     <p class="receipt-meta mt-3 text-xs font-bold uppercase tracking-wide">Proof of Payment</p>
@@ -117,8 +123,8 @@
                 @endif
                 <p class="text-sm"><span class="font-semibold">Seller:</span> {{ $farmerNames->isNotEmpty() ? $farmerNames->join(', ') : 'Local Farmer' }}</p>
                 <p class="text-sm"><span class="font-semibold">Total Kilograms:</span> {{ number_format($order->total_kg ?? 0, 2) }} kg</p>
-                @if($order->coupon_code)
-                    <p class="text-sm"><span class="font-semibold">Coupon Code:</span> {{ $order->coupon_code }}</p>
+                @if($order->discount_label || $order->coupon_code)
+                    <p class="text-sm"><span class="font-semibold">Discount:</span> {{ $order->discount_label ?? $order->coupon_code }}</p>
                 @endif
             </div>
         </div>

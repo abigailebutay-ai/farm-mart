@@ -25,6 +25,9 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . auth()->id(),
             'phone' => 'nullable|string|max:20',
+            'gcash_name' => 'nullable|string|max:255',
+            'gcash_number' => 'nullable|regex:/^[0-9]{8,20}$/',
+            'gcash_qr' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'address' => 'nullable|string|max:500',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -38,6 +41,16 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($user->profile_picture);
             }
             $validated['profile_picture'] = $request->file('profile_picture')->store('profile-pictures', 'public');
+        }
+
+        if (! $user->isFarmer()) {
+            unset($validated['gcash_name'], $validated['gcash_number'], $validated['gcash_qr']);
+        } elseif ($request->hasFile('gcash_qr')) {
+            if ($user->gcash_qr) {
+                Storage::disk(config('filesystems.default'))->delete($user->gcash_qr);
+            }
+
+            $validated['gcash_qr'] = $request->file('gcash_qr')->storePublicly('gcash_qr_codes', config('filesystems.default'));
         }
 
         $user->update($validated);

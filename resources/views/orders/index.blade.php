@@ -185,7 +185,7 @@
                                             @if($order->status === 'pending')
                                                 @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
                                                     <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
-                                                        {{ $order->payment_status === 'rejected' ? 'Payment proof rejected' : 'Waiting for admin payment verification' }}
+                                                        {{ $order->payment_status === 'rejected' ? 'Payment proof rejected' : 'Confirm GCash payment first' }}
                                                     </span>
                                                 @else
                                                     <form method="POST" action="{{ route('farmer.orders.accept', $order) }}">
@@ -213,7 +213,7 @@
                                             @elseif($order->status === 'preparing')
                                                 @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
                                                     <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
-                                                        Payment must be verified before continuing
+                                                        Confirm GCash payment before continuing
                                                     </span>
                                                 @else
                                                     @if($order->fulfillment_method === 'pickup')
@@ -233,7 +233,7 @@
                                             @elseif(in_array($order->status, ['ready_for_pickup', 'out_for_delivery'], true))
                                                 @if($order->payment_method === 'gcash' && $order->payment_status !== 'paid')
                                                     <span class="rounded-lg border border-amber-200 px-4 py-2 text-sm font-semibold text-amber-700 dark:border-amber-800 dark:text-amber-200">
-                                                        Payment must be verified before completion
+                                                        Confirm GCash payment before completion
                                                     </span>
                                                 @else
                                                     <span class="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-800 dark:border-emerald-800 dark:text-emerald-200">

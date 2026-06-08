@@ -16,6 +16,9 @@ class Order extends Model
         'user_id',
         'coupon_id',
         'coupon_code',
+        'discount_label',
+        'discount_type',
+        'discount_rate',
         'discount_amount',
         'total_kg',
         'subtotal',
@@ -29,6 +32,8 @@ class Order extends Model
         'refunded_at',
         'payment_reference',
         'payment_proof',
+        'gcash_payee_name',
+        'gcash_payee_number',
         'fulfillment_method',
         'completion_proof',
         'completion_note',
@@ -122,7 +127,7 @@ class Order extends Model
         }
 
         return match ($this->payment_status) {
-            'pending_verification' => 'Pending Verification',
+            'pending_farmer_confirmation', 'pending_verification' => 'Pending Farmer Confirmation',
             'refund_pending' => 'Refund Pending',
             'refunded' => 'Refunded',
             'paid' => 'Paid',

@@ -8,6 +8,7 @@ use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Support\Collection;
+use App\Services\DiscountService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -138,7 +139,7 @@ class OrderController extends Controller
     /**
      * Checkout - create order from cart.
      */
-    public function checkout(Request $request, NotificationService $notifications)
+    public function checkout(Request $request, NotificationService $notifications, DiscountService $discountService)
     {
         $user = auth()->user();
 
@@ -171,7 +172,29 @@ class OrderController extends Controller
             'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ]);
 
+        $cartFarmerIds = $cart->items
+            ->map(fn (CartItem $item) => $item->product?->user_id)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $gcashFarmer = null;
+
         if ($validated['payment_method'] === 'gcash') {
+            if ($cartFarmerIds->count() > 1) {
+                return back()
+                    ->withErrors(['payment_method' => 'GCash payment is only available for one farmer per order.'])
+                    ->withInput();
+            }
+
+            $gcashFarmer = $cart->items->first()?->product?->farmer;
+
+            if (! $gcashFarmer?->gcash_number) {
+                return back()
+                    ->withErrors(['payment_method' => 'This farmer has not added GCash payment details. Please choose Cash on Delivery.'])
+                    ->withInput();
+            }
+
             if (empty($validated['payment_reference']) || ! preg_match('/^\d{8,20}$/', $validated['payment_reference'])) {
                 return back()
                     ->withErrors(['payment_reference' => 'GCash reference number must contain numbers only.'])
@@ -185,19 +208,19 @@ class OrderController extends Controller
             }
         }
 
-        $couponResult = $this->activeCouponResult($cart);
+        $discountResult = $this->automaticDiscountResult($cart, $discountService);
 
-        if (! $couponResult['ok']) {
-            session()->forget('checkout_coupon_id');
+        if (! $discountResult['ok']) {
+            session()->forget('cart_discount');
 
             return back()
-                ->with('error', $couponResult['message'])
+                ->with('error', $discountResult['message'])
                 ->withInput();
         }
 
-        $coupon = $couponResult['coupon'];
-        $discountAmount = $couponResult['discount'];
-        $totalKg = $couponResult['totalKg'];
+        $appliedDiscount = $discountResult['discount'];
+        $discountAmount = (float) ($appliedDiscount['discount_amount'] ?? 0);
+        $totalKg = $discountResult['totalKg'];
         $orderTotal = max((float) $cart->subtotal - $discountAmount, 0);
 
         $paymentData = [
@@ -210,17 +233,22 @@ class OrderController extends Controller
         if ($validated['payment_method'] === 'gcash') {
             $paymentData = [
                 'payment_method' => 'gcash',
-                'payment_status' => 'pending_verification',
+                'payment_status' => 'pending_farmer_confirmation',
                 'payment_reference' => $validated['payment_reference'],
                 'payment_proof' => $request->file('payment_proof')->storePublicly('payment_proofs', config('filesystems.default')),
+                'gcash_payee_name' => $gcashFarmer->gcash_name ?: $gcashFarmer->name,
+                'gcash_payee_number' => $gcashFarmer->gcash_number,
             ];
         }
 
-        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated, $coupon, $discountAmount, $totalKg, $orderTotal) {
+        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated, $appliedDiscount, $discountAmount, $totalKg, $orderTotal) {
             $order = Order::create([
                 'user_id' => $user->id,
-                'coupon_id' => $coupon?->id,
-                'coupon_code' => $coupon?->code,
+                'coupon_id' => null,
+                'coupon_code' => null,
+                'discount_label' => $appliedDiscount['label'] ?? null,
+                'discount_type' => $appliedDiscount['discount_type'] ?? null,
+                'discount_rate' => $appliedDiscount['discount_rate'] ?? null,
                 'discount_amount' => $discountAmount,
                 'total_kg' => $totalKg,
                 'subtotal' => $cart->subtotal,
@@ -241,13 +269,9 @@ class OrderController extends Controller
                 ]);
             }
 
-            if ($coupon) {
-                $coupon->increment('used_count');
-            }
-
             $cart->items()->delete();
             $cart->calculateTotals();
-            session()->forget('checkout_coupon_id');
+            session()->forget(['checkout_coupon_id', 'cart_discount']);
 
             return $order;
         });
@@ -280,18 +304,23 @@ class OrderController extends Controller
         );
 
         if ($order->payment_method === 'gcash') {
-            $notifications->sendToAdmins(
-                'payment.proof_uploaded',
-                'GCash payment proof uploaded',
-                ($order->consumer->name ?? 'A buyer') . " uploaded proof for Order #{$order->id}.",
-                'money',
-                route('orders.show', $order),
-                ['order_id' => $order->id, 'payment_status' => $order->payment_status]
-            );
+            $order->items
+                ->pluck('farmer')
+                ->filter()
+                ->unique('id')
+                ->each(fn ($farmer) => $notifications->send(
+                    $farmer,
+                    'payment.proof_uploaded',
+                    'New GCash order received',
+                    "Please confirm the payment proof for Order #{$order->id}.",
+                    'money',
+                    route('orders.show', $order),
+                    ['order_id' => $order->id, 'payment_status' => $order->payment_status]
+                ));
         }
 
         $successMessage = $order->payment_method === 'gcash'
-            ? 'Order placed successfully. Your payment is pending verification.'
+            ? 'Order placed successfully. Your payment is waiting for farmer confirmation.'
             : ($order->fulfillment_method === 'pickup'
                 ? 'Order placed successfully. Please prepare cash upon pickup.'
                 : 'Order placed successfully. Please prepare cash upon delivery.');
@@ -447,7 +476,7 @@ class OrderController extends Controller
         if ($refundPending) {
             $updates['payment_status'] = 'refund_pending';
             $updates['refund_status'] = 'pending';
-        } elseif ($order->payment_method === 'gcash' && $order->payment_status === 'pending_verification') {
+        } elseif ($order->payment_method === 'gcash' && $this->isPendingFarmerConfirmation($order)) {
             $updates['payment_status'] = 'cancelled';
         }
 
@@ -574,7 +603,7 @@ class OrderController extends Controller
         if ($order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
             return back()->with('error', $order->payment_status === 'rejected'
                 ? 'Payment proof was rejected. This order cannot be completed.'
-                : 'GCash payment must be verified before completing this order.');
+                : 'Confirm the GCash payment before completing this order.');
         }
 
         $validated = $request->validate([
@@ -636,7 +665,7 @@ class OrderController extends Controller
         if ($refundPending) {
             $updates['payment_status'] = 'refund_pending';
             $updates['refund_status'] = 'pending';
-        } elseif ($order->payment_method === 'gcash' && $order->payment_status === 'pending_verification') {
+        } elseif ($order->payment_method === 'gcash' && $this->isPendingFarmerConfirmation($order)) {
             $updates['payment_status'] = 'cancelled';
         }
 
@@ -685,6 +714,69 @@ class OrderController extends Controller
         }
     }
 
+    public function confirmPayment(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments need farmer confirmation.');
+        }
+
+        if (! $this->isPendingFarmerConfirmation($order)) {
+            return back()->with('error', 'This payment is not waiting for farmer confirmation.');
+        }
+
+        $order->update([
+            'payment_status' => 'paid',
+        ]);
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'payment.confirmed',
+                'GCash payment confirmed',
+                'Your GCash payment has been confirmed.',
+                'money',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => 'paid']
+            );
+        }
+
+        return back()->with('success', 'Payment confirmed. You can now accept the order.');
+    }
+
+    public function rejectPayment(Order $order, NotificationService $notifications)
+    {
+        $this->ensureFarmerOwnsOrder($order);
+
+        if ($order->payment_method !== 'gcash') {
+            return back()->with('error', 'Only GCash payments can be rejected.');
+        }
+
+        if ($order->status === 'completed') {
+            return back()->with('error', 'Completed orders cannot have payment rejected.');
+        }
+
+        $order->update([
+            'payment_status' => 'rejected',
+            'status' => 'cancelled',
+        ]);
+
+        if ($order->consumer) {
+            $notifications->send(
+                $order->consumer,
+                'payment.rejected',
+                'GCash payment rejected',
+                'Your GCash payment was rejected and the order was cancelled.',
+                'alert',
+                route('orders.show', $order),
+                ['order_id' => $order->id, 'payment_status' => 'rejected', 'status' => 'cancelled']
+            );
+        }
+
+        return back()->with('success', 'Payment rejected and order cancelled.');
+    }
+
     private function transitionOrder(
         Order $order,
         string $nextStatus,
@@ -700,7 +792,7 @@ class OrderController extends Controller
         if ($nextStatus === 'accepted' && $order->payment_method === 'gcash' && $order->payment_status !== 'paid') {
             return [
                 'ok' => false,
-                'message' => 'This GCash order cannot be accepted until admin verifies the payment.',
+                'message' => 'Confirm the GCash payment before accepting this order.',
             ];
         }
 
@@ -713,7 +805,7 @@ class OrderController extends Controller
                 'ok' => false,
                 'message' => $order->payment_status === 'rejected'
                     ? 'Payment proof was rejected. This order cannot continue.'
-                    : 'GCash payment must be verified by admin before this order can continue.',
+                    : 'Confirm the GCash payment before continuing this order.',
             ];
         }
 
@@ -771,6 +863,11 @@ class OrderController extends Controller
         return redirect()
             ->route('orders.show', $order)
             ->with('success', $successMessage);
+    }
+
+    private function isPendingFarmerConfirmation(Order $order): bool
+    {
+        return in_array($order->payment_status, ['pending_farmer_confirmation', 'pending_verification'], true);
     }
 
     private function activeCouponResult(Cart $cart): array
@@ -857,11 +954,44 @@ class OrderController extends Controller
     {
         $cart->loadMissing('items.product');
 
-        return (float) $cart->items->sum(function ($item) {
-            return strtolower(trim((string) optional($item->product)->unit)) === 'kg'
-                ? (float) $item->quantity
-                : 0;
-        });
+        return (float) $cart->items->sum(fn ($item) => (float) $item->quantity);
+    }
+
+    private function automaticDiscountResult(Cart $cart, DiscountService $discountService): array
+    {
+        $cart->loadMissing('items.product');
+        $cart->calculateTotals();
+
+        $totalKg = $this->cartTotalKg($cart);
+        $eligibleDiscount = $discountService->getEligibleDiscount($totalKg, (float) $cart->subtotal);
+
+        if (! session('cart_discount')) {
+            return [
+                'ok' => true,
+                'eligibleDiscount' => $eligibleDiscount,
+                'discount' => null,
+                'totalKg' => $totalKg,
+                'message' => null,
+            ];
+        }
+
+        if (! ($eligibleDiscount['eligible'] ?? false)) {
+            return [
+                'ok' => false,
+                'eligibleDiscount' => $eligibleDiscount,
+                'discount' => null,
+                'totalKg' => $totalKg,
+                'message' => 'No bulk discount available yet. Add more kg to qualify for a discount.',
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'eligibleDiscount' => $eligibleDiscount,
+            'discount' => $eligibleDiscount,
+            'totalKg' => $totalKg,
+            'message' => null,
+        ];
     }
 
     private function reduceOrderStock(Order $order, NotificationService $notifications): void
@@ -931,7 +1061,7 @@ class OrderController extends Controller
                 ->with('error', 'Farmers cannot place orders.');
         }
 
-        $cart = $user->cart?->loadMissing('items.product');
+        $cart = $user->cart?->loadMissing('items.product.farmer');
 
         // Empty cart check
         if (
@@ -944,14 +1074,14 @@ class OrderController extends Controller
                 ->with('error', 'Your cart is empty!');
         }
 
-        $couponResult = $this->activeCouponResult($cart);
+        $discountResult = $this->automaticDiscountResult($cart, app(DiscountService::class));
 
-        if (! $couponResult['ok']) {
-            session()->forget('checkout_coupon_id');
-            $couponResult = [
+        if (! $discountResult['ok']) {
+            session()->forget('cart_discount');
+            $discountResult = [
                 'ok' => true,
-                'coupon' => null,
-                'discount' => 0,
+                'eligibleDiscount' => app(DiscountService::class)->getEligibleDiscount($this->cartTotalKg($cart), (float) $cart->subtotal),
+                'discount' => null,
                 'totalKg' => $this->cartTotalKg($cart),
                 'message' => null,
             ];
@@ -959,12 +1089,38 @@ class OrderController extends Controller
 
         return view('orders.checkout', [
             'cart' => $cart,
-            'coupon' => $couponResult['coupon'],
-            'discountAmount' => $couponResult['discount'],
-            'totalKg' => $couponResult['totalKg'],
-            'checkoutTotal' => max((float) $cart->subtotal - (float) $couponResult['discount'], 0),
+            'coupon' => null,
+            'eligibleDiscount' => $discountResult['eligibleDiscount'],
+            'appliedDiscount' => $discountResult['discount'],
+            'discountAmount' => (float) ($discountResult['discount']['discount_amount'] ?? 0),
+            'totalKg' => $discountResult['totalKg'],
+            'checkoutTotal' => max((float) $cart->subtotal - (float) ($discountResult['discount']['discount_amount'] ?? 0), 0),
             'pickupLocations' => $this->pickupLocationsFromCart($cart),
+            'gcashFarmer' => $this->gcashFarmerFromCart($cart),
+            'cartFarmerCount' => $this->cartFarmerCount($cart),
         ]);
+    }
+
+    private function gcashFarmerFromCart(Cart $cart)
+    {
+        $cart->loadMissing('items.product.farmer');
+
+        if ($this->cartFarmerCount($cart) !== 1) {
+            return null;
+        }
+
+        return $cart->items->first()?->product?->farmer;
+    }
+
+    private function cartFarmerCount(Cart $cart): int
+    {
+        $cart->loadMissing('items.product');
+
+        return $cart->items
+            ->map(fn (CartItem $item) => $item->product?->user_id)
+            ->filter()
+            ->unique()
+            ->count();
     }
 
     private function pickupLocationsFromCart(Cart $cart): Collection

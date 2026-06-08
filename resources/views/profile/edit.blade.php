@@ -85,6 +85,59 @@
                     @error('address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                @if($user->isFarmer())
+                    <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">GCash Payment Details</h3>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Buyers will send GCash payments directly to this account.</p>
+
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label for="gcash_name" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">GCash Account Name</label>
+                                <input
+                                    type="text"
+                                    id="gcash_name"
+                                    name="gcash_name"
+                                    value="{{ old('gcash_name', $user->gcash_name) }}"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
+                                >
+                                @error('gcash_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="gcash_number" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">GCash Number</label>
+                                <input
+                                    type="text"
+                                    id="gcash_number"
+                                    name="gcash_number"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{8,20}"
+                                    maxlength="20"
+                                    value="{{ old('gcash_number', $user->gcash_number) }}"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-600"
+                                    placeholder="Enter GCash number"
+                                >
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Numbers only.</p>
+                                @error('gcash_number')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            </div>
+
+                            <div>
+                                <label for="gcash_qr" class="block text-sm font-semibold text-gray-900 dark:text-white mb-2">GCash QR Code (Optional)</label>
+                                <input
+                                    type="file"
+                                    id="gcash_qr"
+                                    name="gcash_qr"
+                                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                                    class="block text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                @if($user->gcash_qr)
+                                    <p class="mt-2 text-xs font-semibold text-emerald-600 dark:text-emerald-300">QR code uploaded.</p>
+                                @endif
+                                @error('gcash_qr')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
                     <p class="text-blue-800 dark:text-blue-200 text-sm">
                         <strong>Want to change your password?</strong>
