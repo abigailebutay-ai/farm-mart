@@ -95,6 +95,7 @@ Route::middleware('auth')->group(function () {
     // Checkout routes (consumers only)
     Route::middleware('role:consumer,buyer')->group(function () {
         Route::get('/checkout', [OrderController::class, 'showCheckout'])->name('checkout.show');
+        Route::get('/checkout/farmer/{farmer}', [OrderController::class, 'showCheckoutForFarmer'])->name('checkout.farmer');
         Route::post('/checkout/coupon', [OrderController::class, 'applyCoupon'])->name('checkout.coupon.apply');
         Route::delete('/checkout/coupon', [OrderController::class, 'removeCoupon'])->name('checkout.coupon.remove');
         Route::post('/checkout', [OrderController::class, 'checkout'])->name('checkout.store');

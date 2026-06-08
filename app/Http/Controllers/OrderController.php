@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use App\Services\DiscountService;
 use App\Services\NotificationService;
@@ -39,10 +40,11 @@ class OrderController extends Controller
         } elseif ($user->isFarmer()) {
 
             // Farmer sees orders containing their products
-            $orders = Order::whereHas('items', function ($query) use ($user) {
-
-                $query->where('farmer_id', $user->id);
-
+            $orders = Order::where(function ($query) use ($user) {
+                $query->where('farmer_id', $user->id)
+                    ->orWhereHas('items', function ($query) use ($user) {
+                        $query->where('farmer_id', $user->id);
+                    });
             })
                 ->where(function ($query) {
                     $query->whereNull('payment_method')
@@ -165,6 +167,7 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
+            'farmer_id' => 'required|integer|exists:users,id',
             'notes' => 'nullable|string|max:1000',
             'fulfillment_method' => 'required|in:pickup,delivery',
             'payment_method' => 'required|in:cod,gcash',
@@ -172,24 +175,18 @@ class OrderController extends Controller
             'payment_proof' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:5120',
         ]);
 
-        $cartFarmerIds = $cart->items
-            ->map(fn (CartItem $item) => $item->product?->user_id)
-            ->filter()
-            ->unique()
-            ->values();
+        $selectedFarmerId = (int) $validated['farmer_id'];
+        $selectedFarmer = User::where('role', 'farmer')->findOrFail($selectedFarmerId);
+        $checkoutItems = $this->cartItemsForFarmer($cart, $selectedFarmerId);
 
-        $gcashFarmer = null;
+        if ($checkoutItems->isEmpty()) {
+            return redirect()
+                ->route('cart.index')
+                ->with('error', 'Please choose which farmer you want to checkout from.');
+        }
 
         if ($validated['payment_method'] === 'gcash') {
-            if ($cartFarmerIds->count() > 1) {
-                return back()
-                    ->withErrors(['payment_method' => 'GCash payment is only available for one farmer per order.'])
-                    ->withInput();
-            }
-
-            $gcashFarmer = $cart->items->first()?->product?->farmer;
-
-            if (! $gcashFarmer?->gcash_number) {
+            if (! $selectedFarmer->gcash_number) {
                 return back()
                     ->withErrors(['payment_method' => 'This farmer has not added GCash payment details. Please choose Cash on Delivery.'])
                     ->withInput();
@@ -208,10 +205,10 @@ class OrderController extends Controller
             }
         }
 
-        $discountResult = $this->automaticDiscountResult($cart, $discountService);
+        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $selectedFarmerId, $discountService);
 
         if (! $discountResult['ok']) {
-            session()->forget('cart_discount');
+            $this->forgetFarmerDiscount($selectedFarmerId);
 
             return back()
                 ->with('error', $discountResult['message'])
@@ -221,7 +218,8 @@ class OrderController extends Controller
         $appliedDiscount = $discountResult['discount'];
         $discountAmount = (float) ($appliedDiscount['discount_amount'] ?? 0);
         $totalKg = $discountResult['totalKg'];
-        $orderTotal = max((float) $cart->subtotal - $discountAmount, 0);
+        $subtotal = (float) $checkoutItems->sum('subtotal');
+        $orderTotal = max($subtotal - $discountAmount, 0);
 
         $paymentData = [
             'payment_method' => 'cod',
@@ -236,14 +234,15 @@ class OrderController extends Controller
                 'payment_status' => 'pending_farmer_confirmation',
                 'payment_reference' => $validated['payment_reference'],
                 'payment_proof' => $request->file('payment_proof')->storePublicly('payment_proofs', config('filesystems.default')),
-                'gcash_payee_name' => $gcashFarmer->gcash_name ?: $gcashFarmer->name,
-                'gcash_payee_number' => $gcashFarmer->gcash_number,
+                'gcash_payee_name' => $selectedFarmer->gcash_name ?: $selectedFarmer->name,
+                'gcash_payee_number' => $selectedFarmer->gcash_number,
             ];
         }
 
-        $order = DB::transaction(function () use ($cart, $paymentData, $user, $validated, $appliedDiscount, $discountAmount, $totalKg, $orderTotal) {
+        $order = DB::transaction(function () use ($cart, $checkoutItems, $selectedFarmerId, $paymentData, $user, $validated, $appliedDiscount, $discountAmount, $totalKg, $subtotal, $orderTotal) {
             $order = Order::create([
                 'user_id' => $user->id,
+                'farmer_id' => $selectedFarmerId,
                 'coupon_id' => null,
                 'coupon_code' => null,
                 'discount_label' => $appliedDiscount['label'] ?? null,
@@ -251,14 +250,14 @@ class OrderController extends Controller
                 'discount_rate' => $appliedDiscount['discount_rate'] ?? null,
                 'discount_amount' => $discountAmount,
                 'total_kg' => $totalKg,
-                'subtotal' => $cart->subtotal,
+                'subtotal' => $subtotal,
                 'total' => $orderTotal,
                 'status' => 'pending',
                 'fulfillment_method' => $validated['fulfillment_method'],
                 'notes' => $validated['notes'] ?? null,
             ] + $paymentData);
 
-            foreach ($cart->items as $cartItem) {
+            foreach ($checkoutItems as $cartItem) {
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $cartItem->product_id,
@@ -269,8 +268,11 @@ class OrderController extends Controller
                 ]);
             }
 
-            $cart->items()->delete();
+            $cart->items()
+                ->whereIn('id', $checkoutItems->pluck('id'))
+                ->delete();
             $cart->calculateTotals();
+            $this->forgetFarmerDiscount($selectedFarmerId);
             session()->forget(['checkout_coupon_id', 'cart_discount']);
 
             return $order;
@@ -706,9 +708,12 @@ class OrderController extends Controller
 
         if (
             ! $user?->isFarmer() ||
-            ! $order->items()
-                ->where('farmer_id', $user->id)
-                ->exists()
+            ! (
+                (int) $order->farmer_id === (int) $user->id ||
+                $order->items()
+                    ->where('farmer_id', $user->id)
+                    ->exists()
+            )
         ) {
             abort(403);
         }
@@ -994,6 +999,54 @@ class OrderController extends Controller
         ];
     }
 
+    private function automaticDiscountResultForItems(Collection $items, int $farmerId, DiscountService $discountService): array
+    {
+        $totalKg = (float) $items->sum('quantity');
+        $subtotal = (float) $items->sum('subtotal');
+        $eligibleDiscount = $discountService->getEligibleDiscount($totalKg, $subtotal);
+        $appliedDiscounts = session('cart_discounts', []);
+
+        if (! isset($appliedDiscounts[$farmerId])) {
+            return [
+                'ok' => true,
+                'eligibleDiscount' => $eligibleDiscount,
+                'discount' => null,
+                'totalKg' => $totalKg,
+                'message' => null,
+            ];
+        }
+
+        if (! ($eligibleDiscount['eligible'] ?? false)) {
+            return [
+                'ok' => false,
+                'eligibleDiscount' => $eligibleDiscount,
+                'discount' => null,
+                'totalKg' => $totalKg,
+                'message' => 'No bulk discount available yet for this farmer. Add more kg from this farmer to qualify.',
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'eligibleDiscount' => $eligibleDiscount,
+            'discount' => $eligibleDiscount,
+            'totalKg' => $totalKg,
+            'message' => null,
+        ];
+    }
+
+    private function forgetFarmerDiscount(int $farmerId): void
+    {
+        $discounts = session('cart_discounts', []);
+        unset($discounts[$farmerId]);
+
+        if ($discounts) {
+            session(['cart_discounts' => $discounts]);
+        } else {
+            session()->forget('cart_discounts');
+        }
+    }
+
     private function reduceOrderStock(Order $order, NotificationService $notifications): void
     {
         foreach ($order->items as $item) {
@@ -1051,6 +1104,21 @@ class OrderController extends Controller
      */
     public function showCheckout()
     {
+        $farmerId = request()->integer('farmer_id');
+
+        if (! $farmerId) {
+            return redirect()
+                ->route('cart.index')
+                ->with('error', 'Please choose which farmer you want to checkout from.');
+        }
+
+        return $this->showCheckoutForFarmer(User::where('role', 'farmer')->findOrFail($farmerId));
+    }
+
+    public function showCheckoutForFarmer(User $farmer)
+    {
+        abort_unless($farmer->isFarmer(), 404);
+
         $user = auth()->user();
 
         // Farmers cannot checkout
@@ -1074,30 +1142,44 @@ class OrderController extends Controller
                 ->with('error', 'Your cart is empty!');
         }
 
-        $discountResult = $this->automaticDiscountResult($cart, app(DiscountService::class));
+        $checkoutItems = $this->cartItemsForFarmer($cart, $farmer->id);
+
+        if ($checkoutItems->isEmpty()) {
+            return redirect()
+                ->route('cart.index')
+                ->with('error', 'No cart items found for the selected farmer.');
+        }
+
+        $discountResult = $this->automaticDiscountResultForItems($checkoutItems, $farmer->id, app(DiscountService::class));
 
         if (! $discountResult['ok']) {
-            session()->forget('cart_discount');
+            $this->forgetFarmerDiscount($farmer->id);
             $discountResult = [
                 'ok' => true,
-                'eligibleDiscount' => app(DiscountService::class)->getEligibleDiscount($this->cartTotalKg($cart), (float) $cart->subtotal),
+                'eligibleDiscount' => app(DiscountService::class)->getEligibleDiscount((float) $checkoutItems->sum('quantity'), (float) $checkoutItems->sum('subtotal')),
                 'discount' => null,
-                'totalKg' => $this->cartTotalKg($cart),
+                'totalKg' => (float) $checkoutItems->sum('quantity'),
                 'message' => null,
             ];
         }
 
         return view('orders.checkout', [
             'cart' => $cart,
+            'checkoutItems' => $checkoutItems,
+            'selectedFarmer' => $farmer,
             'coupon' => null,
             'eligibleDiscount' => $discountResult['eligibleDiscount'],
             'appliedDiscount' => $discountResult['discount'],
             'discountAmount' => (float) ($discountResult['discount']['discount_amount'] ?? 0),
             'totalKg' => $discountResult['totalKg'],
-            'checkoutTotal' => max((float) $cart->subtotal - (float) ($discountResult['discount']['discount_amount'] ?? 0), 0),
-            'pickupLocations' => $this->pickupLocationsFromCart($cart),
-            'gcashFarmer' => $this->gcashFarmerFromCart($cart),
-            'cartFarmerCount' => $this->cartFarmerCount($cart),
+            'checkoutSubtotal' => (float) $checkoutItems->sum('subtotal'),
+            'checkoutTotal' => max((float) $checkoutItems->sum('subtotal') - (float) ($discountResult['discount']['discount_amount'] ?? 0), 0),
+            'pickupLocations' => collect([[
+                'farmer' => $farmer,
+                'products' => $checkoutItems->map(fn (CartItem $item) => $item->product?->name)->filter()->unique()->values(),
+            ]]),
+            'gcashFarmer' => $farmer,
+            'cartFarmerCount' => 1,
         ]);
     }
 
@@ -1121,6 +1203,15 @@ class OrderController extends Controller
             ->filter()
             ->unique()
             ->count();
+    }
+
+    private function cartItemsForFarmer(Cart $cart, int $farmerId): Collection
+    {
+        $cart->loadMissing('items.product.farmer');
+
+        return $cart->items
+            ->filter(fn (CartItem $item) => (int) ($item->product?->user_id) === $farmerId)
+            ->values();
     }
 
     private function pickupLocationsFromCart(Cart $cart): Collection

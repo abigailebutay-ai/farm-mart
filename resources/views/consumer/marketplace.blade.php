@@ -8,8 +8,8 @@
         subtitle="Browse available products from local farmers."
     />
 
-    <x-ui.dashboard-card class="mb-6" title="Find Products" subtitle="Search by product name, category, or stock status.">
-        <form method="GET" action="{{ route('consumer.marketplace') }}" class="grid gap-4 lg:grid-cols-[1fr_220px_220px_auto] lg:items-end">
+    <x-ui.dashboard-card class="mb-6" title="Choose a farmer to shop from" subtitle="Search by farmer/store, product name, category, or stock status.">
+        <form method="GET" action="{{ route('consumer.marketplace') }}" class="grid gap-4 lg:grid-cols-[1fr_220px_220px_220px_auto] lg:items-end">
             <div>
                 <label for="search" class="mb-2 block text-sm font-bold text-slate-700">Search</label>
                 <div class="relative">
@@ -18,6 +18,18 @@
                     </span>
                     <input id="search" type="text" name="search" value="{{ $search ?? '' }}" placeholder="Search tomato, pechay, eggplant..." class="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-slate-800 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
                 </div>
+            </div>
+
+            <div>
+                <label for="farmer_id" class="mb-2 block text-sm font-bold text-slate-700">Farmer</label>
+                <select id="farmer_id" name="farmer_id" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-800 focus:border-emerald-600 focus:outline-none focus:ring-4 focus:ring-emerald-100">
+                    <option value="">All Farmers</option>
+                    @foreach($farmers ?? [] as $farmer)
+                        <option value="{{ $farmer->id }}" @selected((string) ($selectedFarmerId ?? '') === (string) $farmer->id)>
+                            {{ $farmer->name }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div>

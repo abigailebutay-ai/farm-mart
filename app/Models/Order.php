@@ -14,6 +14,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'farmer_id',
         'coupon_id',
         'coupon_code',
         'discount_label',
@@ -60,6 +61,11 @@ class Order extends Model
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
+    }
+
+    public function farmer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'farmer_id');
     }
 
     /**

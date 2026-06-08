@@ -122,8 +122,11 @@ class DashboardController extends Controller
      */
     private function farmerDashboard($user)
     {
-        $farmerOrderQuery = Order::whereHas('items', function ($query) use ($user) {
-            $query->where('farmer_id', $user->id);
+        $farmerOrderQuery = Order::where(function ($query) use ($user) {
+            $query->where('farmer_id', $user->id)
+                ->orWhereHas('items', function ($query) use ($user) {
+                    $query->where('farmer_id', $user->id);
+                });
         })->where(function ($query) {
             $query->whereNull('payment_method')
                 ->orWhere('payment_method', 'cod')

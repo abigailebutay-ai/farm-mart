@@ -5,7 +5,7 @@
 @section('content')
     <x-ui.page-header
         title="Checkout"
-        subtitle="Choose pickup or delivery, confirm payment, and place your order."
+        subtitle="You are ordering from {{ $selectedFarmer->name }}."
     />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -17,11 +17,16 @@
 
                 <form id="checkout-form" method="POST" action="{{ route('checkout.store') }}" enctype="multipart/form-data" class="p-6 space-y-6" x-data="{ paymentMethod: @js(old('payment_method', 'cod')), fulfillmentMethod: @js(old('fulfillment_method', 'delivery')) }">
                     @csrf
+                    <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
+
+                    <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-100">
+                        You are ordering from {{ $selectedFarmer->name }}. Discounts, GCash details, and pickup location are based on this farmer only.
+                    </div>
 
                     <div>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Order Items</h3>
                         <div class="space-y-4">
-                            @foreach($cart->items as $item)
+                            @foreach($checkoutItems as $item)
                                 <div class="flex flex-col gap-4 rounded-lg bg-gray-100 p-4 dark:bg-gray-700 sm:flex-row sm:items-center sm:justify-between">
                                     <div class="flex gap-4">
                                         <x-ui.product-image
@@ -89,7 +94,7 @@
 
                         <div x-show="fulfillmentMethod === 'pickup'" class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-100">
                             <h4 class="text-base font-bold">Pickup Information</h4>
-                            <p class="mt-1 font-semibold">You selected Pick up. Please pick up your order at the farmer's address.</p>
+                            <p class="mt-1 font-semibold">Pickup location is based on this farmer's address.</p>
 
                             <div class="mt-4 space-y-3">
                                 @forelse($pickupLocations as $location)
@@ -153,7 +158,7 @@
                                     <p class="font-bold">Farmer GCash Details</p>
                                     <p class="mt-2"><span class="font-semibold">Farmer:</span> {{ $gcashFarmer->name }}</p>
                                     <p><span class="font-semibold">GCash Name:</span> {{ $gcashFarmer->gcash_name ?: $gcashFarmer->name }}</p>
-                                    <p><span class="font-semibold">GCash Number:</span> {{ $gcashFarmer->gcash_number ?: 'Not provided' }}</p>
+                                    <p><span class="font-semibold">GCash Number:</span> {{ $selectedFarmer->gcash_number ?: 'Not provided' }}</p>
                                     @if($gcashFarmer->gcash_qr)
                                         <a href="{{ \Illuminate\Support\Facades\Storage::disk(config('filesystems.default'))->url($gcashFarmer->gcash_qr) }}" target="_blank" rel="noopener" class="mt-3 inline-flex rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800">
                                             View GCash QR Code
@@ -199,13 +204,13 @@
 
                 <div class="p-6 space-y-4">
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>Total Items:</span>
-                        <span>{{ $cart->items->sum('quantity') }}</span>
+                        <span>Product Lines:</span>
+                        <span>{{ $checkoutItems->count() }}</span>
                     </div>
 
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Subtotal:</span>
-                        <span>PHP {{ number_format($cart->subtotal, 2) }}</span>
+                        <span>PHP {{ number_format($checkoutSubtotal ?? $checkoutItems->sum('subtotal'), 2) }}</span>
                     </div>
 
                     <div class="flex justify-between text-gray-600 dark:text-gray-400">
@@ -225,6 +230,7 @@
                                 <form method="POST" action="{{ route('cart.remove-discount') }}">
                                     @csrf
                                     @method('DELETE')
+                                    <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
                                     <button type="submit" class="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30">
                                         Remove
                                     </button>
@@ -236,6 +242,7 @@
                             </p>
                             <form method="POST" action="{{ route('cart.apply-discount') }}" class="mt-3">
                                 @csrf
+                                <input type="hidden" name="farmer_id" value="{{ $selectedFarmer->id }}">
                                 <button type="submit" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-800">Apply Discount</button>
                             </form>
                         @else

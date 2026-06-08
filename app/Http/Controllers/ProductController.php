@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -22,10 +23,16 @@ class ProductController extends Controller
             $query->whereNull('status')
                 ->orWhere('status', 'active');
         })->select('category')->distinct()->get();
+        $farmers = User::where('role', 'farmer')
+            ->whereHas('products', fn ($query) => $query->where('quantity', '>', 0))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return view('products.index', [
             'products' => $products,
             'categories' => $categories,
+            'farmers' => $farmers,
+            'selectedFarmerId' => $request->farmer_id,
             'search' => $request->search ?? '',
             'availability' => $request->availability ?? '',
             'marketplaceRoute' => 'marketplace',
@@ -48,10 +55,16 @@ class ProductController extends Controller
             ->select('category')
             ->distinct()
             ->get();
+        $farmers = User::where('role', 'farmer')
+            ->whereHas('products', fn ($query) => $query->where('quantity', '>', 0))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return view('consumer.marketplace', [
             'products' => $products,
             'categories' => $categories,
+            'farmers' => $farmers,
+            'selectedFarmerId' => $request->farmer_id,
             'search' => $request->search ?? '',
             'availability' => $request->availability ?? '',
         ]);
@@ -335,6 +348,10 @@ class ProductController extends Controller
 
         if ($request->filled('category')) {
             $query->where('category', $request->category);
+        }
+
+        if ($request->filled('farmer_id')) {
+            $query->where('user_id', $request->integer('farmer_id'));
         }
 
         if ($request->availability === 'in_stock') {
