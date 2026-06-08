@@ -71,27 +71,56 @@
             />
         @endif
     @else
-        <x-ui.page-header
-            title="Choose a Farmer"
-            subtitle="Select a farmer to view available products."
-        />
+        <div class="mb-6 overflow-hidden rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-sm">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-sm font-bold uppercase tracking-wide text-emerald-300">Marketplace</p>
+                    <h1 class="mt-2 text-3xl font-black text-white">Choose a Farmer</h1>
+                    <p class="mt-2 max-w-3xl text-base leading-relaxed text-slate-300">
+                        Choose a farmer to view their available products, pickup location, and payment details.
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border border-emerald-800/70 bg-emerald-950/40 px-4 py-3 text-sm font-semibold text-emerald-100">
+                    Shop one farmer at a time for clearer checkout.
+                </div>
+            </div>
+        </div>
 
         @if(($farmers ?? collect())->count() > 0)
-            <div class="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                 @foreach($farmers as $farmer)
-                    <article class="rounded-2xl border border-slate-700 bg-gray-900 p-5 shadow-sm">
+                    <article class="group flex h-full flex-col rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-sm transition hover:border-emerald-500/60 hover:bg-slate-800/80 hover:shadow-lg">
                         <div class="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 class="text-xl font-black text-white">{{ $farmer->name }}</h2>
-                                <p class="mt-2 text-sm leading-relaxed text-gray-300">{{ $farmer->address ?: 'Address not provided' }}</p>
-                                <p class="mt-1 text-sm text-gray-400">Contact: {{ $farmer->phone ?: 'Not provided' }}</p>
+                            <div class="flex min-w-0 items-center gap-4">
+                                <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-700 text-lg font-black text-white shadow-sm shadow-emerald-950/40">
+                                    {{ strtoupper(\Illuminate\Support\Str::substr($farmer->name, 0, 1)) }}
+                                </div>
+
+                                <div class="min-w-0">
+                                    <h2 class="truncate text-xl font-black text-white">{{ $farmer->name }}</h2>
+                                    <p class="mt-1 text-sm font-semibold text-emerald-300">Farmer Store</p>
+                                </div>
                             </div>
+
                             <span class="rounded-full bg-emerald-900/50 px-3 py-1 text-sm font-bold text-emerald-200">
                                 {{ $farmer->available_products_count }} products
                             </span>
                         </div>
 
-                        <a href="{{ route('consumer.marketplace.farmer', $farmer) }}" class="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-emerald-700 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800">
+                        <div class="mt-6 flex-1 space-y-4 text-sm leading-relaxed text-slate-300">
+                            <div class="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Location</p>
+                                <p class="mt-1 font-semibold text-slate-100">{{ $farmer->address ?: 'Address not provided' }}</p>
+                            </div>
+
+                            <div class="rounded-2xl border border-slate-700/80 bg-slate-950/40 p-4">
+                                <p class="text-xs font-bold uppercase tracking-wide text-slate-500">Contact</p>
+                                <p class="mt-1 font-semibold text-slate-100">{{ $farmer->phone ?: 'Contact not provided' }}</p>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('consumer.marketplace.farmer', $farmer) }}" class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-black text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/30">
                             View Products
                         </a>
                     </article>
@@ -99,9 +128,12 @@
             </div>
         @else
             <x-ui.empty-state
-                title="No farmers available"
-                message="Farmers with available products will appear here."
+                title="No farmers available yet."
+                message="Please check again later for available products."
+                action-url="{{ route('dashboard') }}"
+                action-label="Back to Dashboard"
                 icon="farmer"
+                class="border-slate-700 bg-slate-900 text-white [&_h3]:text-white [&_p]:text-slate-300"
             />
         @endif
     @endif
